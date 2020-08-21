@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"ginp/conv"
+	"ginp/encoding"
 	"github.com/coocood/freecache"
 )
 
@@ -20,7 +22,7 @@ var cache = freecache.NewCache(cacheSize)
 //Get cached data
 func (this *New) Get() []byte {
 	//判断是否有缓存
-	var hash = secret.Sha256(this.Group + this.Key)
+	var hash = encoding.Sha256(this.Group + this.Key)
 	getData, _ := cache.Get([]byte(hash))
 	return getData
 }
@@ -31,7 +33,7 @@ func (this *New) Set(data interface{}) {
 	if this.Expire == 0 {
 		this.Expire = 10000
 	}
-	var hash = secret.Sha256(this.Group + this.Key)
+	var hash = encoding.Sha256(this.Group + this.Key)
 	go cache.Set([]byte(hash), conv.StructToBytes(data), this.Expire)
 }
 
