@@ -1,4 +1,4 @@
-module ginp
+module github.com/small-ek/ginp
 
 go 1.14
 
