@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"ginp/conv"
-	"ginp/encoding"
+	"github.com/small-ek/ginp/conv"
+	"github.com/small-ek/ginp/encoding"
 	"github.com/coocood/freecache"
 )
 

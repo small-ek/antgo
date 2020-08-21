@@ -2,7 +2,7 @@ package validator
 
 import (
 	"errors"
-	"ginp/conv"
+	"github.com/small-ek/ginp/conv"
 	"log"
 	"regexp"
 	"strconv"
