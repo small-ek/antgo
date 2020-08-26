@@ -6,7 +6,7 @@ import (
 
 //创建uuid
 //Create uuid
-func NewUUID() string {
+func New() string {
 	uuid := uuid.NewV4().String()
 	return uuid
 }

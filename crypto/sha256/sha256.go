@@ -6,7 +6,7 @@ import (
 )
 
 //使用sha256哈希函数
-func Sha256(str string) string {
+func New(str string) string {
 	//使用sha256哈希函数
 	h := sha256.New()
 	h.Write([]byte(str))

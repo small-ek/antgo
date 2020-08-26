@@ -1,4 +1,4 @@
-package encoding
+package rsa
 
 import (
 	"crypto/rand"
