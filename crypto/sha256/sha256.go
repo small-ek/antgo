@@ -11,7 +11,6 @@ func Create(str string) string {
 	h := sha256.New()
 	h.Write([]byte(str))
 	sum := h.Sum(nil)
-
 	//由于是十六进制表示，因此需要转换
 	s := hex.EncodeToString(sum)
 	return s

@@ -28,6 +28,7 @@ DsGbQw9BvOPJX+P+rIEm4NooZ2W1fRuwMyEKbX6wTr0illbr6AhOVHRXLEbh78l0
 7+Vc8wQsdZSLK+ATqIM/KkC00dR1462axPXUR6f3
 -----END RSA PRIVATE KEY-----
 `)
+
 var publicKey = []byte(`
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQChfYIOm7bOOlHF2VcEwqGaR1Ox
@@ -37,9 +38,23 @@ DtknkgANt7OREpBYowIDAQAB
 -----END PUBLIC KEY-----
 `)
 
+type New struct {
+	PrivateKey []byte
+	PublicKey  []byte
+}
+
+//默认秘钥
+func Default() *New {
+	return &New{
+		PublicKey:  publicKey,
+		PrivateKey: privateKey,
+	}
+}
+
 // RSA加密
-func RsaEncrypt(origData string) (string, error) {
-	block, _ := pem.Decode(publicKey) //将密钥解析成公钥实例
+func (this *New) Encrypt(origData string) (string, error) {
+
+	block, _ := pem.Decode(this.PublicKey) //将密钥解析成公钥实例
 	if block == nil {
 		return "", errors.New("public key error")
 	}
@@ -48,7 +63,6 @@ func RsaEncrypt(origData string) (string, error) {
 		return "", err
 	}
 	pub := pubInterface.(*rsa.PublicKey)
-
 	RsaEncrypt, err := rsa.EncryptPKCS1v15(rand.Reader, pub, []byte(origData)) //RSA算法加密
 	//base64加密
 	encodeString := base64.StdEncoding.EncodeToString(RsaEncrypt)
@@ -57,12 +71,10 @@ func RsaEncrypt(origData string) (string, error) {
 }
 
 // RSA解密
-func RsaDecrypt(ciphertext string) (string, error) {
+func (this *New) Decrypt(ciphertext string) (string, error) {
 	//base64解密
 	decodeBytes, _ := base64.StdEncoding.DecodeString(ciphertext)
-
-	block, _ := pem.Decode(privateKey) //将密钥解析成私钥实例
-
+	block, _ := pem.Decode(this.PrivateKey) //将密钥解析成私钥实例
 	if block == nil {
 		return "", errors.New("解密失败")
 	}
@@ -71,8 +83,6 @@ func RsaDecrypt(ciphertext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	RsaDecrypt, err := rsa.DecryptPKCS1v15(rand.Reader, priv, decodeBytes)
-
 	return string(RsaDecrypt), err //RSA算法解密
 }

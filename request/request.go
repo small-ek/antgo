@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/ginp/conv"
 	"io/ioutil"
 	"net/http"
 )
@@ -19,6 +20,36 @@ func Get(this *gin.Context) map[string]interface{} {
 	}
 	json.Unmarshal(body, &request)
 	return request
+}
+
+//获取请求单个数据
+func GetString(name string, this *gin.Context) string {
+	var request = Get(this)
+	return conv.String(request[name])
+}
+
+//获取请求单个数据
+func GetBool(name string, this *gin.Context) bool {
+	var request = Get(this)
+	return conv.Bool(request[name])
+}
+
+//获取请求单个数据
+func GetFloat21(name string, this *gin.Context) float32 {
+	var request = Get(this)
+	return conv.Float32(request[name])
+}
+
+//获取请求单个数据
+func GetFloat64(name string, this *gin.Context) float64 {
+	var request = Get(this)
+	return conv.Float64(request[name])
+}
+
+//获取请求单个数据
+func GetInt(name string, this *gin.Context) int {
+	var request = Get(this)
+	return conv.Int(request[name])
 }
 
 //获取请求单个数据

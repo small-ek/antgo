@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"github.com/small-ek/ginp/conv"
 	"github.com/coocood/freecache"
-	"github.com/small-ek/ginp/crypto/hashs"
+	"github.com/small-ek/ginp/conv"
+	"github.com/small-ek/ginp/crypto/sha256"
 )
 
 type New struct {
@@ -22,7 +22,7 @@ var cache = freecache.NewCache(cacheSize)
 //Get cached data
 func (this *New) Get() []byte {
 	//判断是否有缓存
-	var hash = hashs.Sha256(this.Group + this.Key)
+	var hash = sha256.Create(this.Group + this.Key)
 	getData, _ := cache.Get([]byte(hash))
 	return getData
 }
@@ -33,7 +33,7 @@ func (this *New) Set(data interface{}) {
 	if this.Expire == 0 {
 		this.Expire = 10000
 	}
-	var hash = hashs.Sha256(this.Group + this.Key)
+	var hash = sha256.Create(this.Group + this.Key)
 	go cache.Set([]byte(hash), conv.StructToBytes(data), this.Expire)
 }
 

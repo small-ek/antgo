@@ -9,7 +9,7 @@ import (
 
 //密钥格式：PKCS#1
 //密钥位数2048
-var PrivateKeyJwt = []byte(`
+var PrivateKey = []byte(`
 -----BEGIN PRIVATE KEY-----
 MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAMMBf8hUaDk+oCsQ
 ecIJDrRt+EktQaGE+11Un1YWgjelgJR68JcS+2HsSTjkd+aUYFuy7uo7Jc0ugQqN
@@ -27,7 +27,7 @@ isXUlyKSsakm+M+hzkoJxlizUiM3tN9cIfsIBXdWv9LNGRp2gl8Sa69ri3EdqQXv
 0PcStMOn2IX1kw==
 -----END PRIVATE KEY-----
 `)
-var PublicKeyJwt = []byte(`
+var PublicKey = []byte(`
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDAX/IVGg5PqArEHnCCQ60bfhJ
 LUGhhPtdVJ9WFoI3pYCUevCXEvth7Ek45HfmlGBbsu7qOyXNLoEKjcU8D88iV3yF
@@ -36,9 +36,22 @@ PEqRQFBDR49ayaxSqwIDAQAB
 -----END PUBLIC KEY-----
 `)
 
+type New struct {
+	PrivateKey []byte
+	PublicKey  []byte
+}
+
+//默认秘钥
+func Default() *New {
+	return &New{
+		PublicKey:  PublicKey,
+		PrivateKey: PrivateKey,
+	}
+}
+
 //创建Jwttoken
-func Create(manifest map[string]interface{}) (tokenStr string) {
-	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(PrivateKeyJwt)
+func (this *New) Encrypt(manifest map[string]interface{}) (tokenStr string) {
+	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(this.PrivateKey)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iat":      time.Now().Unix(),                      // Token颁发时间
 		"nbf":      time.Now().Unix(),                      // Token生效时间
@@ -53,9 +66,9 @@ func Create(manifest map[string]interface{}) (tokenStr string) {
 }
 
 //解密
-func Decode(tokenStr string) (manifest map[string]interface{}, err error) {
+func (this *New)Decode(tokenStr string) (manifest map[string]interface{}, err error) {
 	result := map[string]interface{}{}
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(PublicKeyJwt)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(this.PublicKey)
 	// 基于公钥验证Token合法性
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		// 基于JWT的第一部分中的alg字段值进行一次验证
