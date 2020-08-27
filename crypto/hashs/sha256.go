@@ -1,4 +1,4 @@
-package sha256
+package hashs
 
 import (
 	"crypto/sha256"
@@ -6,7 +6,7 @@ import (
 )
 
 //使用sha256哈希函数
-func Create(str string) string {
+func Sha256(str string) string {
 	//使用sha256哈希函数
 	h := sha256.New()
 	h.Write([]byte(str))

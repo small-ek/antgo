@@ -21,6 +21,12 @@ func Get(this *gin.Context) map[string]interface{} {
 	return request
 }
 
+//获取请求单个数据
+func Param(name string, this *gin.Context) interface{} {
+	var request = Get(this)
+	return request[name]
+}
+
 //跨域请求
 func Cors(this *gin.Context) {
 	this.Header("Access-Control-Allow-Origin", "*")                                      //允许访问所有域
