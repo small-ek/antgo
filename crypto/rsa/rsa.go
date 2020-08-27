@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 //密钥格式：PKCS#1

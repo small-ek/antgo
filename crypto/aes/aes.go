@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gaes provides useful API for AES encryption/decryption algorithms.
-package gaes
+package aes
 
 import (
 	"bytes"
