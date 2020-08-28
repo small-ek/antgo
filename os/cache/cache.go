@@ -6,40 +6,48 @@ import (
 	"github.com/small-ek/ginp/crypto/sha256"
 )
 
-type New struct {
-	Key    string
-	Group  string
-	Expire int
-}
-
 const (
 	//Sets the start memory size
-	cacheSize = 1024 * 1024
+	cacheSize   = 1024 * 1024
+	cacheExpire = 1000
 )
 
 var cache = freecache.NewCache(cacheSize)
 
 //Get cached data
-func (this *New) Get() []byte {
+func Get(key string) []byte {
 	//判断是否有缓存
-	var hash = sha256.Create(this.Group + this.Key)
+	var hash = sha256.Create(key)
 	getData, _ := cache.Get([]byte(hash))
+
 	return getData
 }
 
 //Set the cache data
-func (this *New) Set(data interface{}) {
+func Set(key string, value interface{}, expire ...int) {
 	//判断是否有缓存
-	if this.Expire == 0 {
-		this.Expire = 10000
+	var hash = sha256.Create(conv.String(key))
+
+	if len(expire) > 0 {
+		cache.Set([]byte(hash), conv.StructToBytes(value), expire[0])
 	}
-	var hash = sha256.Create(this.Group + this.Key)
-	go cache.Set([]byte(hash), conv.StructToBytes(data), this.Expire)
+	cache.Set([]byte(hash), conv.StructToBytes(value), cacheExpire)
+}
+
+func GetOrSet(key string, value interface{}, expire ...int) []byte {
+	var hash = sha256.Create(key)
+	if len(expire) > 0 {
+		var result, _ = cache.GetOrSet(conv.Bytes(hash), conv.Bytes(value), expire[0])
+		return result
+	}
+	var result, _ = cache.GetOrSet(conv.Bytes(hash), conv.Bytes(value), cacheExpire)
+	return result
 }
 
 //Delete the cache
-func Del(key []byte) bool {
-	result := cache.Del(key)
+func Remove(key string) bool {
+	var hash = sha256.Create(key)
+	result := cache.Del([]byte(hash))
 	return result
 }
 
