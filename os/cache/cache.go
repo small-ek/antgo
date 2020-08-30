@@ -8,8 +8,9 @@ import (
 
 const (
 	//Sets the start memory size
-	cacheSize   = 1024 * 1024
-	cacheExpire = 1000
+	cacheSize = 1024 * 1024
+	//the entry will not be written to the cache. expireSeconds <= 0 means no expire,
+	cacheExpire = 0
 )
 
 var cache = freecache.NewCache(cacheSize)
@@ -29,11 +30,12 @@ func Set(key string, value interface{}, expire ...int) {
 	var hash = sha256.Create(conv.String(key))
 
 	if len(expire) > 0 {
-		cache.Set([]byte(hash), conv.StructToBytes(value), expire[0])
+		cache.Set([]byte(hash), conv.Bytes(value), expire[0])
 	}
-	cache.Set([]byte(hash), conv.StructToBytes(value), cacheExpire)
+	cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
 }
 
+//GetOrSet returns existing value or if record doesn't exist
 func GetOrSet(key string, value interface{}, expire ...int) []byte {
 	var hash = sha256.Create(key)
 	if len(expire) > 0 {
