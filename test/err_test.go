@@ -1,24 +1,12 @@
 package test
 
 import (
-	"errors"
-	"log"
+	"github.com/small-ek/ginp/os/logs"
 	"testing"
 )
 
 func TestErr(t *testing.T) {
-
-
-
-	var err = errors.New("2222")
-	if err != nil {
-		log.Panicln(err)
+	for i := 0; i < 100; i++ {
+		logs.Error("1234")
 	}
-	err = errors.New("1111")
-	if err != nil {
-		log.Println(err)
-	}
-}
-func a() error {
-	return nil
 }
