@@ -12,10 +12,10 @@ import (
 //data 数据
 func Struct(model interface{}, data interface{}) {
 	result, err := json.Marshal(data)
+	err = json.Unmarshal(result, model)
 	if err != nil {
-		log.Print("类型不正确" + err.Error())
+		log.Println(err.Error())
 	}
-	json.Unmarshal(result, model)
 }
 
 //Struct转换绑定 使用gob编码方式一般用于“相似”的两个结构体传输绑定或者RPC通讯
@@ -24,7 +24,7 @@ func StructToBytes(data interface{}) []byte {
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(data)
 	if err != nil {
-		log.Println("Struct转Byte类型不正确" + err.Error())
+		log.Println(err.Error())
 	}
 	return buf.Bytes()
 }

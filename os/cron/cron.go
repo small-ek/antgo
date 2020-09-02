@@ -2,8 +2,8 @@ package cron
 
 import (
 	"errors"
+	"github.com/robfig/cron/v3"
 	"sync"
-	cron "github.com/robfig/cron/v3"
 )
 
 // Crontab crontab manager

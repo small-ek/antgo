@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -97,7 +98,10 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 			send_data = string(send_body)
 		} else {
 			send_body := http.Request{}
-			send_body.ParseForm()
+			err = send_body.ParseForm()
+			if err != nil {
+				log.Println(err.Error())
+			}
 			for k, v := range h.Body {
 				send_body.Form.Add(k, v)
 			}

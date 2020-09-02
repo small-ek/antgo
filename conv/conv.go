@@ -18,7 +18,7 @@ func Rune(i interface{}) rune {
 	if v, ok := i.(rune); ok {
 		return v
 	}
-	return rune(Int32(i))
+	return Int32(i)
 }
 
 //将<i>转换为Runes.
@@ -62,11 +62,10 @@ func Bytes(i interface{}) []byte {
 	default:
 		result, err := json.Marshal(value)
 		if err != nil {
-			log.Println("类型不正确" + err.Error())
+			log.Println(err.Error())
 		}
 		return result
 	}
-	return i.([]byte)
 }
 
 //将<i>转换为String
@@ -224,11 +223,11 @@ func Int64(i interface{}) int64 {
 	case []byte:
 		return int64(binary.BigEndian.Uint64(value))
 	case string:
-		int64, err := strconv.ParseInt(value, 10, 64)
+		str, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			log.Println("数据类型不正确" + err.Error())
+			log.Println(err.Error())
 		}
-		return int64
+		return str
 	}
 	return i.(int64)
 }
@@ -360,22 +359,25 @@ func Float64(i interface{}) float64 {
 func intToBytes(i interface{}) []byte {
 	x := Int64(i)
 	bytesBuffer := bytes.NewBuffer([]byte{})
-	binary.Write(bytesBuffer, binary.BigEndian, x)
+	var err = binary.Write(bytesBuffer, binary.BigEndian, x)
+	if err != nil {
+		log.Println(err.Error())
+	}
 	return bytesBuffer.Bytes()
 }
 
 // float64将<i>转换为Bytes.
 func Float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
-	bytes := make([]byte, 4)
-	binary.LittleEndian.PutUint32(bytes, bits)
-	return bytes
+	result := make([]byte, 4)
+	binary.LittleEndian.PutUint32(result, bits)
+	return result
 }
 
 // float64将<i>转换为Bytes.
 func Float64ToBytes(float float64) []byte {
 	bits := math.Float64bits(float)
-	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, bits)
-	return bytes
+	result := make([]byte, 8)
+	binary.LittleEndian.PutUint64(result, bits)
+	return result
 }

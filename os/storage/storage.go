@@ -1,7 +1,7 @@
 package storage
 
 import (
-	badger "github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/small-ek/ginp/conv"
 	"log"
 )
@@ -38,9 +38,9 @@ func (this *Storage) Set(key string, value interface{}) error {
 
 func (this *Storage) Get(key string) ([]byte, error) {
 	var valNot, valCopy []byte
-	this.Db.View(func(txn *badger.Txn) error {
+	_ = this.Db.View(func(txn *badger.Txn) error {
 		item, _ := txn.Get([]byte(key))
-		item.Value(func(val []byte) error {
+		_ = item.Value(func(val []byte) error {
 			// Copying or parsing val is valid.
 			valCopy = append([]byte{}, val...)
 			// Assigning val slice to another variable is NOT OK.

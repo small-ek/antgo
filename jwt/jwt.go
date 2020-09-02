@@ -50,7 +50,7 @@ func Default() *New {
 }
 
 //创建Jwttoken
-func (this *New) Encrypt(manifest map[string]interface{}) (tokenStr string) {
+func (this *New) Encrypt(manifest map[string]interface{}) string {
 	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(this.PrivateKey)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iat":      time.Now().Unix(),                      // Token颁发时间
@@ -60,20 +60,20 @@ func (this *New) Encrypt(manifest map[string]interface{}) (tokenStr string) {
 	})
 	result, err := token.SignedString(Key)
 	if err != nil {
-		log.Println("error:创建Jwt失败" + err.Error())
+		log.Println(err.Error())
 	}
 	return result
 }
 
 //解密
-func (this *New)Decode(tokenStr string) (manifest map[string]interface{}, err error) {
+func (this *New) Decode(token_str string) (manifest map[string]interface{}, err error) {
 	result := map[string]interface{}{}
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(this.PublicKey)
-	// 基于公钥验证Token合法性
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// 基于JWT的第一部分中的alg字段值进行一次验证
+
+	token, err := jwt.Parse(token_str, func(token *jwt.Token) (interface{}, error) {
+
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, errors.New("验证Token的加密类型错误")
+			return nil, errors.New("Token Encryption Type Error")
 		}
 		return publicKey, nil
 	})
@@ -85,5 +85,5 @@ func (this *New)Decode(tokenStr string) (manifest map[string]interface{}, err er
 		result = claims["manifest"].(map[string]interface{})
 		return result, nil
 	}
-	return result, errors.New("Token无效或者无对应值")
+	return result, errors.New("Token invalid")
 }

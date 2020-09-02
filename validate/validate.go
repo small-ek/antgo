@@ -1,8 +1,8 @@
 package validate
 
 import (
-	"github.com/small-ek/ginp/conv"
 	"errors"
+	"github.com/small-ek/ginp/conv"
 	"log"
 	"regexp"
 	"strconv"

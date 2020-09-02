@@ -30,9 +30,9 @@ func Set(key string, value interface{}, expire ...int) {
 	var hash = sha256.Create(conv.String(key))
 
 	if len(expire) > 0 {
-		cache.Set([]byte(hash), conv.Bytes(value), expire[0])
+		_ = cache.Set([]byte(hash), conv.Bytes(value), expire[0])
 	}
-	cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
+	_ = cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
 }
 
 //GetOrSet returns existing value or if record doesn't exist

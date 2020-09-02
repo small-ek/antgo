@@ -6,55 +6,61 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/ginp/conv"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
 //获取请求的数据
-func Get(this *gin.Context) map[string]interface{} {
+func GetBody(this *gin.Context) map[string]interface{} {
 	var request map[string]interface{}
 	var body []byte
+
 	if this.Request.Body != nil {
 		body, _ = ioutil.ReadAll(this.Request.Body)
 		//把刚刚读出来的再写进去其他地方使用没有
 		this.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}
-	json.Unmarshal(body, &request)
+	var err = json.Unmarshal(body, &request)
+
+	if err != nil {
+		log.Println(err.Error())
+	}
 	return request
 }
 
 //获取请求单个数据
 func GetString(name string, this *gin.Context) string {
-	var request = Get(this)
+	var request = GetBody(this)
 	return conv.String(request[name])
 }
 
 //获取请求单个数据
 func GetBool(name string, this *gin.Context) bool {
-	var request = Get(this)
+	var request = GetBody(this)
 	return conv.Bool(request[name])
 }
 
 //获取请求单个数据
-func GetFloat21(name string, this *gin.Context) float32 {
-	var request = Get(this)
+func GetFloat32(name string, this *gin.Context) float32 {
+	var request = GetBody(this)
 	return conv.Float32(request[name])
 }
 
 //获取请求单个数据
 func GetFloat64(name string, this *gin.Context) float64 {
-	var request = Get(this)
+	var request = GetBody(this)
 	return conv.Float64(request[name])
 }
 
 //获取请求单个数据
 func GetInt(name string, this *gin.Context) int {
-	var request = Get(this)
+	var request = GetBody(this)
 	return conv.Int(request[name])
 }
 
 //获取请求单个数据
 func Param(name string, this *gin.Context) interface{} {
-	var request = Get(this)
+	var request = GetBody(this)
 	return request[name]
 }
 

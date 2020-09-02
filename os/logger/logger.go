@@ -103,8 +103,8 @@ func ToJsonData(args []interface{}) zap.Field {
 			det = append(det, fmt.Sprintf("%+v", v))
 		}
 	}
-	zap := zap.Any("detail", det)
-	return zap
+	result := zap.Any("detail", det)
+	return result
 }
 
 func FormateLog(args []interface{}) *zap.Logger {

@@ -22,9 +22,9 @@ func TimeString(i time.Time) string {
 
 //将<i>转换为time.Time
 func Time(i interface{}) time.Time {
-	time, err := time.Parse("2006-01-02 15:04:05", i.(string))
+	result, err := time.Parse("2006-01-02 15:04:05", i.(string))
 	if err != nil {
-		log.Println("时间转字符串失败" + err.Error())
+		log.Println(err.Error())
 	}
-	return time
+	return result
 }

@@ -17,7 +17,7 @@ func Encode(str [] byte) string {
 func Decode(str string) string {
 	decodeBytes, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
-		log.Print("err:base64 decoding failed" + err.Error())
+		log.Println(err.Error())
 	}
 	return string(decodeBytes)
 }

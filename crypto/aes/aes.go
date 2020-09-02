@@ -79,33 +79,33 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 
 func PKCS5Padding(src []byte, blockSize int) []byte {
 	padding := blockSize - len(src)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, padtext...)
+	fillText := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(src, fillText...)
 }
 
 func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 	length := len(src)
 	if blockSize <= 0 {
-		return nil, errors.New("invalid blocklen")
+		return nil, errors.New("invalid block")
 	}
 
 	if length%blockSize != 0 || length == 0 {
 		return nil, errors.New("invalid data len")
 	}
 
-	unpadding := int(src[length-1])
-	if unpadding > blockSize || unpadding == 0 {
+	unFill := int(src[length-1])
+	if unFill > blockSize || unFill == 0 {
 		return nil, errors.New("invalid padding")
 	}
 
-	padding := src[length-unpadding:]
-	for i := 0; i < unpadding; i++ {
-		if padding[i] != byte(unpadding) {
+	padding := src[length-unFill:]
+	for i := 0; i < unFill; i++ {
+		if padding[i] != byte(unFill) {
 			return nil, errors.New("invalid padding")
 		}
 	}
 
-	return src[:(length - unpadding)], nil
+	return src[:(length - unFill)], nil
 }
 
 // EncryptCFB encrypts <plainText> using CFB mode.
