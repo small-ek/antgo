@@ -35,6 +35,17 @@ func Set(key string, value interface{}, expire ...int) {
 	_ = cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
 }
 
+//Set cache data based on value
+func Sets(value interface{}, expire ...int) {
+	//判断是否有缓存
+	var hash = sha256.Create(conv.String(value))
+
+	if len(expire) > 0 {
+		_ = cache.Set([]byte(hash), conv.Bytes(value), expire[0])
+	}
+	_ = cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
+}
+
 //GetOrSet returns existing value or if record doesn't exist
 func GetOrSet(key string, value interface{}, expire ...int) []byte {
 	var hash = sha256.Create(key)
