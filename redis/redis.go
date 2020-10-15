@@ -32,7 +32,7 @@ func (this *Option) Client() Option {
 	_, err := client.Ping(ctx).Result()
 
 	if err != nil {
-		log.Println("Redis加载失败:" + err.Error())
+		log.Println(err.Error())
 	}
 	return Option{
 		Clients: client,
@@ -61,6 +61,6 @@ func Set(key string, value interface{}, expiration ...int64) {
 
 	err := Option.Set(ctx, key, value, ex).Err()
 	if err != nil {
-		log.Println("redis修改值错误或者配置不正确:" + err.Error())
+		log.Println(err.Error())
 	}
 }

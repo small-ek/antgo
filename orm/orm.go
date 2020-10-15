@@ -2,7 +2,7 @@ package orm
 
 import (
 	"encoding/json"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"strings"
 )
 

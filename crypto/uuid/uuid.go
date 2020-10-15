@@ -34,7 +34,7 @@ func New() UUID {
 func Create() UUID {
 	var result, err = uuid.NewUUID()
 	if err != nil {
-		log.Println("生成失败" + err.Error())
+		log.Println(err.Error())
 	}
 	return result
 }
@@ -46,7 +46,7 @@ func Create() UUID {
 func NewDCEGroup() UUID {
 	var result, err = uuid.NewDCESecurity(DomainGroup, uint32(os.Getgid()))
 	if err != nil {
-		log.Println("生成失败" + err.Error())
+		log.Println(err.Error())
 	}
 	return result
 }
@@ -58,7 +58,7 @@ func NewDCEGroup() UUID {
 func NewDCEPerson() UUID {
 	var result, err = uuid.NewDCESecurity(DomainPerson, uint32(os.Getuid()))
 	if err != nil {
-		log.Println("生成失败" + err.Error())
+		log.Println(err.Error())
 	}
 	return result
 }
@@ -83,10 +83,10 @@ func NewMD5(space UUID, data []byte) UUID {
 //  means the probability is about 0.00000000006 (6 × 10−11),
 //  equivalent to the odds of creating a few tens of trillions of UUIDs in a
 //  year and having one duplicate.
-func NewRandom() (UUID) {
-	var result,err= uuid.NewRandom()
+func NewRandom() UUID {
+	var result, err = uuid.NewRandom()
 	if err != nil {
-		log.Println("生成失败" + err.Error())
+		log.Println(err.Error())
 	}
 	return result
 }
