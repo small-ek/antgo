@@ -1,4 +1,4 @@
-package container
+package maps
 
 import (
 	"sync"
@@ -6,11 +6,11 @@ import (
 
 type Map struct {
 	Map  map[string]interface{}
-	lock sync.RWMutex // 加锁
+	lock *sync.RWMutex // 加锁
 }
 
 // New ...
-func NewMap() *Map {
+func New() *Map {
 	return &Map{Map: make(map[string]interface{})}
 }
 
@@ -64,4 +64,22 @@ func (this *Map) Delete(key string) bool {
 	} else {
 		return true
 	}
+}
+
+// LockFunc locks writing by callback function <f>
+func (this *Map) LockFunc(f func(Map map[string]interface{})) *Map {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+
+	f(this.Map)
+	return this
+}
+
+// LockFunc locks writing by callback function <f>
+func (this *Map) ReadLockFunc(f func(Map map[string]interface{})) *Map {
+	this.lock.RLock()
+	defer this.lock.RUnlock()
+
+	f(this.Map)
+	return this
 }

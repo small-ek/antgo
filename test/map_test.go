@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/container"
+	"github.com/small-ek/ginp/container/maps"
 	"github.com/small-ek/ginp/conv"
 	"log"
 	"sync"
@@ -10,7 +10,7 @@ import (
 
 func TestMap(t *testing.T) {
 
-	var data = container.NewMap()
+	var data = maps.New()
 	wg := sync.WaitGroup{}
 
 	for i := 0; i < 10; i++ {

@@ -2,14 +2,14 @@ package test
 
 import (
 	"fmt"
-	"github.com/small-ek/ginp/container"
+	"github.com/small-ek/ginp/container/array"
 	"testing"
 )
 
 func TestArray(t *testing.T) {
 
 	// 创建并发安全的int类型数组
-	a := container.NewArray()
+	a := array.New()
 
 	// 添加数据项
 	for i := 0; i < 10; i++ {
