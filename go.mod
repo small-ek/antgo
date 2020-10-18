@@ -3,6 +3,7 @@ module github.com/small-ek/ginp
 go 1.14
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/coocood/freecache v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3

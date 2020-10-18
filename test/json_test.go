@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/encoding/jsons"
+	"github.com/small-ek/ginp/encoding/json"
 	"log"
 	"testing"
 )
@@ -20,7 +20,7 @@ func TestJson(t *testing.T) {
 	conv.Struct(&bindRow, data)
 	log.Println(bindRow)*/
 	jsonStr := `
-        {
+        [{
 	"users" : {
 	    "count" : 2,
 	    "list"  : [
@@ -28,9 +28,8 @@ func TestJson(t *testing.T) {
 	        {"name" : "John", "score" : 99.5}
 	    ]
 		}
-	}
+	}]
         `
-	log.Println(jsonStr)
-	/*var result = jsons.DecodeJson(jsonStr).Get("users")
-	log.Println(result["12"])*/
+	var result = json.DecodeArray(jsonStr).Array()
+	log.Println(result)
 }

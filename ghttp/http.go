@@ -1,10 +1,9 @@
-package http
+package ghttp
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,6 +17,11 @@ var (
 	POST          = "POST"
 	PUT           = "PUT"
 	DELETE        = "DELETE"
+	HEAD          = "HEAD"
+	PATCH         = "PATCH"
+	CONNECT       = "CONNECT"
+	OPTIONS       = "OPTIONS"
+	TRACE         = "TRACE"
 	SENDTYPE_JSON = "json"
 )
 
@@ -25,18 +29,17 @@ type HttpSend struct {
 	Link     string
 	SendType string
 	Header   map[string]string
-	Body     map[string]string
+	Body     map[string]interface{}
 	sync.RWMutex
 }
 
-func NewClient(link string) *HttpSend {
+func NewClient() *HttpSend {
 	return &HttpSend{
-		Link:     link,
 		SendType: SENDTYPE_JSON,
 	}
 }
 
-func (h *HttpSend) SetBody(body map[string]string) {
+func (h *HttpSend) SetBody(body map[string]interface{}) {
 	h.Lock()
 	defer h.Unlock()
 	h.Body = body
@@ -54,20 +57,49 @@ func (h *HttpSend) SetSendType(send_type string) {
 	h.SendType = send_type
 }
 
-func (h *HttpSend) Get() ([]byte, error) {
+func (h *HttpSend) Get(url string) ([]byte, error) {
+	h.Link = url
 	return h.send(GET)
 }
 
-func (h *HttpSend) Post() ([]byte, error) {
+func (h *HttpSend) Post(url string) ([]byte, error) {
+	h.Link = url
 	return h.send(POST)
 }
 
-func (h *HttpSend) Put() ([]byte, error) {
+func (h *HttpSend) Put(url string) ([]byte, error) {
+	h.Link = url
 	return h.send(PUT)
 }
 
-func (h *HttpSend) DELETE() ([]byte, error) {
+func (h *HttpSend) Delete(url string) ([]byte, error) {
+	h.Link = url
 	return h.send(DELETE)
+}
+
+func (h *HttpSend) Connect(url string) ([]byte, error) {
+	h.Link = url
+	return h.send(CONNECT)
+}
+
+func (h *HttpSend) Head(url string) ([]byte, error) {
+	h.Link = url
+	return h.send(HEAD)
+}
+
+func (h *HttpSend) Options(url string) ([]byte, error) {
+	h.Link = url
+	return h.send(OPTIONS)
+}
+
+func (h *HttpSend) Trace(url string) ([]byte, error) {
+	h.Link = url
+	return h.send(TRACE)
+}
+
+func (h *HttpSend) Patch(url string) ([]byte, error) {
+	h.Link = url
+	return h.send(PATCH)
 }
 
 func GetUrlBuild(link string, data map[string]string) string {
@@ -82,38 +114,25 @@ func GetUrlBuild(link string, data map[string]string) string {
 
 func (h *HttpSend) send(method string) ([]byte, error) {
 	var (
-		req       *http.Request
-		resp      *http.Response
-		client    http.Client
-		send_data string
-		err       error
+		req    *http.Request
+		resp   *http.Response
+		client http.Client
+		err    error
 	)
 
-	if len(h.Body) > 0 {
-		if strings.ToLower(h.SendType) == SENDTYPE_JSON {
-			send_body, json_err := json.Marshal(h.Body)
-			if json_err != nil {
-				return nil, json_err
-			}
-			send_data = string(send_body)
-		} else {
-			send_body := http.Request{}
-			err = send_body.ParseForm()
-			if err != nil {
-				log.Println(err.Error())
-			}
-			for k, v := range h.Body {
-				send_body.Form.Add(k, v)
-			}
-			send_data = send_body.Form.Encode()
-		}
+	configdata, err := json.Marshal(h.Body)
+	if err != nil {
+		log.Println(err.Error())
 	}
+	var send_data = bytes.NewBuffer(configdata)
 
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-
-	req, err = http.NewRequest(method, h.Link, strings.NewReader(send_data))
+	log.Println(method)
+	log.Println(h.Link)
+	log.Println(send_data)
+	req, err = http.NewRequest(method, h.Link, send_data)
 	if err != nil {
 		return nil, err
 	}
@@ -145,11 +164,8 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("error http code :%d", resp.StatusCode))
-	}
+	defer resp.Body.Close()
 
 	return ioutil.ReadAll(resp.Body)
 }

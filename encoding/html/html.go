@@ -1,10 +1,9 @@
 package html
 
 import (
+	strip "github.com/grokify/html-strip-tags-go"
 	"html"
 	"strings"
-
-	strip "github.com/grokify/html-strip-tags-go"
 )
 
 // 过滤掉HTML标签，只返回text内容
