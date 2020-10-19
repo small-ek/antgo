@@ -61,4 +61,4 @@ Development document: https://www.yuque.com/kaf1xz/lchg15#%20《ginp》
 
 # Agreement
 
-`GF` uses the very friendly [MIT](LICENSE) open source agreement for release, which is permanently `100%` open source and free.
+`Ginp` uses the very friendly [MIT](LICENSE) open source agreement for release, which is permanently `100%` open source and free.
