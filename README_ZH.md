@@ -6,7 +6,7 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/small-ek/ginp)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/small-ek/ginp)
 
-[English](README.MD) | 简体中文
+[English](README.md) | 简体中文
 
 `Ginp(Gin Plus)`是一款模块化、高性能、生产级的Gin基础开发扩展框架。
 实现了完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，

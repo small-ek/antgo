@@ -6,7 +6,7 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/small-ek/ginp)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/small-ek/ginp)
 
-[English](README_ZH.MD) | Simplified Chinese
+[中文](README_ZH.md) | Simplified Chinese
 
 `Ginp (Gin Plus)` is a modular, high-performance, production-level Gin basic development and extension framework.
 A complete infrastructure construction and development tool chain are realized, and common basic development modules are provided,
