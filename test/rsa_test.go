@@ -5,7 +5,8 @@ import (
 	"log"
 	"testing"
 )
-/*var privateKey = []byte(`
+
+var privateKey = []byte(`
 -----BEGIN RSA PRIVATE KEY-----
 MIICWgIBAAKBgQChfYIOm7bOOlHF2VcEwqGaR1OxVT8fpJIjmvz6+k2EbiMo5e6b
 L1pyRUXEVyXf+x06bJtXC1QCOKtwmnUKPAsSrWSP5jYmyLCjNaTJqwcCgyAXMA7k
@@ -29,12 +30,14 @@ VT8fpJIjmvz6+k2EbiMo5e6bL1pyRUXEVyXf+x06bJtXC1QCOKtwmnUKPAsSrWSP
 5jYmyLCjNaTJqwcCgyAXMA7kAVoLRfjTxt4XYSm+P4HS+9w1yLZvsZ1XbRIhxgVH
 DtknkgANt7OREpBYowIDAQAB
 -----END PUBLIC KEY-----
-`)*/
-func TestRSA(t *testing.T)  {
+`)
+
+func TestRSA(t *testing.T) {
 	/*var rsa=rsa.Default()*/
-	for i:=0;i<100;i++{
-		var str1,_= rsa.Default().Encrypt("admin");
+	var result = rsa.Default(publicKey, privateKey)
+	for i := 0; i < 2; i++ {
+		var str1, _ = result.Encrypt("admin")
 		log.Println(str1)
-		log.Println(rsa.Default().Decrypt(str1))
+		log.Println(result.Decrypt(str1))
 	}
 }

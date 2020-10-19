@@ -2,6 +2,7 @@ package orm
 
 import (
 	"encoding/json"
+	. "github.com/small-ek/ginp/conv"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -81,37 +82,50 @@ func WhereQueryBuild(where interface{}) func(db *gorm.DB) *gorm.DB {
 		if where == nil {
 			return db
 		}
+
 		whereArray := where.([]string)
 		var column string
 		var value []interface{}
-
 		for _, v := range whereArray {
-			var arr []string
+			var arr []interface{}
 			json.Unmarshal([]byte(v), &arr)
 
-			if arr[2] != "" {
+			if len(arr) == 3 && arr[2] != "" {
+
 				//判断是否需要拼接
 				if column != "" {
 					column = column + " AND "
 				}
 
 				//检索where条件
-				if strings.Index(" = < > <= >= <> != <=> like likebinary notlike ilike rlike regexp notregexp", arr[1]) > -1 {
+				if arr[1] == "like" || arr[1] == "notlike" || arr[1] == "ilike" || arr[1] == "rlike" {
+					column = column + String(arr[0]) + " " + String(arr[1]) + " ?"
+					value = append(value, String(arr[2])+"%")
 
-					if arr[1] == "like" || arr[1] == "notlike" || arr[1] == "ilike" || arr[1] == "rlike" {
-						value = append(value, arr[2]+"%")
-					} else {
-						value = append(value, arr[2])
+				} else if arr[1] == "between" && arr[2] != "" { //搜索between
+					var betweenStr []string
+					json.Unmarshal(Bytes(arr[2]), &betweenStr)
+					if len(betweenStr) > 1 {
+						column = column + String(arr[0]) + " BETWEEN ? AND ?"
+						value = append(value, betweenStr[0], betweenStr[1])
 					}
 
-					column = column + arr[0] + " " + arr[1] + " ?"
-				} else if strings.Index(" in notin ", arr[1]) > -1 {
-					column = column + arr[0] + " " + arr[1] + " (?)"
+				} else if strings.Index(" in not in", String(arr[1])) > -1 {
+					column = column + String(arr[0]) + " " + String(arr[1]) + " (?)"
+					value = append(value, arr[2])
+
+				} else {
+					column = column + String(arr[0]) + " " + String(arr[1]) + " ?"
 					value = append(value, arr[2])
 				}
-
+			} else if strings.Index("is null is not null", String(arr[1])) > -1 {
+				if column != "" {
+					column = column + " AND "
+				}
+				column = column + String(arr[0]) + " " + String(arr[1])
 			}
 		}
+
 		return db.Where(column, value...)
 	}
 }

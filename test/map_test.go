@@ -20,10 +20,11 @@ func TestMap(t *testing.T) {
 			var key = conv.String(n)
 			var keys = "test" + key
 			var value = "ek" + key
-
+			log.Println(keys)
+			log.Println(value)
 			data.Set(keys, value)
 
-			t.Logf("k=:%v,v:=%v\n,c=:%c", key, data.Get(keys), data.Count())
+			/*t.Logf("k=:%v,v:=%v\n,c=:%c", key, data.Get(keys), data.Count())*/
 			wg.Done()
 		}(i)
 	}

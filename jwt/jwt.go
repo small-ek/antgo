@@ -3,75 +3,47 @@ package jwt
 import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"log"
 	"time"
 )
-
-//密钥格式：PKCS#1
-//密钥位数2048
-var PrivateKey = []byte(`
------BEGIN PRIVATE KEY-----
-MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAMMBf8hUaDk+oCsQ
-ecIJDrRt+EktQaGE+11Un1YWgjelgJR68JcS+2HsSTjkd+aUYFuy7uo7Jc0ugQqN
-xTwPzyJXfIX0J3niM0MM4SNLiqGD+UYGJ3bbBiw33NPT4CQ0/ATKk7Y4kdGXWl9z
-OMqV6YqWau88SpFAUENHj1rJrFKrAgMBAAECgYBEFSTo61dMDSpcfq8T6JeitPZH
-ji5o1wXvqtjKdKdYCEdhD58qD62GnblezJ1z+n+95DX3v1jOTxssdRzUgGx/Ys13
-Ukso6hzNgMOw46zwd8qoWuFuytWWc953FGsr+atWFrvfU8aEjBjWzhlTtFVRPaiS
-42zS7OZzYdmCw/PJaQJBAPu9R23SePtKIufwkg9ejWKyfIwJfLfdrfPL3RSTryGy
-ph6CahWcr19/fMRTJaTYQtfxnXc1quFow3X+IBgfMr0CQQDGTmibUOJGyVrjSNMe
-dTntWaBjMdFRwNdl7EzgUuLePUFs0gbZ6SW5dMsK/3JfzyxYF3XRki7Lupju3Ano
-RGWHAkAN/lCJJ0j4Vv+nuvSzjAL5+If51NEs+1KfGbb5XNhAXEjlq0QwXVxWR6Ts
-2N5f0nGsxU6GgOI103gCCBVKoflVAkBvBzVwSE/4XAJEIOD7O50MM9Ml1p2gjTzM
-Nwovyph0340C9XCajvvtIuQPq0gJNoBYbgIsLRGARWAc1BvD7I9/AkEAgQEnpQEI
-isXUlyKSsakm+M+hzkoJxlizUiM3tN9cIfsIBXdWv9LNGRp2gl8Sa69ri3EdqQXv
-0PcStMOn2IX1kw==
------END PRIVATE KEY-----
-`)
-var PublicKey = []byte(`
------BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDAX/IVGg5PqArEHnCCQ60bfhJ
-LUGhhPtdVJ9WFoI3pYCUevCXEvth7Ek45HfmlGBbsu7qOyXNLoEKjcU8D88iV3yF
-9Cd54jNDDOEjS4qhg/lGBid22wYsN9zT0+AkNPwEypO2OJHRl1pfczjKlemKlmrv
-PEqRQFBDR49ayaxSqwIDAQAB
------END PUBLIC KEY-----
-`)
 
 type New struct {
 	PrivateKey []byte
 	PublicKey  []byte
+	Exp        int64
 }
 
-//默认秘钥
-func Default() *New {
+func Default(PublicKey, PrivateKey []byte, exp ...int64) *New {
+	var Exp = time.Now().Add(time.Hour * 360).Unix()
+	if len(exp) > 0 {
+		Exp = exp[0]
+	}
+
 	return &New{
 		PublicKey:  PublicKey,
 		PrivateKey: PrivateKey,
+		Exp:        Exp,
 	}
 }
 
-//创建Jwttoken
-func (this *New) Encrypt(manifest map[string]interface{}) string {
+func (this *New) Encrypt(manifest map[string]interface{}) (string, error) {
 	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(this.PrivateKey)
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"iat":      time.Now().Unix(),                      // Token颁发时间
-		"nbf":      time.Now().Unix(),                      // Token生效时间
-		"exp":      time.Now().Add(time.Hour * 168).Unix(), // Token过期时间，目前是24小时
-		"manifest": manifest,                               // 主题
-	})
-	result, err := token.SignedString(Key)
-	if err != nil {
-		log.Println(err.Error())
+	if this.Exp == 0 {
+		this.Exp = time.Now().Add(time.Hour * 168).Unix()
 	}
-	return result
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iat":      time.Now().Unix(),
+		"nbf":      time.Now().Unix(),
+		"exp":      this.Exp,
+		"manifest": manifest,
+	})
+	return token.SignedString(Key)
 }
 
-//解密
 func (this *New) Decode(token_str string) (manifest map[string]interface{}, err error) {
 	result := map[string]interface{}{}
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(this.PublicKey)
 
 	token, err := jwt.Parse(token_str, func(token *jwt.Token) (interface{}, error) {
-
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, errors.New("Token Encryption Type Error")
 		}

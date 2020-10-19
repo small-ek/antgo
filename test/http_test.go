@@ -7,7 +7,9 @@ import (
 )
 
 func TestHttp(t *testing.T) {
-	var result, err = ghttp.NewClient().Post("https://www.baidu.com")
+	var result, err = ghttp.Client().SetBody(map[string]interface{}{
+		"test": "test",
+	}).Post("https://www.baidu.com")
 	log.Println(string(result))
 	log.Println(err)
 }

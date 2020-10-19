@@ -9,6 +9,6 @@ import (
 func TestConfig(t *testing.T) {
 	config.SetPath("config.toml")
 	/*log.Println(config.Get["Master"])*/
-	var result = config.Default().Get("Master").Map()
+	var result = config.Default().Get("en").Map()
 	log.Println(result)
 }

@@ -33,28 +33,31 @@ type HttpSend struct {
 	sync.RWMutex
 }
 
-func NewClient() *HttpSend {
+func Client() *HttpSend {
 	return &HttpSend{
 		SendType: SENDTYPE_JSON,
 	}
 }
 
-func (h *HttpSend) SetBody(body map[string]interface{}) {
+func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
 	h.Body = body
+	return h
 }
 
-func (h *HttpSend) SetHeader(header map[string]string) {
+func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
 	h.Header = header
+	return h
 }
 
-func (h *HttpSend) SetSendType(send_type string) {
+func (h *HttpSend) SetSendType(send_type string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
 	h.SendType = send_type
+	return h
 }
 
 func (h *HttpSend) Get(url string) ([]byte, error) {

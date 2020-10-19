@@ -114,6 +114,12 @@ func String(i interface{}) string {
 			return ""
 		}
 		return value.String()
+	default:
+		result, err := json.Marshal(value)
+		if err != nil {
+			log.Println(err.Error())
+		}
+		return string(result)
 	}
 	return i.(string)
 }

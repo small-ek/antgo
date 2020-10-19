@@ -2,7 +2,6 @@ package base64
 
 import (
 	"encoding/base64"
-	"log"
 )
 
 func Encode(str []byte) string {
@@ -10,10 +9,7 @@ func Encode(str []byte) string {
 	return encodeString
 }
 
-func Decode(str string) string {
+func Decode(str string) (string, error) {
 	decodeBytes, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	return string(decodeBytes)
+	return string(decodeBytes), err
 }

@@ -61,25 +61,43 @@ func (this *Result) Get(name interface{}) *Result {
 }
 
 func (this *Result) String() string {
+	if this.Child == nil {
+		return ""
+	}
 	return String(this.Child)
 }
 
 func (this *Result) Int() int {
+	if this.Child == nil {
+		return 0
+	}
 	return Int(this.Child)
 }
 
 func (this *Result) Int64() int64 {
+	if this.Child == nil {
+		return 0
+	}
 	return Int64(this.Child)
 }
 
 func (this *Result) Float64() float64 {
+	if this.Child == nil {
+		return 0
+	}
 	return Float64(this.Child)
 }
 
 func (this *Result) Map() map[string]interface{} {
+	if this.Child == nil {
+		return nil
+	}
 	return this.Child.(map[string]interface{})
 }
 
 func (this *Result) Array() []interface{} {
+	if this.Child == nil {
+		return nil
+	}
 	return this.Child.([]interface{})
 }

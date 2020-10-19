@@ -23,9 +23,9 @@ func Default(router *gin.Engine, port string) *Option {
 	return &Option{
 		&http.Server{
 			Addr:              "127.0.0.1:" + port,
-			ReadTimeout:       120 * time.Second,                                          //设置秒的读超时
-			WriteTimeout:      120 * time.Second,                                          //设置秒的写超时
-			ReadHeaderTimeout: 60 * time.Second,                                           //读取头超时
+			ReadTimeout:       120 * time.Second, //设置秒的读超时
+			WriteTimeout:      120 * time.Second, //设置秒的写超时
+			ReadHeaderTimeout: 60 * time.Second,  //读取头超时
 			IdleTimeout:       120 * time.Second, //空闲超时
 			MaxHeaderBytes:    2097152,
 			Handler:           router,
