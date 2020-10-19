@@ -54,5 +54,5 @@ func Fail(msg string, err ...interface{}) *Write {
 		return &Write{Code: ERROR, Msg: msg, Error: err[0].(string), Data: ""}
 	}
 
-	return &Write{Code: ERROR, Msg: msg, Data: ""}
+	return &Write{Code: ERROR, Msg: msg}
 }

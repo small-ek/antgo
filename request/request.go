@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/small-ek/ginp/conv"
+	. "github.com/small-ek/ginp/conv"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,39 +29,39 @@ func GetBody(this *gin.Context) map[string]interface{} {
 }
 
 //获取请求单个数据
+func Input(name string, this *gin.Context) interface{} {
+	var request = GetBody(this)
+	return request[name]
+}
+
+//获取请求单个数据
 func GetString(name string, this *gin.Context) string {
 	var request = GetBody(this)
-	return conv.String(request[name])
+	return String(request[name])
 }
 
 //获取请求单个数据
 func GetBool(name string, this *gin.Context) bool {
 	var request = GetBody(this)
-	return conv.Bool(request[name])
+	return Bool(request[name])
 }
 
 //获取请求单个数据
 func GetFloat32(name string, this *gin.Context) float32 {
 	var request = GetBody(this)
-	return conv.Float32(request[name])
+	return Float32(request[name])
 }
 
 //获取请求单个数据
 func GetFloat64(name string, this *gin.Context) float64 {
 	var request = GetBody(this)
-	return conv.Float64(request[name])
+	return Float64(request[name])
 }
 
 //获取请求单个数据
 func GetInt(name string, this *gin.Context) int {
 	var request = GetBody(this)
-	return conv.Int(request[name])
-}
-
-//获取请求单个数据
-func Param(name string, this *gin.Context) interface{} {
-	var request = GetBody(this)
-	return request[name]
+	return Int(request[name])
 }
 
 //跨域请求

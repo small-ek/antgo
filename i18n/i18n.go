@@ -24,6 +24,7 @@ func SetLanguage(languages string) {
 			child[key] = value
 		}
 	}
+
 	Result = &Data{
 		Tag: languages,
 		Msg: child,
