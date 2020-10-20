@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-//Json parameter structure.
+//New Json parameter structure.
 type New struct {
 	Child interface{} //json next level.
 }

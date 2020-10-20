@@ -6,7 +6,7 @@ import (
 	"net/smtp"
 )
 
-//Email parameter structure
+//New Email parameter structure
 type New struct {
 	From     string   //Send email
 	To       []string //Accept mailbox
@@ -20,8 +20,6 @@ type New struct {
 	Host     string   //Send email host
 	FilePath []string //Email attachment path
 }
-
-var Config New
 
 //SetFrom Set Send email
 func (this *New) SetFrom(from string) *New {
@@ -78,46 +76,46 @@ func (this *New) SetFilePath(file_path []string) *New {
 }
 
 //Send Email
-func Send() {
+func (this *New) Send() {
 	e := email.NewEmail()
 	//设置发送方的邮箱
-	e.From = Config.From
+	e.From = this.From
 	// 设置接收方的邮箱
-	e.To = Config.To
+	e.To = this.To
 	//设置主题
-	e.Subject = Config.Title
+	e.Subject = this.Title
 	//设置文件发送的内容
-	if Config.Text != "" {
-		e.Text = []byte(Config.Text)
+	if this.Text != "" {
+		e.Text = []byte(this.Text)
 	}
 	//设置文件发送的html
-	if Config.Html != "" {
-		e.HTML = []byte(Config.Html)
+	if this.Html != "" {
+		e.HTML = []byte(this.Html)
 	}
 	//附件
-	if len(Config.FilePath) > 0 {
-		for i := 0; i < len(Config.FilePath); i++ {
-			e.AttachFile(Config.FilePath[i])
+	if len(this.FilePath) > 0 {
+		for i := 0; i < len(this.FilePath); i++ {
+			e.AttachFile(this.FilePath[i])
 		}
 	}
 	//设置服务器相关的配置
-	if Config.Address == "" {
-		Config.Address = "smtp.qq.com:25"
+	if this.Address == "" {
+		this.Address = "smtp.qq.com:25"
 	}
 	//发送地址
-	if Config.Host == "" {
-		Config.Host = "smtp.qq.com"
+	if this.Host == "" {
+		this.Host = "smtp.qq.com"
 	}
 	//设置抄送如果抄送多人逗号隔开
-	if len(Config.Cc) > 0 {
-		e.Cc = Config.Cc
+	if len(this.Cc) > 0 {
+		e.Cc = this.Cc
 	}
 	//设置秘密抄送
-	if len(Config.Bcc) > 0 {
-		e.Bcc = Config.Bcc
+	if len(this.Bcc) > 0 {
+		e.Bcc = this.Bcc
 	}
 
-	err := e.Send(Config.Address, smtp.PlainAuth("", Config.From, Config.Password, Config.Host))
+	err := e.Send(this.Address, smtp.PlainAuth("", this.From, this.Password, this.Host))
 	if err != nil {
 		log.Fatal(err)
 	}

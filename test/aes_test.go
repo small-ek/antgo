@@ -9,8 +9,8 @@ import (
 )
 
 func TestCBC(t *testing.T) {
-	origData := []byte("Hello World") // 待加密的数据
-	key := []byte("ABCDEFGHIJKLMNOP") // 加密的密钥
+	origData := []byte("Hello World")
+	key := []byte("ABCDEFGHIJKLMNOP")
 	log.Println("原文：", string(origData))
 
 	encrypted := aes.EncryptCBC(origData, key)
@@ -21,8 +21,8 @@ func TestCBC(t *testing.T) {
 }
 
 func TestCFB(t *testing.T) {
-	origData := []byte("Hello World") // 待加密的数据
-	key := []byte("ABCDEFGHIJKLMNOP") // 加密的密钥
+	origData := []byte("Hello World")
+	key := []byte("ABCDEFGHIJKLMNOP")
 	log.Println("原文：", string(origData))
 
 	encrypted := aes.EncryptCFB(origData, key)

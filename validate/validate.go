@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+//New Validator default structure
 type New struct {
 	Request interface{}         //Request data
 	Rule    map[string][]string //Validation rules {"require|required", "max:25|maximum length","min:5|minimum length","number|number","email|mailbox",">:8|greater than 8"," <:8|Less than 8","=:8|equal to 8"}

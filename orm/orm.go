@@ -141,7 +141,7 @@ func Order(str string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// 分页
+// Paginate...
 func Paginate(page_size, current_page int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Limit(page_size).Offset((current_page - 1) * page_size)

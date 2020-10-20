@@ -6,22 +6,22 @@ import (
 )
 
 const (
-	ERROR   = 403 //Default error code returned
-	SUCCESS = 200 //Default success code return
+	ERROR   = 403 //ERROR Default error code returned
+	SUCCESS = 200 //SUCCESS Default success code return
 )
 
 //Write Return parameter
 type Write struct {
 	Code  int         `json:"code"`  //Code
-	Msg   string      `json:"msg"`   //Prompt message
+	Msg   string      `json:"msg"`   //Msg Prompt message
 	Data  interface{} `json:"data"`  //Data
 	Error string      `json:"error"` //Error message
 }
 
 //Page Pagination return
 type Page struct {
-	Total int         `json:"total"` //total pages
-	List  interface{} `json:"list"`  //json data
+	Total int         `json:"total"` //Total total pages
+	List  interface{} `json:"list"`  //List json data
 }
 
 //ErrorResponse Error output

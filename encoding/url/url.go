@@ -26,7 +26,7 @@ func RawEncode(str string) string {
 	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
 }
 
-// Decode URL-encoded strings.
+// RawDecode URL-encoded strings.
 // See http://php.net/manual/en/function.rawurldecode.php.
 func RawDecode(str string) (string, error) {
 	return url.QueryUnescape(strings.Replace(str, "%20", "+", -1))

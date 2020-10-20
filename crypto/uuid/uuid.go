@@ -23,7 +23,7 @@ func New() UUID {
 	return uuid.New()
 }
 
-// NewUUID returns a Version 1 UUID based on the current NodeID and clock
+// Create NewUUID returns a Version 1 UUID based on the current NodeID and clock
 // sequence, and the current time.  If the NodeID has not been set by SetNodeID
 // or SetNodeInterface then it will be set automatically.  If the NodeID cannot
 // be set NewUUID returns nil.  If clock sequence has not been set by
