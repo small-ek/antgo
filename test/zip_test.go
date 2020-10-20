@@ -15,10 +15,10 @@ func TestZip(t *testing.T) {
 		panic(err)
 	}
 
-	files, err := zip.Unzip(output, "done")
-	if err != nil {
-		log.Fatal(err)
+	files2, err2 := zip.Unzip(output, "done")
+	if err2 != nil {
+		log.Println(err2)
 	}
-
+	log.Println(files2)
 	log.Println("Zipped File:", output)
 }
