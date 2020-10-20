@@ -10,11 +10,12 @@ import (
 )
 
 var (
-	Group errgroup.Group
+	Group errgroup.Group //Group ...
 )
 
-var Engine *gin.Engine
+var Engine *gin.Engine //Engine ...
 
+//New ...
 type New struct {
 	Server *http.Server
 }
@@ -34,7 +35,7 @@ func Default(router *gin.Engine, port string) *New {
 	}
 }
 
-// Run the service
+//Run the service
 func (this *New) Run() *New {
 	gin.ForceConsoleColor()
 	Group.Go(func() error {
@@ -45,7 +46,7 @@ func (this *New) Run() *New {
 	return this
 }
 
-// Wait Service waiting, multi-service situation waiting at the end
+//Wait Service waiting, multi-service situation waiting at the end
 func Wait() {
 	if err := Group.Wait(); err != nil {
 		log.Fatal(err)

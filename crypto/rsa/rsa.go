@@ -9,7 +9,7 @@ import (
 	"errors"
 )
 
-//New...
+//New ...
 type New struct {
 	PrivateKey []byte
 	PublicKey  []byte

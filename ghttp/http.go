@@ -140,19 +140,17 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 		err    error
 	)
 
-	configdata, err := json.Marshal(h.Body)
+	configData, err := json.Marshal(h.Body)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	var send_data = bytes.NewBuffer(configdata)
+	var sendData = bytes.NewBuffer(configData)
 
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	log.Println(method)
-	log.Println(h.Link)
-	log.Println(send_data)
-	req, err = http.NewRequest(method, h.Link, send_data)
+
+	req, err = http.NewRequest(method, h.Link, sendData)
 	if err != nil {
 		return nil, err
 	}

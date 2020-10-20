@@ -6,8 +6,10 @@ import (
 )
 
 const (
-	ERROR   = 403 //ERROR Default error code returned
-	SUCCESS = 200 //SUCCESS Default success code return
+	//ERROR Default error code returned
+	ERROR = 403
+	//SUCCESS Default success code return
+	SUCCESS = 200
 )
 
 //Write Return parameter
@@ -33,7 +35,7 @@ func ErrorResponse(err error) *Write {
 	}
 }
 
-//Success: Successfully returned
+//Success Successfully returned
 func Success(msg string, data ...interface{}) *Write {
 	var lenData = len(data)
 	if lenData == 1 {
@@ -44,7 +46,7 @@ func Success(msg string, data ...interface{}) *Write {
 	return &Write{Code: SUCCESS, Msg: msg}
 }
 
-//Fail: Error return, the second parameter is passed back to the front end and printed
+//Fail Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...interface{}) *Write {
 	if len(err) > 0 {
 		logger.Write.Error("错误", zap.Any("error", err[0].(string)))

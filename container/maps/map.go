@@ -29,9 +29,8 @@ func (get *Map) Get(key string) interface{} {
 	_, err := get.Map[key]
 	if err {
 		return nil
-	} else {
-		return get.Map[key]
 	}
+	return get.Map[key]
 }
 
 //GetOrSet ...
@@ -42,9 +41,8 @@ func (get *Map) GetOrSet(key string, value interface{}) interface{} {
 	if err {
 		get.Map[key] = value
 		return value
-	} else {
-		return get.Map[key]
 	}
+	return get.Map[key]
 }
 
 //Count ...
@@ -62,9 +60,8 @@ func (get *Map) Delete(key string) bool {
 	_, err := get.Map[key]
 	if err {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
 //LockFunc locks writing by callback function <f>

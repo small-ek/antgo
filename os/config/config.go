@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+//Data config data
 var Data map[string]interface{}
 
 //SetPath Set path.
@@ -17,6 +18,7 @@ func SetPath(path string) {
 	}
 }
 
+//Result ...
 type Result struct {
 	Child interface{}
 }
@@ -74,7 +76,7 @@ func (get *Result) String() string {
 	return conv.String(get.Child)
 }
 
-//String Data type conversion.
+//Strings Data type conversion.
 func (get *Result) Strings() []string {
 	return conv.Strings(get.Child)
 }
@@ -100,7 +102,7 @@ func (get *Result) Int64() int64 {
 	return conv.Int64(get.Child)
 }
 
-//Int64 Data type conversion.
+//Float64 Data type conversion.
 func (get *Result) Float64() float64 {
 	if get.Child == nil {
 		return 0

@@ -36,8 +36,8 @@ func DecodeArray(data string) *New {
 }
 
 //Get the next level of array or json.
-func (this *New) Get(name interface{}) *New {
-	var child = this.Child
+func (get *New) Get(name interface{}) *New {
+	var child = get.Child
 	switch child.(type) {
 	case map[string]interface{}:
 		return &New{
@@ -70,31 +70,31 @@ func (this *New) Get(name interface{}) *New {
 }
 
 //String Data type conversion.
-func (this *New) String() string {
-	return conv.String(this.Child)
+func (get *New) String() string {
+	return conv.String(get.Child)
 }
 
 //Int Data type conversion.
-func (this *New) Int() int {
-	return conv.Int(this.Child)
+func (get *New) Int() int {
+	return conv.Int(get.Child)
 }
 
 //Int64 Data type conversion.
-func (this *New) Int64() int64 {
-	return conv.Int64(this.Child)
+func (get *New) Int64() int64 {
+	return conv.Int64(get.Child)
 }
 
 //Float64 Data type conversion.
-func (this *New) Float64() float64 {
-	return conv.Float64(this.Child)
+func (get *New) Float64() float64 {
+	return conv.Float64(get.Child)
 }
 
 //Map Data type conversion.
-func (this *New) Map() map[string]interface{} {
-	return this.Child.(map[string]interface{})
+func (get *New) Map() map[string]interface{} {
+	return get.Child.(map[string]interface{})
 }
 
 //Array Data type conversion.
-func (this *New) Array() []interface{} {
-	return this.Child.([]interface{})
+func (get *New) Array() []interface{} {
+	return get.Child.([]interface{})
 }
