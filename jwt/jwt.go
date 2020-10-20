@@ -6,12 +6,14 @@ import (
 	"time"
 )
 
+//Jwt parameter
 type New struct {
-	PrivateKey []byte
-	PublicKey  []byte
-	Exp        int64
+	PrivateKey []byte //Private key
+	PublicKey  []byte //Public key
+	Exp        int64  //Expiration timestamp
 }
 
+//Default function
 func Default(PublicKey, PrivateKey []byte, exp ...int64) *New {
 	var Exp = time.Now().Add(time.Hour * 360).Unix()
 	if len(exp) > 0 {
@@ -25,6 +27,7 @@ func Default(PublicKey, PrivateKey []byte, exp ...int64) *New {
 	}
 }
 
+//Jwt Encrypt
 func (this *New) Encrypt(manifest map[string]interface{}) (string, error) {
 	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(this.PrivateKey)
 	if this.Exp == 0 {
@@ -39,6 +42,7 @@ func (this *New) Encrypt(manifest map[string]interface{}) (string, error) {
 	return token.SignedString(Key)
 }
 
+//Jwt Decode
 func (this *New) Decode(token_str string) (manifest map[string]interface{}, err error) {
 	result := map[string]interface{}{}
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(this.PublicKey)
