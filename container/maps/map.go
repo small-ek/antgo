@@ -16,50 +16,50 @@ func New() *Map {
 }
 
 //Set ...
-func (this *Map) Set(key string, value interface{}) {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	this.Map[key] = value
+func (get *Map) Set(key string, value interface{}) {
+	get.lock.Lock()
+	defer get.lock.Unlock()
+	get.Map[key] = value
 }
 
 //Get ...
-func (this *Map) Get(key string) interface{} {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	_, err := this.Map[key]
+func (get *Map) Get(key string) interface{} {
+	get.lock.Lock()
+	defer get.lock.Unlock()
+	_, err := get.Map[key]
 	if err {
 		return nil
 	} else {
-		return this.Map[key]
+		return get.Map[key]
 	}
 }
 
 //GetOrSet ...
-func (this *Map) GetOrSet(key string, value interface{}) interface{} {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	_, err := this.Map[key]
+func (get *Map) GetOrSet(key string, value interface{}) interface{} {
+	get.lock.Lock()
+	defer get.lock.Unlock()
+	_, err := get.Map[key]
 	if err {
-		this.Map[key] = value
+		get.Map[key] = value
 		return value
 	} else {
-		return this.Map[key]
+		return get.Map[key]
 	}
 }
 
 //Count ...
-func (this *Map) Count() int {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	return len(this.Map)
+func (get *Map) Count() int {
+	get.lock.Lock()
+	defer get.lock.Unlock()
+	return len(get.Map)
 }
 
 //Delete ...
-func (this *Map) Delete(key string) bool {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	delete(this.Map, key)
-	_, err := this.Map[key]
+func (get *Map) Delete(key string) bool {
+	get.lock.Lock()
+	defer get.lock.Unlock()
+	delete(get.Map, key)
+	_, err := get.Map[key]
 	if err {
 		return false
 	} else {
@@ -68,19 +68,19 @@ func (this *Map) Delete(key string) bool {
 }
 
 //LockFunc locks writing by callback function <f>
-func (this *Map) LockFunc(f func(Map map[string]interface{})) *Map {
-	this.lock.Lock()
-	defer this.lock.Unlock()
+func (get *Map) LockFunc(f func(Map map[string]interface{})) *Map {
+	get.lock.Lock()
+	defer get.lock.Unlock()
 
-	f(this.Map)
-	return this
+	f(get.Map)
+	return get
 }
 
-//LockFunc locks writing by callback function <f>
-func (this *Map) ReadLockFunc(f func(Map map[string]interface{})) *Map {
-	this.lock.RLock()
-	defer this.lock.RUnlock()
+//ReadLockFunc locks writing by callback function <f>
+func (get *Map) ReadLockFunc(f func(Map map[string]interface{})) *Map {
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 
-	f(this.Map)
-	return this
+	f(get.Map)
+	return get
 }

@@ -29,7 +29,7 @@ func Create(filename string, files []string) error {
 	return nil
 }
 
-//AddFileToZip...
+//AddFileToZip ...
 func AddFileToZip(zipWriter *zip.Writer, filename string) error {
 
 	fileToZip, err := os.Open(filename)

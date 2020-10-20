@@ -27,29 +27,29 @@ func Default(PublicKey, PrivateKey []byte, exp ...int64) *New {
 	}
 }
 
-//Encrypt...
-func (this *New) Encrypt(manifest map[string]interface{}) (string, error) {
-	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(this.PrivateKey)
-	if this.Exp == 0 {
-		this.Exp = time.Now().Add(time.Hour * 168).Unix()
+//Encrypt ...
+func (get *New) Encrypt(manifest map[string]interface{}) (string, error) {
+	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(get.PrivateKey)
+	if get.Exp == 0 {
+		get.Exp = time.Now().Add(time.Hour * 168).Unix()
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iat":      time.Now().Unix(),
 		"nbf":      time.Now().Unix(),
-		"exp":      this.Exp,
+		"exp":      get.Exp,
 		"manifest": manifest,
 	})
 	return token.SignedString(Key)
 }
 
-//Decode...
-func (this *New) Decode(token_str string) (manifest map[string]interface{}, err error) {
+//Decode ...
+func (get *New) Decode(tokenStr string) (manifest map[string]interface{}, err error) {
 	result := map[string]interface{}{}
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(this.PublicKey)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(get.PublicKey)
 
-	token, err := jwt.Parse(token_str, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, errors.New("Token Encryption Type Error")
+			return nil, errors.New("token encryption type error")
 		}
 		return publicKey, nil
 	})
@@ -61,5 +61,5 @@ func (this *New) Decode(token_str string) (manifest map[string]interface{}, err 
 		result = claims["manifest"].(map[string]interface{})
 		return result, nil
 	}
-	return result, errors.New("Token invalid")
+	return result, errors.New("token invalid")
 }

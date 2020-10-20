@@ -34,20 +34,20 @@ func Default(path string) *New {
 }
 
 //SetPath Set log path
-func (this *New) SetPath() *zap.Logger {
+func (get *New) SetPath() *zap.Logger {
 	// Log split
 	hook := lumberjack.Logger{
-		Filename:   this.Path,
-		MaxSize:    this.MaxSize,
-		MaxBackups: this.MaxBackups,
-		MaxAge:     this.MaxAge,
-		Compress:   this.Compress,
+		Filename:   get.Path,
+		MaxSize:    get.MaxSize,
+		MaxBackups: get.MaxBackups,
+		MaxAge:     get.MaxAge,
+		Compress:   get.Compress,
 	}
 	WriteSyncer := zapcore.AddSync(&hook)
 	// Set log level
 	// debug->info->warn->error
 	var level zapcore.Level
-	switch this.Level {
+	switch get.Level {
 	case "debug":
 		level = zap.DebugLevel
 	case "info":
@@ -86,14 +86,14 @@ func (this *New) SetPath() *zap.Logger {
 	// Open document and line number
 	development := zap.Development()
 	// Set the initialization field, such as: add a server name
-	filed := zap.Fields(zap.String("serviceName", this.ServiceName))
+	filed := zap.Fields(zap.String("serviceName", get.ServiceName))
 	// Construction log
 	Write = zap.New(core, caller, development, filed)
 	defer Write.Sync()
 	return Write
 }
 
-//ToJsonData...
+//ToJsonData
 func ToJsonData(args []interface{}) zap.Field {
 	det := make([]string, 0)
 	if len(args) > 0 {
@@ -105,18 +105,18 @@ func ToJsonData(args []interface{}) zap.Field {
 	return result
 }
 
-//FormateLog...
+//FormateLog
 func FormateLog(args []interface{}) *zap.Logger {
 	log := Write.With(ToJsonData(args))
 	return log
 }
 
-//Debug...
+//Debug
 func Debug(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Debugf(msg)
 }
 
-//Error...
+//Error
 func Error(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Errorf(msg)
 }

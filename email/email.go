@@ -22,100 +22,100 @@ type New struct {
 }
 
 //SetFrom Set Send email
-func (this *New) SetFrom(from string) *New {
-	this.From = from
-	return this
+func (get *New) SetFrom(from string) *New {
+	get.From = from
+	return get
 }
 
 //SetTo Set To
-func (this *New) SetTo(to []string) *New {
-	this.To = to
-	return this
+func (get *New) SetTo(to []string) *New {
+	get.To = to
+	return get
 }
 
 //SetTitle Set Title
-func (this *New) SetTitle(title string) *New {
-	this.Title = title
-	return this
+func (get *New) SetTitle(title string) *New {
+	get.Title = title
+	return get
 }
 
 //SetText Set Text
-func (this *New) SetText(text string) *New {
-	this.Text = text
-	return this
+func (get *New) SetText(text string) *New {
+	get.Text = text
+	return get
 }
 
 //SetHtml Set Html
-func (this *New) SetHtml(html string) *New {
-	this.Html = html
-	return this
+func (get *New) SetHtml(html string) *New {
+	get.Html = html
+	return get
 }
 
 //SetPassword Set Password
-func (this *New) SetPassword(password string) *New {
-	this.Password = password
-	return this
+func (get *New) SetPassword(password string) *New {
+	get.Password = password
+	return get
 }
 
 //SetAddress Set Address
-func (this *New) SetAddress(address string) *New {
-	this.Address = address
-	return this
+func (get *New) SetAddress(address string) *New {
+	get.Address = address
+	return get
 }
 
 //SetHost Set Host
-func (this *New) SetHost(host string) *New {
-	this.Host = host
-	return this
+func (get *New) SetHost(host string) *New {
+	get.Host = host
+	return get
 }
 
 //SetFilePath Set Email attachment path
-func (this *New) SetFilePath(file_path []string) *New {
-	this.FilePath = file_path
-	return this
+func (get *New) SetFilePath(filePath []string) *New {
+	get.FilePath = filePath
+	return get
 }
 
 //Send Email
-func (this *New) Send() {
+func (get *New) Send() {
 	e := email.NewEmail()
 	//设置发送方的邮箱
-	e.From = this.From
+	e.From = get.From
 	// 设置接收方的邮箱
-	e.To = this.To
+	e.To = get.To
 	//设置主题
-	e.Subject = this.Title
+	e.Subject = get.Title
 	//设置文件发送的内容
-	if this.Text != "" {
-		e.Text = []byte(this.Text)
+	if get.Text != "" {
+		e.Text = []byte(get.Text)
 	}
 	//设置文件发送的html
-	if this.Html != "" {
-		e.HTML = []byte(this.Html)
+	if get.Html != "" {
+		e.HTML = []byte(get.Html)
 	}
 	//附件
-	if len(this.FilePath) > 0 {
-		for i := 0; i < len(this.FilePath); i++ {
-			e.AttachFile(this.FilePath[i])
+	if len(get.FilePath) > 0 {
+		for i := 0; i < len(get.FilePath); i++ {
+			e.AttachFile(get.FilePath[i])
 		}
 	}
 	//设置服务器相关的配置
-	if this.Address == "" {
-		this.Address = "smtp.qq.com:25"
+	if get.Address == "" {
+		get.Address = "smtp.qq.com:25"
 	}
 	//发送地址
-	if this.Host == "" {
-		this.Host = "smtp.qq.com"
+	if get.Host == "" {
+		get.Host = "smtp.qq.com"
 	}
 	//设置抄送如果抄送多人逗号隔开
-	if len(this.Cc) > 0 {
-		e.Cc = this.Cc
+	if len(get.Cc) > 0 {
+		e.Cc = get.Cc
 	}
 	//设置秘密抄送
-	if len(this.Bcc) > 0 {
-		e.Bcc = this.Bcc
+	if len(get.Bcc) > 0 {
+		e.Bcc = get.Bcc
 	}
 
-	err := e.Send(this.Address, smtp.PlainAuth("", this.From, this.Password, this.Host))
+	err := e.Send(get.Address, smtp.PlainAuth("", get.From, get.Password, get.Host))
 	if err != nil {
 		log.Fatal(err)
 	}

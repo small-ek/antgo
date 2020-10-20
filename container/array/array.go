@@ -21,10 +21,10 @@ func (get *Array) Append(value interface{}) {
 }
 
 //Len Count Array
-func (this *Array) Len() int {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	return len(this.Slice)
+func (get *Array) Len() int {
+	get.lock.Lock()
+	defer get.lock.Unlock()
+	return len(get.Slice)
 }
 
 //List Array

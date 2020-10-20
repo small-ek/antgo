@@ -59,10 +59,10 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 }
 
 //SetSendType Set Type
-func (h *HttpSend) SetSendType(send_type string) *HttpSend {
+func (h *HttpSend) SetSendType(sendType string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
-	h.SendType = send_type
+	h.SendType = sendType
 	return h
 }
 
@@ -114,13 +114,13 @@ func (h *HttpSend) Trace(url string) ([]byte, error) {
 	return h.send(TRACE)
 }
 
-//Patch...
+//Patch ...
 func (h *HttpSend) Patch(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(PATCH)
 }
 
-//GetUrlBuild...
+//GetUrlBuild ...
 func GetUrlBuild(link string, data map[string]string) string {
 	u, _ := url.Parse(link)
 	q := u.Query()
@@ -131,7 +131,7 @@ func GetUrlBuild(link string, data map[string]string) string {
 	return u.String()
 }
 
-//send...
+//send ...
 func (h *HttpSend) send(method string) ([]byte, error) {
 	var (
 		req    *http.Request
