@@ -6,63 +6,78 @@ import (
 	"net/smtp"
 )
 
-type Data struct {
-	From     string
-	To       []string
-	Cc       []string
-	Bcc      []string
-	Title    string
-	Text     string
-	Html     string
-	Password string
-	Address  string
-	Host     string
-	FilePath []string
+//Email parameter structure
+type New struct {
+	From     string   //Send email
+	To       []string //Accept mailbox
+	Cc       []string //Set cc
+	Bcc      []string //Set Bcc
+	Title    string   //Email title
+	Text     string   //Email Text
+	Html     string   //Email Html
+	Password string   //Email password
+	Address  string   //Send email address
+	Host     string   //Send email host
+	FilePath []string //Email attachment path
 }
 
-var Config Data
+var Config New
 
-func (this *Data) SetFrom(from string) *Data {
+//SetFrom Set Send email
+func (this *New) SetFrom(from string) *New {
 	this.From = from
 	return this
 }
 
-func (this *Data) SetTo(to []string) *Data {
+//SetTo Set To
+func (this *New) SetTo(to []string) *New {
 	this.To = to
 	return this
 }
 
-func (this *Data) SetTitle(title string) *Data {
+//SetTitle Set Title
+func (this *New) SetTitle(title string) *New {
 	this.Title = title
 	return this
 }
 
-func (this *Data) SetText(text string) *Data {
+//SetText Set Text
+func (this *New) SetText(text string) *New {
 	this.Text = text
 	return this
 }
-func (this *Data) SetHtml(html string) *Data {
+
+//SetHtml Set Html
+func (this *New) SetHtml(html string) *New {
 	this.Html = html
 	return this
 }
-func (this *Data) SetPassword(password string) *Data {
+
+//SetPassword Set Password
+func (this *New) SetPassword(password string) *New {
 	this.Password = password
 	return this
 }
 
-func (this *Data) SetAddress(address string) *Data {
+//SetAddress Set Address
+func (this *New) SetAddress(address string) *New {
 	this.Address = address
 	return this
 }
 
-func (this *Data) SetHost(host string) *Data {
+//SetHost Set Host
+func (this *New) SetHost(host string) *New {
 	this.Host = host
 	return this
 }
-func (this *Data) SetFilePath(file_path []string) *Data {
+
+//SetFilePath Set Email attachment path
+func (this *New) SetFilePath(file_path []string) *New {
 	this.FilePath = file_path
 	return this
 }
+
+//Send Email
 func Send() {
 	e := email.NewEmail()
 	//设置发送方的邮箱

@@ -10,19 +10,18 @@ import (
 )
 
 type New struct {
-	Request interface{}         //请求数据
-	Rule    map[string][]string //验证规则 {"require|必填", "max:25|最大长度","min:5|最小长度","number|数值","email|邮箱",">:8|大于8","<:8|小于8","=:8|等于8"}
-	Scene   []string            //检测的字段
+	Request interface{}         //Request data
+	Rule    map[string][]string //Validation rules {"require|required", "max:25|maximum length","min:5|minimum length","number|number","email|mailbox",">:8|greater than 8"," <:8|Less than 8","=:8|equal to 8"}
+	Scene   []string            //Detected field
 }
 
-// 表单验证器规则
+//CheckRule Form validator rules
 func (this *New) CheckRule() error {
 	var Scene = this.Scene
 	var request map[string]string
 	conv.Struct(&request, this.Request)
 	//循环要验证的数据
 	for a := 0; a < len(Scene); a++ {
-
 		var rowRule = this.Rule[Scene[a]]
 		//循环需要验证的规则
 		for b := 0; b < len(rowRule); b++ {
@@ -37,7 +36,7 @@ func (this *New) CheckRule() error {
 }
 
 //TODO
-//验证字段可以定义自己需要的规则
+//CheckItem The validation field can define the rules you need
 func CheckItem(value string, Rule string) error {
 	var message = strings.Split(Rule, "|")
 	var newValue = strings.Split(message[0], ":")

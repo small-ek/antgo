@@ -14,7 +14,7 @@ type New struct {
 	PublicKey  []byte
 }
 
-//默认秘钥
+//Default Default key
 func Default(publicKey, privateKey []byte) *New {
 	return &New{
 		PublicKey:  publicKey,
@@ -22,13 +22,12 @@ func Default(publicKey, privateKey []byte) *New {
 	}
 }
 
-// RSA加密
+// Encrypt RSA encryption
 func (this *New) Encrypt(origData string) (string, error) {
 	block, _ := pem.Decode(this.PublicKey)
 	if block == nil {
 		return "", errors.New("Public key error")
 	}
-
 	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		return "", err
@@ -39,14 +38,13 @@ func (this *New) Encrypt(origData string) (string, error) {
 	return encodeString, err
 }
 
-// RSA解密
+// Decrypt RSA decryption
 func (this *New) Decrypt(ciphertext string) (string, error) {
 	decodeBytes, _ := base64.StdEncoding.DecodeString(ciphertext)
 	block, _ := pem.Decode(this.PrivateKey)
 	if block == nil {
 		return "", errors.New("Decryption failed")
 	}
-
 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return "", err

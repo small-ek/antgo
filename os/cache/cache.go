@@ -35,7 +35,7 @@ func Set(key string, value interface{}, expire ...int) {
 	_ = cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
 }
 
-//Set cache data based on value
+//Sets cache data based on value
 func Sets(value interface{}, expire ...int) {
 	//判断是否有缓存
 	var hash = hash.Sha256(conv.String(value))
@@ -57,7 +57,7 @@ func GetOrSet(key string, value interface{}, expire ...int) []byte {
 	return result
 }
 
-//Delete the cache
+//Remove Delete the cache
 func Remove(key string) bool {
 	var hash = hash.Sha256(key)
 	result := cache.Del([]byte(hash))

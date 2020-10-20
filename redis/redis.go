@@ -9,23 +9,26 @@ import (
 
 var ctx = context.Background()
 
-type Option struct {
-	Addr     string //地址
+//Redis parameter structure
+type New struct {
+	Addr     string //Address
 	Password string //no password set
 	DB       int    //use default DB
 	Clients  *redis.Client
 }
 
-func Default(Addr, Password string, DB int) *Option {
-	return &Option{
-		Addr:     Addr,
+//Default setting redis
+func Default(Addr, Password string, DB int) *New {
+	return &New{
+		Addr:     Addr,     //Address
 		Password: Password, // no password set
 		DB:       DB,       // use default DB
 	}
 }
-func (this *Option) Client() Option {
+
+func (this *New) Client() New {
 	client := redis.NewClient(&redis.Options{
-		Addr:     this.Addr,
+		Addr:     this.Addr,     //Address
 		Password: this.Password, // no password set
 		DB:       this.DB,       // use default DB
 	})
@@ -34,14 +37,14 @@ func (this *Option) Client() Option {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	return Option{
+	return New{
 		Clients: client,
 	}
 }
 
-//获取值
+//Get value
 func Get(key string) string {
-	var Option = new(Option).Client().Clients
+	var Option = new(New).Client().Clients
 	var result, err = Option.Get(ctx, key).Result()
 	if err != nil {
 		return ""
@@ -49,10 +52,10 @@ func Get(key string) string {
 	return result
 }
 
-//修改Redis
+//Set value
 func Set(key string, value interface{}, expiration ...int64) {
 	var ex time.Duration
-	var Option = new(Option).Client().Clients
+	var Option = new(New).Client().Clients
 	if len(expiration) > 0 {
 		ex = time.Duration(expiration[0])
 	} else {

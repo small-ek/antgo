@@ -7,19 +7,21 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+//Inherit zap log
 var Write *zap.Logger
 
+//Log parameter structure
 type New struct {
-	Path        string //保存路径
-	Level       string //设置日志级别,info debug warn
-	MaxBackups  int    //保留30个备份，默认300个
-	MaxSize     int    //每个日志文件保存10M，默认 10M
-	MaxAge      int    //保留7天，默认30天
-	Compress    bool   //是否压缩,默认不压缩
-	ServiceName string //日志服务名称,默认serviceName1
+	Path        string //Save Path
+	Level       string //Set log level,info debug warn
+	MaxBackups  int    //Keep 30 backups, 300 by default
+	MaxSize     int    //Each log file saves 10M, the default is 10M
+	MaxAge      int    //7 days reserved, 30 days by default
+	Compress    bool   //Whether to compress, no compression by default
+	ServiceName string //Log service name, default Ginp
 }
 
-//默认设置日志
+//Default setting log
 func Default(path string) *New {
 	return &New{
 		Path:        path,
@@ -27,26 +29,22 @@ func Default(path string) *New {
 		MaxBackups:  300,
 		MaxAge:      30,
 		Compress:    false,
-		ServiceName: "serviceName1",
+		ServiceName: "Ginp",
 	}
 }
 
-// logpath 日志文件路径
-// loglevel 日志级别
-func (this *New) Load() *zap.Logger {
-	// 日志分割
+// Set log path
+func (this *New) SetPath() *zap.Logger {
+	// Log split
 	hook := lumberjack.Logger{
-		Filename:   this.Path,       // 日志文件路径，默认 os.TempDir()
-		MaxSize:    this.MaxSize,    // 每个日志文件保存10M，默认 100M
-		MaxBackups: this.MaxBackups, // 保留30个备份，默认不限
-		MaxAge:     this.MaxAge,     // 保留7天，默认不限
-		Compress:   this.Compress,   // 是否压缩，默认不压缩
+		Filename:   this.Path,
+		MaxSize:    this.MaxSize,
+		MaxBackups: this.MaxBackups,
+		MaxAge:     this.MaxAge,
+		Compress:   this.Compress,
 	}
 	WriteSyncer := zapcore.AddSync(&hook)
-	// 设置日志级别
-	// debug 可以打印出 info debug warn
-	// info  级别可以打印 warn info
-	// warn  只能打印 warn
+	// Set log level
 	// debug->info->warn->error
 	var level zapcore.Level
 	switch this.Level {
@@ -59,7 +57,6 @@ func (this *New) Load() *zap.Logger {
 	default:
 		level = zap.InfoLevel
 	}
-
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -68,13 +65,13 @@ func (this *New) Load() *zap.Logger {
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,  // 小写编码器
+		EncodeLevel:    zapcore.LowercaseLevelEncoder,  // Lowercase encoder
 		EncodeTime:     zapcore.ISO8601TimeEncoder,     // ISO8601 UTC 时间格式
 		EncodeDuration: zapcore.SecondsDurationEncoder, //
-		EncodeCaller:   zapcore.FullCallerEncoder,      // 全路径编码器
+		EncodeCaller:   zapcore.FullCallerEncoder,      // Full path encoder
 		EncodeName:     zapcore.FullNameEncoder,
 	}
-	// 设置日志级别
+	// Set log level
 	atomicLevel := zap.NewAtomicLevel()
 	atomicLevel.SetLevel(level)
 	core := zapcore.NewCore(
@@ -84,13 +81,13 @@ func (this *New) Load() *zap.Logger {
 		WriteSyncer,
 		level,
 	)
-	// 开启开发模式，堆栈跟踪
+	// Open development mode, stack trace
 	caller := zap.AddCaller()
-	// 开启文件及行号
+	// Open document and line number
 	development := zap.Development()
-	// 设置初始化字段,如：添加一个服务器名称
+	// Set the initialization field, such as: add a server name
 	filed := zap.Fields(zap.String("serviceName", this.ServiceName))
-	// 构造日志
+	// Construction log
 	Write = zap.New(core, caller, development, filed)
 	defer Write.Sync()
 	return Write
@@ -112,32 +109,32 @@ func FormateLog(args []interface{}) *zap.Logger {
 	return log
 }
 
-//调试打印 debug
+//Debug...
 func Debug(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Debugf(msg)
 }
 
-//打印 error
+//Error...
 func Error(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Errorf(msg)
 }
 
-//打印 warn
+//Warn...
 func Warn(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Warn(msg)
 }
 
-//打印 Panic报错并记录
+//Panic...
 func Panic(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Panic(msg)
 }
 
-//默认打印 info
+//Info Print log by default
 func Info(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Infof(msg)
 }
 
-//异步打印 info
+//AsyncInfo Asynchronous print log
 func AsyncInfo(msg string, args ...interface{}) {
 	go func() {
 		FormateLog(args).Sugar().Infof(msg)

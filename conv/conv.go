@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-//基本类型转换
+//Basic type conversion
 
-//将<i>转换为Rune.
+//Rune Convert <i> to Rune.
 func Rune(i interface{}) rune {
 	if v, ok := i.(rune); ok {
 		return v
@@ -21,7 +21,7 @@ func Rune(i interface{}) rune {
 	return Int32(i)
 }
 
-//将<i>转换为Runes.
+//Runes Convert <i> to []rune.
 func Runes(i interface{}) []rune {
 	if v, ok := i.([]rune); ok {
 		return v
@@ -29,7 +29,7 @@ func Runes(i interface{}) []rune {
 	return []rune(String(i))
 }
 
-//将<i>转换为Byte.
+//Byte Convert <i> to byte.
 func Byte(i interface{}) byte {
 	if v, ok := i.(byte); ok {
 		return v
@@ -37,14 +37,13 @@ func Byte(i interface{}) byte {
 	return Uint8(i)
 }
 
-// 将<i>转换为Bytes.
+//Bytes Convert <i> to []byte.
 func Bytes(i interface{}) []byte {
 	if i == nil {
 		return nil
 	}
 
 	switch value := i.(type) {
-
 	case string:
 		return []byte(value)
 	case []byte:
@@ -68,7 +67,7 @@ func Bytes(i interface{}) []byte {
 	}
 }
 
-//将<i>转换为String
+//String Convert <i> to String.
 func String(i interface{}) string {
 	if i == nil {
 		return ""
@@ -124,7 +123,7 @@ func String(i interface{}) string {
 	return i.(string)
 }
 
-//将<i>转换为Bool
+//Bool converts <i> to Bool.
 func Bool(i interface{}) bool {
 	if i == nil {
 		return false
@@ -147,7 +146,7 @@ func Bool(i interface{}) bool {
 	return false
 }
 
-//将<i>转换为Int
+//Int converts <i> to int.
 func Int(i interface{}) int {
 	if i == nil {
 		return 0
@@ -158,7 +157,7 @@ func Int(i interface{}) int {
 	return int(Int64(i))
 }
 
-//将<i>转换为Int8
+//Int8 converts <i> to int8.
 func Int8(i interface{}) int8 {
 	if i == nil {
 		return 0
@@ -169,7 +168,7 @@ func Int8(i interface{}) int8 {
 	return int8(Int64(i))
 }
 
-//将<i>转换为Int16
+//Int16 converts <i> to int16.
 func Int16(i interface{}) int16 {
 	if i == nil {
 		return 0
@@ -180,7 +179,7 @@ func Int16(i interface{}) int16 {
 	return int16(Int64(i))
 }
 
-//将<i>转换为Int32
+//Int32 converts <i> to int32.
 func Int32(i interface{}) int32 {
 	if i == nil {
 		return 0
@@ -191,7 +190,7 @@ func Int32(i interface{}) int32 {
 	return int32(Int64(i))
 }
 
-//将<i>转换为Int64
+//Int64 converts <i> to int64.
 func Int64(i interface{}) int64 {
 	if i == nil {
 		return 0
@@ -238,7 +237,7 @@ func Int64(i interface{}) int64 {
 	return i.(int64)
 }
 
-//将<i>转换为Uint
+//Uint converts <i> to uint.
 func Uint(i interface{}) uint {
 	if i == nil {
 		return 0
@@ -249,7 +248,7 @@ func Uint(i interface{}) uint {
 	return uint(Uint64(i))
 }
 
-//将<i>转换为Uint8
+//Uint8 converts <i> to uint8.
 func Uint8(i interface{}) uint8 {
 	if i == nil {
 		return 0
@@ -260,7 +259,7 @@ func Uint8(i interface{}) uint8 {
 	return uint8(Uint64(i))
 }
 
-//将<i>转换为Uint16
+//Uint16 converts <i> to uint16.
 func Uint16(i interface{}) uint16 {
 	if i == nil {
 		return 0
@@ -271,7 +270,7 @@ func Uint16(i interface{}) uint16 {
 	return uint16(Uint64(i))
 }
 
-//将<i>转换为Uint32
+//Uint32 converts <i> to uint32.
 func Uint32(i interface{}) uint32 {
 	if i == nil {
 		return 0
@@ -282,7 +281,7 @@ func Uint32(i interface{}) uint32 {
 	return uint32(Uint64(i))
 }
 
-//将<i>转换为Uint64
+//Uint64 converts <i> to uint64.
 func Uint64(i interface{}) uint64 {
 	if i == nil {
 		return 0
@@ -324,7 +323,7 @@ func Uint64(i interface{}) uint64 {
 	return i.(uint64)
 }
 
-// 将<i>转换为Float32
+//Float32 converts <i> to float32.
 func Float32(i interface{}) float32 {
 	if i == nil {
 		return 0
@@ -343,7 +342,7 @@ func Float32(i interface{}) float32 {
 	}
 }
 
-// 将<i>转换为Float64
+//Float64 converts <i> to float64.
 func Float64(i interface{}) float64 {
 	if i == nil {
 		return 0
@@ -361,7 +360,7 @@ func Float64(i interface{}) float64 {
 	}
 }
 
-// int将<i>转换为Bytes.
+//intToBytes converts <i> to []byte.
 func intToBytes(i interface{}) []byte {
 	x := Int64(i)
 	bytesBuffer := bytes.NewBuffer([]byte{})
@@ -372,7 +371,7 @@ func intToBytes(i interface{}) []byte {
 	return bytesBuffer.Bytes()
 }
 
-// float64将<i>转换为Bytes.
+//Float32ToBytes converts <i> to []byte.
 func Float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
 	result := make([]byte, 4)
@@ -380,7 +379,7 @@ func Float32ToBytes(float float32) []byte {
 	return result
 }
 
-// float64将<i>转换为Bytes.
+//Float64ToBytes converts <i> to []byte.
 func Float64ToBytes(float float64) []byte {
 	bits := math.Float64bits(float)
 	result := make([]byte, 8)

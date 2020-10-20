@@ -6,53 +6,49 @@ import (
 )
 
 const (
-	ERROR   = 403
-	SUCCESS = 200
+	ERROR   = 403 //Default error code returned
+	SUCCESS = 200 //Default success code return
 )
 
-//返回
+//Write Return parameter
 type Write struct {
-	Code  int         `json:"code"`
-	Msg   string      `json:"msg"`
-	Data  interface{} `json:"data"`
-	Error string      `json:"error"`
+	Code  int         `json:"code"`  //Code
+	Msg   string      `json:"msg"`   //Prompt message
+	Data  interface{} `json:"data"`  //Data
+	Error string      `json:"error"` //Error message
 }
 
-//分页返回
+//Page Pagination return
 type Page struct {
-	Total int         `json:"total"`
-	List  interface{} `json:"list"`
+	Total int         `json:"total"` //total pages
+	List  interface{} `json:"list"`  //json data
 }
 
-//错误输出
+//ErrorResponse Error output
 func ErrorResponse(err error) *Write {
 	return &Write{
 		Code:  ERROR,
-		Msg:   "参数错误",
+		Msg:   "错误",
 		Error: err.Error(),
 	}
 }
 
-//成功返回
+//Success: Successfully returned
 func Success(msg string, data ...interface{}) *Write {
 	var lenData = len(data)
-
 	if lenData == 1 {
 		return &Write{Code: SUCCESS, Msg: msg, Data: data[0]}
 	} else if lenData > 1 {
 		return &Write{Code: SUCCESS, Msg: msg, Data: data}
 	}
-
 	return &Write{Code: SUCCESS, Msg: msg}
 }
 
-//错误返回,第二个参数传参返回给前端并会打印
+//Fail: Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...interface{}) *Write {
-
 	if len(err) > 0 {
 		logger.Write.Error("错误", zap.Any("error", err[0].(string)))
 		return &Write{Code: ERROR, Msg: msg, Error: err[0].(string), Data: ""}
 	}
-
 	return &Write{Code: ERROR, Msg: msg}
 }

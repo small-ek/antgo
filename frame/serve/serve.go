@@ -15,12 +15,13 @@ var (
 
 var Engine *gin.Engine
 
-type Option struct {
+type New struct {
 	Server *http.Server
 }
 
-func Default(router *gin.Engine, port string) *Option {
-	return &Option{
+//Default service parameters
+func Default(router *gin.Engine, port string) *New {
+	return &New{
 		&http.Server{
 			Addr:              "127.0.0.1:" + port,
 			ReadTimeout:       120 * time.Second, //设置秒的读超时
@@ -33,8 +34,8 @@ func Default(router *gin.Engine, port string) *Option {
 	}
 }
 
-// 运行服务(Run the service)
-func (this *Option) Run() *Option {
+// Run the service
+func (this *New) Run() *New {
 	gin.ForceConsoleColor()
 	Group.Go(func() error {
 		return this.Server.ListenAndServe()
@@ -44,7 +45,7 @@ func (this *Option) Run() *Option {
 	return this
 }
 
-// 服务等待,多服务情况在最后等待(Service waiting)
+// Wait Service waiting, multi-service situation waiting at the end
 func Wait() {
 	if err := Group.Wait(); err != nil {
 		log.Fatal(err)

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// 有值的时候模糊搜索
+//Like Fuzzy search when there is value
 func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
@@ -17,7 +17,7 @@ func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// 有值的时候模糊搜索
+//Ilike Fuzzy search when there is value
 func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
@@ -27,7 +27,7 @@ func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// 有值的时候whereIn搜索
+// WhereIn WhereIn search when there is value
 func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		switch value := value.(type) {
@@ -64,7 +64,7 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// 有值的时候where搜索
+// Where Where to search when there is value
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 
@@ -76,8 +76,8 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 	}
 }
 
-// 构建where查询filter[]: ["test","like","test"]
-func WhereQueryBuild(where interface{}) func(db *gorm.DB) *gorm.DB {
+// WhereBuildQuery Build a where query
+func WhereBuildQuery(where interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if where == nil {
 			return db
@@ -130,7 +130,7 @@ func WhereQueryBuild(where interface{}) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// 排序
+// Order Sort
 func Order(str string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if str == "" {

@@ -25,20 +25,23 @@ var (
 	SENDTYPE_JSON = "json"
 )
 
+//HttpSend Request parameter
 type HttpSend struct {
-	Link     string
-	SendType string
-	Header   map[string]string
-	Body     map[string]interface{}
+	Link     string                 //Request address
+	SendType string                 //Request type
+	Header   map[string]string      //Request header
+	Body     map[string]interface{} //Request body
 	sync.RWMutex
 }
 
+//Client Default request
 func Client() *HttpSend {
 	return &HttpSend{
 		SendType: SENDTYPE_JSON,
 	}
 }
 
+//SetBody Set body
 func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -46,6 +49,7 @@ func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	return h
 }
 
+//SetHeader set header
 func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -53,6 +57,7 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	return h
 }
 
+//SetSendType Set Type
 func (h *HttpSend) SetSendType(send_type string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -60,41 +65,49 @@ func (h *HttpSend) SetSendType(send_type string) *HttpSend {
 	return h
 }
 
+//Get request
 func (h *HttpSend) Get(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(GET)
 }
 
+//Post request
 func (h *HttpSend) Post(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(POST)
 }
 
+//Put request
 func (h *HttpSend) Put(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(PUT)
 }
 
+//Delete request
 func (h *HttpSend) Delete(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(DELETE)
 }
 
+//Connect request
 func (h *HttpSend) Connect(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(CONNECT)
 }
 
+//Head request
 func (h *HttpSend) Head(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(HEAD)
 }
 
+//Options request
 func (h *HttpSend) Options(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(OPTIONS)
 }
 
+//Trace request
 func (h *HttpSend) Trace(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(TRACE)

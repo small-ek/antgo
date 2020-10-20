@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-// CBC encryption
+//EncryptCBC CBC encryption
 func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	// 分组秘钥
 	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
@@ -25,7 +25,7 @@ func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	return encrypted
 }
 
-// CBC Decrypt
+//DecryptCBC CBC Decrypt
 func DecryptCBC(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key) // 分组秘钥
 	if err != nil {
@@ -39,7 +39,7 @@ func DecryptCBC(encrypted []byte, key []byte) (decrypted []byte) {
 	return decrypted
 }
 
-// CFB encryption
+//EncryptCFB CFB encryption
 func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -55,7 +55,7 @@ func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 	return encrypted
 }
 
-//CFB Decrypt
+//DecryptCFB CFB Decrypt
 func DecryptCFB(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {

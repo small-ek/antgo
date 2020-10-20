@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//Jwt parameter
+//New Jwt parameter
 type New struct {
 	PrivateKey []byte //Private key
 	PublicKey  []byte //Public key

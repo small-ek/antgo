@@ -10,61 +10,58 @@ import (
 	"net/http"
 )
 
-//获取请求的数据
+//GetBody Get the requested data
 func GetBody(this *gin.Context) map[string]interface{} {
 	var request map[string]interface{}
 	var body []byte
-
 	if this.Request.Body != nil {
 		body, _ = ioutil.ReadAll(this.Request.Body)
-		//把刚刚读出来的再写进去其他地方使用没有
 		this.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}
 	var err = json.Unmarshal(body, &request)
-
 	if err != nil {
 		log.Println(err.Error())
 	}
 	return request
 }
 
-//获取请求单个数据
+//Input...
 func Input(name string, this *gin.Context) interface{} {
 	var request = GetBody(this)
 	return request[name]
 }
 
-//获取请求单个数据
+//GetString...
 func GetString(name string, this *gin.Context) string {
 	var request = GetBody(this)
 	return String(request[name])
 }
 
-//获取请求单个数据
+//GetBool...
 func GetBool(name string, this *gin.Context) bool {
 	var request = GetBody(this)
 	return Bool(request[name])
 }
 
-//获取请求单个数据
+//GetFloat32...
 func GetFloat32(name string, this *gin.Context) float32 {
 	var request = GetBody(this)
 	return Float32(request[name])
 }
 
-//获取请求单个数据
+//GetFloat64...
 func GetFloat64(name string, this *gin.Context) float64 {
 	var request = GetBody(this)
 	return Float64(request[name])
 }
 
-//获取请求单个数据
+//GetInt...
 func GetInt(name string, this *gin.Context) int {
 	var request = GetBody(this)
 	return Int(request[name])
 }
 
-//跨域请求
+//Cors Cross-domain request
 func Cors(this *gin.Context) {
 	this.Header("Access-Control-Allow-Origin", "*")                                      //允许访问所有域
 	this.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE,OPTIONS") //允许请求类型

@@ -4,9 +4,10 @@ import (
 	"sync"
 )
 
+//Map parameter structure
 type Map struct {
-	Map  map[string]interface{}
-	lock *sync.RWMutex // 加锁
+	Map  map[string]interface{} //
+	lock *sync.RWMutex          // 加锁
 }
 
 // New ...

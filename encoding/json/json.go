@@ -6,85 +6,95 @@ import (
 	"log"
 )
 
-type Result struct {
-	Child interface{}
+//Json parameter structure.
+type New struct {
+	Child interface{} //json next level.
 }
 
-func DecodeJson(data string) *Result {
+//DecodeJson Parse json.
+func DecodeJson(data string) *New {
 	var result map[string]interface{}
 	err := json.Unmarshal([]byte(data), &result)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	return &Result{
+	return &New{
 		Child: result,
 	}
 }
 
-func DecodeArray(data string) *Result {
+//DecodeArray Parse array.
+func DecodeArray(data string) *New {
 	var result []interface{}
 	err := json.Unmarshal([]byte(data), &result)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	return &Result{
+	return &New{
 		Child: result,
 	}
 }
 
-func (this *Result) Get(name interface{}) *Result {
+//Get the next level of array or json.
+func (this *New) Get(name interface{}) *New {
 	var child = this.Child
 	switch child.(type) {
 	case map[string]interface{}:
-		return &Result{
+		return &New{
 			Child: child.(map[string]interface{})[String(name)],
 		}
 	case map[string]string:
-		return &Result{
+		return &New{
 			Child: child.(map[string]string)[String(name)],
 		}
 	case []interface{}:
-		return &Result{
+		return &New{
 			Child: child.([]interface{})[Int(name)],
 		}
 	case []string:
-		return &Result{
+		return &New{
 			Child: child.([]interface{})[Int(name)],
 		}
 	case []int:
-		return &Result{
+		return &New{
 			Child: child.([]interface{})[Int(name)],
 		}
 	case []int64:
-		return &Result{
+		return &New{
 			Child: child.([]interface{})[Int(name)],
 		}
 	}
-	return &Result{
+	return &New{
 		Child: child,
 	}
 }
 
-func (this *Result) String() string {
+//String Data type conversion.
+func (this *New) String() string {
 	return String(this.Child)
 }
 
-func (this *Result) Int() int {
+//Int Data type conversion.
+func (this *New) Int() int {
 	return Int(this.Child)
 }
 
-func (this *Result) Int64() int64 {
+//Int64 Data type conversion.
+func (this *New) Int64() int64 {
 	return Int64(this.Child)
 }
 
-func (this *Result) Float64() float64 {
+//Float64 Data type conversion.
+func (this *New) Float64() float64 {
 	return Float64(this.Child)
 }
 
-func (this *Result) Map() map[string]interface{} {
+//Map Data type conversion.
+func (this *New) Map() map[string]interface{} {
 	return this.Child.(map[string]interface{})
 }
 
-func (this *Result) Array() []interface{} {
+//Array Data type conversion.
+func (this *New) Array() []interface{} {
 	return this.Child.([]interface{})
 }

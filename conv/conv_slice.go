@@ -1,8 +1,8 @@
 package conv
 
-//切片类型转换
+//Slice type conversion
 
-//将<i>转换为[]int
+//Ints Convert <i> to []int.
 func Ints(i interface{}) []int {
 	if i == nil {
 		return nil
@@ -94,7 +94,7 @@ func Ints(i interface{}) []int {
 	return array
 }
 
-//将<i>转换为[]int32
+//Int32s Convert <i> to []int32.
 func Int32s(i interface{}) []int32 {
 	if i == nil {
 		return nil
@@ -186,7 +186,7 @@ func Int32s(i interface{}) []int32 {
 	return array
 }
 
-//将<i>转换为[]int64
+//Int64s Convert <i> to []int64.
 func Int64s(i interface{}) []int64 {
 	if i == nil {
 		return nil
@@ -279,7 +279,7 @@ func Int64s(i interface{}) []int64 {
 	return array
 }
 
-//将<i>转换为[]string
+//Strings Convert <i> to []string.
 func Strings(i interface{}) []string {
 	if i == nil {
 		return nil
@@ -367,7 +367,7 @@ func Strings(i interface{}) []string {
 	return array
 }
 
-//将<i>转换为[]uint
+//Uints Convert <i> to []uint.
 func Uints(i interface{}) []uint {
 	if i == nil {
 		return nil
@@ -542,7 +542,7 @@ func Uint32s(i interface{}) []uint32 {
 	return array
 }
 
-//将<i>转换为uint64
+//将<i>转换为uint64.
 func Uint64s(i interface{}) []uint64 {
 	if i == nil {
 		return nil

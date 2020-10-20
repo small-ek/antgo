@@ -1,22 +1,22 @@
 package plugins
 
-// 定义一个接口，里面有两个方法
+//pluginFunc Define an interface, there are two methods
 type pluginFunc interface {
-	Before() interface{} //在什么之前执行
-	After()              //在什么之后执行
+	Before() interface{} //Before what
+	After()              //After what
 }
 
-// 定义一个类，来存放我们的插件
+//New Define a class to store our plugin
 type New struct {
-	List map[string]pluginFunc
+	List map[string]pluginFunc //Plugin list
 }
 
-// 初始化插件
+//Init Initialize the plugin
 func (p *New) Init() {
 	p.List = make(map[string]pluginFunc)
 }
 
-// 注册插件
+// Register plugin
 func (p *New) Register(path, name string, plugin pluginFunc) {
 	if path == name {
 		p.List[name] = plugin

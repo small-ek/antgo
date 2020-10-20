@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 )
 
-//打印错误堆栈
+//Error Print error stack
 func Error(err string) {
 	log.Println(err)
 	debug.PrintStack()

@@ -23,7 +23,7 @@ func MD5(str string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-//Sha1 encryption
+//Sha sha1 encryption
 func Sha(str string) string {
 	var h = sha1.New()
 	h.Write([]byte(str))

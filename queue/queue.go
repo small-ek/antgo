@@ -11,7 +11,7 @@ const cicleSectionNum = 100
 
 type TaskFunc func(args ...interface{})
 
-//任务
+//Task...
 type Task struct {
 	runTime  time.Time //初次运行时间
 	cycleNum int       //需要第几圈
@@ -31,6 +31,7 @@ type DelayMessage struct {
 	startTime time.Time
 }
 
+//NewDelayMessage...
 func NewDelayMessage() *DelayMessage {
 	dm := &DelayMessage{
 		cycleNum:  0,
@@ -46,6 +47,7 @@ func NewDelayMessage() *DelayMessage {
 	return dm
 }
 
+//Start...
 func (dm *DelayMessage) Start() {
 	go dm.taskLoop()
 	go dm.timeLoop()
@@ -57,6 +59,7 @@ func (dm *DelayMessage) Start() {
 	}
 }
 
+//Stop...
 func (dm *DelayMessage) Stop() {
 	dm.closed <- true
 }
@@ -107,7 +110,7 @@ func (dm *DelayMessage) timeLoop() {
 
 }
 
-//添加任务
+//AddTask...
 func (dm *DelayMessage) AddTask(t time.Time, key string, exec TaskFunc, params []interface{}) error {
 	if dm.startTime.After(t) {
 		return errors.New("时间错误")

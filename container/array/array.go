@@ -2,38 +2,39 @@ package array
 
 import "sync"
 
+//Array parameter structure
 type Array struct {
 	Slice []interface{}
 	lock  *sync.RWMutex // 加锁
 }
 
-// New ...
+// New Array
 func New() *Array {
 	return &Array{Slice: make([]interface{}, 0)}
 }
 
-// Set ...
+// Append Set Array
 func (this *Array) Append(value interface{}) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	this.Slice = append(this.Slice, value)
 }
 
-// Count ...
+// Len Count Array
 func (this *Array) Len() int {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	return len(this.Slice)
 }
 
-// List ...
+// List Array
 func (this *Array) List() []interface{} {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	return this.Slice
 }
 
-// InsertAfter ...
+// InsertAfter Array
 func (this *Array) InsertAfter(index int, value interface{}) []interface{} {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -45,7 +46,7 @@ func (this *Array) InsertAfter(index int, value interface{}) []interface{} {
 	return this.Slice
 }
 
-// Delete ...
+// Delete Array
 func (this *Array) Delete(index int) []interface{} {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -54,7 +55,7 @@ func (this *Array) Delete(index int) []interface{} {
 	return this.Slice
 }
 
-// Set ...
+// Set Array
 func (this *Array) Set(index int, value interface{}) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -62,14 +63,14 @@ func (this *Array) Set(index int, value interface{}) {
 	this.Slice[index] = value
 }
 
-// Set ...
+// Get Array
 func (this *Array) Get(index int) interface{} {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	return this.Slice[index]
 }
 
-// Search ...
+// Search Array
 func (this *Array) Search(value interface{}) int {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -81,7 +82,7 @@ func (this *Array) Search(value interface{}) int {
 	return 0
 }
 
-// Search ...
+// Clear Array
 func (this *Array) Clear() {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -97,7 +98,7 @@ func (this *Array) LockFunc(f func(array []interface{})) *Array {
 	return this
 }
 
-// LockFunc locks writing by callback function <f>
+// ReadLockFunc locks writing by callback function <f>
 func (this *Array) ReadLockFunc(f func(array []interface{})) *Array {
 	this.lock.RLock()
 	defer this.lock.RUnlock()

@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// ZipFiles compresses one or many files into a single zip archive file.
+// Create ZipFiles compresses one or many files into a single zip archive file.
 // Param 1: filename is the output zip file's name.
 // Param 2: files is a list of files to add to the zip.
 func Create(filename string, files []string) error {

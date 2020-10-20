@@ -7,9 +7,9 @@ import (
 	"log"
 )
 
-//Struct转换绑定
-//model 合并的模型
-//data 数据
+//Struct conversion binding
+//model Bound model
+//data Data
 func Struct(model interface{}, data interface{}) {
 	result, err := json.Marshal(data)
 	err = json.Unmarshal(result, model)
@@ -18,7 +18,7 @@ func Struct(model interface{}, data interface{}) {
 	}
 }
 
-//Struct转换绑定 使用gob编码方式一般用于“相似”的两个结构体传输绑定或者RPC通讯
+//StructToBytes Use gob encoding generally used for "similar" two structure transmission binding or RPC communication
 func StructToBytes(data interface{}) []byte {
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
@@ -29,7 +29,7 @@ func StructToBytes(data interface{}) []byte {
 	return buf.Bytes()
 }
 
-//bytes转Struct绑定 使用gob编码方式一般用于“相似”的两个结构体传输绑定或者RPC通讯
+//BytesToStruct Using gob encoding is generally used for "similar" two structure transmission binding or RPC communication
 func BytesToStruct(data []byte, to interface{}) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
