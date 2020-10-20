@@ -135,15 +135,14 @@ func Order(str string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if str == "" {
 			return db
-		} else {
-			return db.Order(str)
 		}
+		return db.Order(str)
 	}
 }
 
-//Paginate...
-func Paginate(page_size, current_page int) func(db *gorm.DB) *gorm.DB {
+//Paginate ...
+func Paginate(pageSize, currentPage int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Limit(page_size).Offset((current_page - 1) * page_size)
+		return db.Limit(pageSize).Offset((currentPage - 1) * pageSize)
 	}
 }

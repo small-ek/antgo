@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-var (
-	Group errgroup.Group //Group ...
-)
+//Group ...
+var Group errgroup.Group
 
-var Engine *gin.Engine //Engine ...
+//Engine ...
+var Engine *gin.Engine
 
 //New ...
 type New struct {
@@ -36,14 +36,14 @@ func Default(router *gin.Engine, port string) *New {
 }
 
 //Run the service
-func (this *New) Run() *New {
+func (get *New) Run() *New {
 	gin.ForceConsoleColor()
 	Group.Go(func() error {
-		return this.Server.ListenAndServe()
+		return get.Server.ListenAndServe()
 	})
 	fmt.Println("  App running at:")
-	fmt.Println("  -Local: http://" + this.Server.Addr)
-	return this
+	fmt.Println("  -Local: http://" + get.Server.Addr)
+	return get
 }
 
 //Wait Service waiting, multi-service situation waiting at the end
