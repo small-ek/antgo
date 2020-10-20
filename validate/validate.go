@@ -17,13 +17,13 @@ type New struct {
 }
 
 //CheckRule Form validator rules
-func (this *New) CheckRule() error {
-	var Scene = this.Scene
+func (get *New) CheckRule() error {
+	var Scene = get.Scene
 	var request map[string]string
-	conv.Struct(&request, this.Request)
+	conv.Struct(&request, get.Request)
 	//循环要验证的数据
 	for a := 0; a < len(Scene); a++ {
-		var rowRule = this.Rule[Scene[a]]
+		var rowRule = get.Rule[Scene[a]]
 		//循环需要验证的规则
 		for b := 0; b < len(rowRule); b++ {
 			if err := CheckItem(request[Scene[a]], rowRule[b]); err != nil {
@@ -36,8 +36,7 @@ func (this *New) CheckRule() error {
 	return nil
 }
 
-//TODO
-//CheckItem The validation field can define the rules you need
+//CheckItem The validation field can define the rules you need TODO
 func CheckItem(value string, Rule string) error {
 	var message = strings.Split(Rule, "|")
 	var newValue = strings.Split(message[0], ":")

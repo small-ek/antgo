@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/BurntSushi/toml"
-	. "github.com/small-ek/ginp/conv"
+	"github.com/small-ek/ginp/conv"
 	"log"
 	"os"
 )
@@ -29,36 +29,36 @@ func Default() *Result {
 }
 
 //Get config
-func (this *Result) Get(name interface{}) *Result {
-	var child = this.Child
+func (get *Result) Get(name interface{}) *Result {
+	var child = get.Child
 	switch child.(type) {
 	case map[string]interface{}:
 		return &Result{
-			Child: child.(map[string]interface{})[String(name)],
+			Child: child.(map[string]interface{})[conv.String(name)],
 		}
 	case map[string]string:
 		return &Result{
-			Child: child.(map[string]string)[String(name)],
+			Child: child.(map[string]string)[conv.String(name)],
 		}
 	case map[string]int:
 		return &Result{
-			Child: child.(map[string]string)[String(name)],
+			Child: child.(map[string]string)[conv.String(name)],
 		}
 	case []interface{}:
 		return &Result{
-			Child: child.([]interface{})[Int(name)],
+			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []string:
 		return &Result{
-			Child: child.([]interface{})[Int(name)],
+			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []int:
 		return &Result{
-			Child: child.([]interface{})[Int(name)],
+			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []int64:
 		return &Result{
-			Child: child.([]interface{})[Int(name)],
+			Child: child.([]interface{})[conv.Int(name)],
 		}
 	}
 	return &Result{
@@ -67,59 +67,59 @@ func (this *Result) Get(name interface{}) *Result {
 }
 
 //String Data type conversion.
-func (this *Result) String() string {
-	if this.Child == nil {
+func (get *Result) String() string {
+	if get.Child == nil {
 		return ""
 	}
-	return String(this.Child)
+	return conv.String(get.Child)
 }
 
 //String Data type conversion.
-func (this *Result) Strings() []string {
-	return Strings(this.Child)
+func (get *Result) Strings() []string {
+	return conv.Strings(get.Child)
 }
 
 //Int Data type conversion.
-func (this *Result) Int() int {
-	if this.Child == nil {
+func (get *Result) Int() int {
+	if get.Child == nil {
 		return 0
 	}
-	return Int(this.Child)
+	return conv.Int(get.Child)
 }
 
 //Ints Data type conversion.
-func (this *Result) Ints() []int {
-	return Ints(this.Child)
+func (get *Result) Ints() []int {
+	return conv.Ints(get.Child)
 }
 
 //Int64 Data type conversion.
-func (this *Result) Int64() int64 {
-	if this.Child == nil {
+func (get *Result) Int64() int64 {
+	if get.Child == nil {
 		return 0
 	}
-	return Int64(this.Child)
+	return conv.Int64(get.Child)
 }
 
 //Int64 Data type conversion.
-func (this *Result) Float64() float64 {
-	if this.Child == nil {
+func (get *Result) Float64() float64 {
+	if get.Child == nil {
 		return 0
 	}
-	return Float64(this.Child)
+	return conv.Float64(get.Child)
 }
 
 //Map Data type conversion.
-func (this *Result) Map() map[string]interface{} {
-	if this.Child == nil {
+func (get *Result) Map() map[string]interface{} {
+	if get.Child == nil {
 		return nil
 	}
-	return this.Child.(map[string]interface{})
+	return get.Child.(map[string]interface{})
 }
 
 //Array Data type conversion.
-func (this *Result) Array() []interface{} {
-	if this.Child == nil {
+func (get *Result) Array() []interface{} {
+	if get.Child == nil {
 		return nil
 	}
-	return this.Child.([]interface{})
+	return get.Child.([]interface{})
 }

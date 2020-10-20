@@ -24,10 +24,10 @@ func Default(publicKey, privateKey []byte) *New {
 }
 
 //Encrypt RSA encryption
-func (this *New) Encrypt(origData string) (string, error) {
-	block, _ := pem.Decode(this.PublicKey)
+func (get *New) Encrypt(origData string) (string, error) {
+	block, _ := pem.Decode(get.PublicKey)
 	if block == nil {
-		return "", errors.New("Public key error")
+		return "", errors.New("public key error")
 	}
 	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
@@ -40,11 +40,11 @@ func (this *New) Encrypt(origData string) (string, error) {
 }
 
 //Decrypt RSA decryption
-func (this *New) Decrypt(ciphertext string) (string, error) {
+func (get *New) Decrypt(ciphertext string) (string, error) {
 	decodeBytes, _ := base64.StdEncoding.DecodeString(ciphertext)
-	block, _ := pem.Decode(this.PrivateKey)
+	block, _ := pem.Decode(get.PrivateKey)
 	if block == nil {
-		return "", errors.New("Decryption failed")
+		return "", errors.New("decryption failed")
 	}
 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {

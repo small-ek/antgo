@@ -93,7 +93,7 @@ func (get *New) SetPath() *zap.Logger {
 	return Write
 }
 
-//ToJsonData
+//ToJsonData ...
 func ToJsonData(args []interface{}) zap.Field {
 	det := make([]string, 0)
 	if len(args) > 0 {
@@ -105,28 +105,28 @@ func ToJsonData(args []interface{}) zap.Field {
 	return result
 }
 
-//FormateLog
+//FormateLog ...
 func FormateLog(args []interface{}) *zap.Logger {
 	log := Write.With(ToJsonData(args))
 	return log
 }
 
-//Debug
+//Debug ...
 func Debug(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Debugf(msg)
 }
 
-//Error
+//Error ...
 func Error(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Errorf(msg)
 }
 
-//Warn...
+//Warn ...
 func Warn(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Warn(msg)
 }
 
-//Panic...
+//Panic ...
 func Panic(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Panic(msg)
 }

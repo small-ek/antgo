@@ -9,7 +9,7 @@ import (
 
 var ctx = context.Background()
 
-//Redis parameter structure
+//New parameter structure
 type New struct {
 	Addr     string //Address
 	Password string //no password set
@@ -26,12 +26,12 @@ func Default(Addr, Password string, DB int) *New {
 	}
 }
 
-//Client...
-func (this *New) Client() New {
+//Client ...
+func (get *New) Client() New {
 	client := redis.NewClient(&redis.Options{
-		Addr:     this.Addr,     //Address
-		Password: this.Password, // no password set
-		DB:       this.DB,       // use default DB
+		Addr:     get.Addr,     //Address
+		Password: get.Password, // no password set
+		DB:       get.DB,       // use default DB
 	})
 	_, err := client.Ping(ctx).Result()
 
