@@ -75,24 +75,12 @@ func String(i interface{}) string {
 	switch value := i.(type) {
 	case int:
 		return strconv.Itoa(value)
-	case int8:
-		return strconv.Itoa(int(value))
-	case int16:
-		return strconv.Itoa(int(value))
-	case int32:
-		return strconv.Itoa(int(value))
+	case int8, int16, int32:
+		return strconv.Itoa(value.(int))
 	case int64:
 		return strconv.FormatInt(value, 10)
-	case uint:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint8:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint16:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint32:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint64:
-		return strconv.FormatUint(value, 10)
+	case uint, uint8, uint16, uint32, uint64:
+		return strconv.FormatUint(value.(uint64), 10)
 	case float32:
 		return strconv.FormatFloat(float64(value), 'f', -1, 32)
 	case float64:
@@ -196,30 +184,10 @@ func Int64(i interface{}) int64 {
 		return 0
 	}
 	switch value := i.(type) {
-	case int:
-		return int64(value)
-	case int8:
-		return int64(value)
-	case int16:
-		return int64(value)
-	case int32:
-		return int64(value)
+	case int, int8, int16, int32, uint, uint8, uint16, uint32, uint64, float32, float64:
+		return value.(int64)
 	case int64:
 		return value
-	case uint:
-		return int64(value)
-	case uint8:
-		return int64(value)
-	case uint16:
-		return int64(value)
-	case uint32:
-		return int64(value)
-	case uint64:
-		return int64(value)
-	case float32:
-		return int64(value)
-	case float64:
-		return int64(value)
 	case bool:
 		if value {
 			return 1
@@ -287,30 +255,10 @@ func Uint64(i interface{}) uint64 {
 		return 0
 	}
 	switch value := i.(type) {
-	case int:
-		return uint64(value)
-	case int8:
-		return uint64(value)
-	case int16:
-		return uint64(value)
-	case int32:
-		return uint64(value)
-	case int64:
-		return uint64(value)
-	case uint:
-		return uint64(value)
-	case uint8:
-		return uint64(value)
-	case uint16:
-		return uint64(value)
-	case uint32:
-		return uint64(value)
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, float32, float64:
+		return value.(uint64)
 	case uint64:
 		return value
-	case float32:
-		return uint64(value)
-	case float64:
-		return uint64(value)
 	case bool:
 		if value {
 			return 1
@@ -318,7 +266,6 @@ func Uint64(i interface{}) uint64 {
 		return 0
 	case []byte:
 		return binary.LittleEndian.Uint64(value)
-
 	}
 	return i.(uint64)
 }
