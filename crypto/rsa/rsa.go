@@ -9,6 +9,7 @@ import (
 	"errors"
 )
 
+//New...
 type New struct {
 	PrivateKey []byte
 	PublicKey  []byte
@@ -22,7 +23,7 @@ func Default(publicKey, privateKey []byte) *New {
 	}
 }
 
-// Encrypt RSA encryption
+//Encrypt RSA encryption
 func (this *New) Encrypt(origData string) (string, error) {
 	block, _ := pem.Decode(this.PublicKey)
 	if block == nil {
@@ -38,7 +39,7 @@ func (this *New) Encrypt(origData string) (string, error) {
 	return encodeString, err
 }
 
-// Decrypt RSA decryption
+//Decrypt RSA decryption
 func (this *New) Decrypt(ciphertext string) (string, error) {
 	decodeBytes, _ := base64.StdEncoding.DecodeString(ciphertext)
 	block, _ := pem.Decode(this.PrivateKey)
