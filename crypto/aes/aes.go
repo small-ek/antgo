@@ -4,163 +4,82 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"errors"
+	"crypto/rand"
+	"io"
+	"log"
 )
 
-var (
-	// IVDefaultValue is the default value for IV.
-	// This can be changed globally.
-	IVDefaultValue = "I Love Go Frame!"
-)
-
-// Encrypt is alias of EncryptCBC.
-func Encrypt(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
-	return EncryptCBC(plainText, key, iv...)
-}
-
-// Decrypt is alias of DecryptCBC.
-func Decrypt(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
-	return DecryptCBC(cipherText, key, iv...)
-}
-
-// EncryptCBC encrypts <plainText> using CBC mode.
-// Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
-func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
+// CBC encryption
+func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
+	// 分组秘钥
+	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		log.Println(err.Error())
 	}
-	blockSize := block.BlockSize()
-	plainText = PKCS5Padding(plainText, blockSize)
-	ivValue := ([]byte)(nil)
-	if len(iv) > 0 {
-		ivValue = iv[0]
-	} else {
-		ivValue = []byte(IVDefaultValue)
-	}
-	blockMode := cipher.NewCBCEncrypter(block, ivValue)
-	cipherText := make([]byte, len(plainText))
-	blockMode.CryptBlocks(cipherText, plainText)
-
-	return cipherText, nil
+	blockSize := block.BlockSize()                              // 获取秘钥块的长度
+	origData = pkcs5Padding(origData, blockSize)                // 补全码
+	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize]) // 加密模式
+	encrypted = make([]byte, len(origData))                     // 创建数组
+	blockMode.CryptBlocks(encrypted, origData)                  // 加密
+	return encrypted
 }
 
-// DecryptCBC decrypts <cipherText> using CBC mode.
-// Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
-func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
+// CBC Decrypt
+func DecryptCBC(encrypted []byte, key []byte) (decrypted []byte) {
+	block, err := aes.NewCipher(key) // 分组秘钥
+	if err != nil {
+		log.Println(err.Error())
+	}
+	blockSize := block.BlockSize()                              // 获取秘钥块的长度
+	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize]) // 加密模式
+	decrypted = make([]byte, len(encrypted))                    // 创建数组
+	blockMode.CryptBlocks(decrypted, encrypted)                 // 解密
+	decrypted = pkcs5UnPadding(decrypted)                       // 去除补全码
+	return decrypted
+}
+
+// CFB encryption
+func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	blockSize := block.BlockSize()
-	if len(cipherText) < blockSize {
-		return nil, errors.New("cipherText too short")
+	encrypted = make([]byte, aes.BlockSize+len(origData))
+	iv := encrypted[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		log.Println(err.Error())
 	}
-	ivValue := ([]byte)(nil)
-	if len(iv) > 0 {
-		ivValue = iv[0]
-	} else {
-		ivValue = []byte(IVDefaultValue)
-	}
-	if len(cipherText)%blockSize != 0 {
-		return nil, errors.New("cipherText is not a multiple of the block size")
-	}
-	blockModel := cipher.NewCBCDecrypter(block, ivValue)
-	plainText := make([]byte, len(cipherText))
-	blockModel.CryptBlocks(plainText, cipherText)
-	plainText, e := PKCS5UnPadding(plainText, blockSize)
-	if e != nil {
-		return nil, e
-	}
-	return plainText, nil
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(encrypted[aes.BlockSize:], origData)
+	return encrypted
 }
 
-func PKCS5Padding(src []byte, blockSize int) []byte {
-	padding := blockSize - len(src)%blockSize
-	fillText := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, fillText...)
-}
-
-func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
-	length := len(src)
-	if blockSize <= 0 {
-		return nil, errors.New("invalid block")
-	}
-
-	if length%blockSize != 0 || length == 0 {
-		return nil, errors.New("invalid data len")
-	}
-
-	unFill := int(src[length-1])
-	if unFill > blockSize || unFill == 0 {
-		return nil, errors.New("invalid padding")
-	}
-
-	padding := src[length-unFill:]
-	for i := 0; i < unFill; i++ {
-		if padding[i] != byte(unFill) {
-			return nil, errors.New("invalid padding")
-		}
-	}
-
-	return src[:(length - unFill)], nil
-}
-
-// EncryptCFB encrypts <plainText> using CFB mode.
-// Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
-func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
+//CFB Decrypt
+func DecryptCFB(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		log.Println(err.Error())
 	}
-	blockSize := block.BlockSize()
-	plainText, *padding = ZeroPadding(plainText, blockSize)
-	ivValue := ([]byte)(nil)
-	if len(iv) > 0 {
-		ivValue = iv[0]
-	} else {
-		ivValue = []byte(IVDefaultValue)
+	if len(encrypted) < aes.BlockSize {
+		panic("ciphertext too short")
 	}
-	stream := cipher.NewCFBEncrypter(block, ivValue)
-	cipherText := make([]byte, len(plainText))
-	stream.XORKeyStream(cipherText, plainText)
-	return cipherText, nil
+	iv := encrypted[:aes.BlockSize]
+	encrypted = encrypted[aes.BlockSize:]
+
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(encrypted, encrypted)
+	return encrypted
 }
 
-// DecryptCFB decrypts <plainText> using CFB mode.
-// Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
-func DecryptCFB(cipherText []byte, key []byte, unPadding int, iv ...[]byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	if len(cipherText) < aes.BlockSize {
-		return nil, errors.New("cipherText too short")
-	}
-	ivValue := ([]byte)(nil)
-	if len(iv) > 0 {
-		ivValue = iv[0]
-	} else {
-		ivValue = []byte(IVDefaultValue)
-	}
-	stream := cipher.NewCFBDecrypter(block, ivValue)
-	plainText := make([]byte, len(cipherText))
-	stream.XORKeyStream(plainText, cipherText)
-	plainText = ZeroUnPadding(plainText, unPadding)
-	return plainText, nil
+func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
 }
 
-func ZeroPadding(cipherText []byte, blockSize int) ([]byte, int) {
-	padding := blockSize - len(cipherText)%blockSize
-	padText := bytes.Repeat([]byte{byte(0)}, padding)
-	return append(cipherText, padText...), padding
-}
-
-func ZeroUnPadding(plaintext []byte, unPadding int) []byte {
-	length := len(plaintext)
-	return plaintext[:(length - unPadding)]
+func pkcs5UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
 }
