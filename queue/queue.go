@@ -9,6 +9,7 @@ import (
 
 const cicleSectionNum = 100
 
+//TaskFunc...
 type TaskFunc func(args ...interface{})
 
 //Task...
@@ -21,6 +22,7 @@ type Task struct {
 	params []interface{}
 }
 
+//DelayMessage...
 type DelayMessage struct {
 	cycleNum  int //当前运行到第几圈了
 	curIndex  int //当前运行到第几格
@@ -64,6 +66,7 @@ func (dm *DelayMessage) Stop() {
 	dm.closed <- true
 }
 
+//taskLoop
 func (dm *DelayMessage) taskLoop() {
 	defer func() {
 		log.Println("任务遍历结束！")
@@ -89,6 +92,7 @@ func (dm *DelayMessage) taskLoop() {
 	}
 }
 
+//timeLoop
 func (dm *DelayMessage) timeLoop() {
 	defer func() {
 		log.Println("时间遍历结束！")

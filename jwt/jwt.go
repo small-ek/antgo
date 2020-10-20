@@ -27,7 +27,7 @@ func Default(PublicKey, PrivateKey []byte, exp ...int64) *New {
 	}
 }
 
-//Jwt Encrypt
+//Encrypt...
 func (this *New) Encrypt(manifest map[string]interface{}) (string, error) {
 	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(this.PrivateKey)
 	if this.Exp == 0 {
@@ -42,7 +42,7 @@ func (this *New) Encrypt(manifest map[string]interface{}) (string, error) {
 	return token.SignedString(Key)
 }
 
-//Jwt Decode
+//Decode...
 func (this *New) Decode(token_str string) (manifest map[string]interface{}, err error) {
 	result := map[string]interface{}{}
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(this.PublicKey)

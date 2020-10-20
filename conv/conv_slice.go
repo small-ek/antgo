@@ -455,7 +455,7 @@ func Uints(i interface{}) []uint {
 	return array
 }
 
-//将<i>转换为uint32
+//Uint32s Convert <i> to []uint32.
 func Uint32s(i interface{}) []uint32 {
 	if i == nil {
 		return nil
@@ -542,7 +542,7 @@ func Uint32s(i interface{}) []uint32 {
 	return array
 }
 
-//将<i>转换为uint64.
+//Uint64s Convert <i> to []uint64.
 func Uint64s(i interface{}) []uint64 {
 	if i == nil {
 		return nil

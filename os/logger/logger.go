@@ -7,10 +7,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-//Inherit zap log
+//Write Inherit zap log
 var Write *zap.Logger
 
-//Log parameter structure
+//New Log parameter structure
 type New struct {
 	Path        string //Save Path
 	Level       string //Set log level,info debug warn
@@ -33,7 +33,7 @@ func Default(path string) *New {
 	}
 }
 
-// Set log path
+//SetPath Set log path
 func (this *New) SetPath() *zap.Logger {
 	// Log split
 	hook := lumberjack.Logger{
@@ -93,6 +93,7 @@ func (this *New) SetPath() *zap.Logger {
 	return Write
 }
 
+//ToJsonData...
 func ToJsonData(args []interface{}) zap.Field {
 	det := make([]string, 0)
 	if len(args) > 0 {
@@ -104,6 +105,7 @@ func ToJsonData(args []interface{}) zap.Field {
 	return result
 }
 
+//FormateLog...
 func FormateLog(args []interface{}) *zap.Logger {
 	log := Write.With(ToJsonData(args))
 	return log

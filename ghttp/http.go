@@ -12,6 +12,7 @@ import (
 	"sync"
 )
 
+//GET POST PUT DELETE HEAD PATCH CONNECT OPTIONS TRACE SENDTYPE_JSON Requet Type
 var (
 	GET           = "GET"
 	POST          = "POST"
@@ -113,11 +114,13 @@ func (h *HttpSend) Trace(url string) ([]byte, error) {
 	return h.send(TRACE)
 }
 
+//Patch...
 func (h *HttpSend) Patch(url string) ([]byte, error) {
 	h.Link = url
 	return h.send(PATCH)
 }
 
+//GetUrlBuild...
 func GetUrlBuild(link string, data map[string]string) string {
 	u, _ := url.Parse(link)
 	q := u.Query()
@@ -128,6 +131,7 @@ func GetUrlBuild(link string, data map[string]string) string {
 	return u.String()
 }
 
+//send...
 func (h *HttpSend) send(method string) ([]byte, error) {
 	var (
 		req    *http.Request

@@ -10,19 +10,19 @@ type Map struct {
 	lock *sync.RWMutex          // 加锁
 }
 
-// New ...
+//New ...
 func New() *Map {
 	return &Map{Map: make(map[string]interface{})}
 }
 
-// Set ...
+//Set ...
 func (this *Map) Set(key string, value interface{}) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	this.Map[key] = value
 }
 
-// Get ...
+//Get ...
 func (this *Map) Get(key string) interface{} {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -34,7 +34,7 @@ func (this *Map) Get(key string) interface{} {
 	}
 }
 
-// GetOrSet ...
+//GetOrSet ...
 func (this *Map) GetOrSet(key string, value interface{}) interface{} {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -47,14 +47,14 @@ func (this *Map) GetOrSet(key string, value interface{}) interface{} {
 	}
 }
 
-// Count ...
+//Count ...
 func (this *Map) Count() int {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	return len(this.Map)
 }
 
-// Delete ...
+//Delete ...
 func (this *Map) Delete(key string) bool {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -67,7 +67,7 @@ func (this *Map) Delete(key string) bool {
 	}
 }
 
-// LockFunc locks writing by callback function <f>
+//LockFunc locks writing by callback function <f>
 func (this *Map) LockFunc(f func(Map map[string]interface{})) *Map {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -76,7 +76,7 @@ func (this *Map) LockFunc(f func(Map map[string]interface{})) *Map {
 	return this
 }
 
-// LockFunc locks writing by callback function <f>
+//LockFunc locks writing by callback function <f>
 func (this *Map) ReadLockFunc(f func(Map map[string]interface{})) *Map {
 	this.lock.RLock()
 	defer this.lock.RUnlock()

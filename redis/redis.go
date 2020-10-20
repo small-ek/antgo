@@ -26,6 +26,7 @@ func Default(Addr, Password string, DB int) *New {
 	}
 }
 
+//Client...
 func (this *New) Client() New {
 	client := redis.NewClient(&redis.Options{
 		Addr:     this.Addr,     //Address

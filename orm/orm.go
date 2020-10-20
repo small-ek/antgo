@@ -2,7 +2,7 @@ package orm
 
 import (
 	"encoding/json"
-	. "github.com/small-ek/ginp/conv"
+	"github.com/small-ek/ginp/conv"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -99,30 +99,30 @@ func WhereBuildQuery(where interface{}) func(db *gorm.DB) *gorm.DB {
 
 				//检索where条件
 				if arr[1] == "like" || arr[1] == "notlike" || arr[1] == "ilike" || arr[1] == "rlike" {
-					column = column + String(arr[0]) + " " + String(arr[1]) + " ?"
-					value = append(value, String(arr[2])+"%")
+					column = column + conv.String(arr[0]) + " " + conv.String(arr[1]) + " ?"
+					value = append(value, conv.String(arr[2])+"%")
 
 				} else if arr[1] == "between" && arr[2] != "" { //搜索between
 					var betweenStr []string
-					json.Unmarshal(Bytes(arr[2]), &betweenStr)
+					json.Unmarshal(conv.Bytes(arr[2]), &betweenStr)
 					if len(betweenStr) > 1 {
-						column = column + String(arr[0]) + " BETWEEN ? AND ?"
+						column = column + conv.String(arr[0]) + " BETWEEN ? AND ?"
 						value = append(value, betweenStr[0], betweenStr[1])
 					}
 
-				} else if strings.Index(" in not in", String(arr[1])) > -1 {
-					column = column + String(arr[0]) + " " + String(arr[1]) + " (?)"
+				} else if strings.Index(" in not in", conv.String(arr[1])) > -1 {
+					column = column + conv.String(arr[0]) + " " + conv.String(arr[1]) + " (?)"
 					value = append(value, arr[2])
 
 				} else {
-					column = column + String(arr[0]) + " " + String(arr[1]) + " ?"
+					column = column + conv.String(arr[0]) + " " + conv.String(arr[1]) + " ?"
 					value = append(value, arr[2])
 				}
-			} else if strings.Index("is null is not null", String(arr[1])) > -1 {
+			} else if strings.Index("is null is not null", conv.String(arr[1])) > -1 {
 				if column != "" {
 					column = column + " AND "
 				}
-				column = column + String(arr[0]) + " " + String(arr[1])
+				column = column + conv.String(arr[0]) + " " + conv.String(arr[1])
 			}
 		}
 
@@ -130,7 +130,7 @@ func WhereBuildQuery(where interface{}) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// Order Sort
+//Order Sort
 func Order(str string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if str == "" {
@@ -141,7 +141,7 @@ func Order(str string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// Paginate...
+//Paginate...
 func Paginate(page_size, current_page int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Limit(page_size).Offset((current_page - 1) * page_size)

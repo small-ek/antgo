@@ -10,6 +10,7 @@ type New struct {
 	Msg map[string]interface{}
 }
 
+//Result...
 var Result *New
 
 //SetPath Set path
