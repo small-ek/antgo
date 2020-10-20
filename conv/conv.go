@@ -73,9 +73,7 @@ func String(i interface{}) string {
 		return ""
 	}
 	switch value := i.(type) {
-	case int:
-		return strconv.Itoa(value)
-	case int8, int16, int32:
+	case int8, int16, int32, int:
 		return strconv.Itoa(value.(int))
 	case int64:
 		return strconv.FormatInt(value, 10)

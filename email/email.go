@@ -75,6 +75,9 @@ func (get *New) SetFilePath(filePath []string) *New {
 	return get
 }
 
+//Config ...
+var Config New
+
 //Send Email
 func (get *New) Send() {
 	e := email.NewEmail()
