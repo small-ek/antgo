@@ -1,4 +1,4 @@
-package websocket
+package gwebsocket
 
 import (
 	"errors"
@@ -16,10 +16,10 @@ type Connection struct {
 	isClosed  bool       // 防止closeChan被关闭多次
 }
 
-//InitConnection ...
-func InitConnection(wsConn *websocket.Conn) (conn *Connection, err error) {
+//New ...
+func New(websocket *websocket.Conn) (conn *Connection, err error) {
 	conn = &Connection{
-		wsConnect: wsConn,
+		wsConnect: websocket,
 		inChan:    make(chan []byte, 1000),
 		outChan:   make(chan []byte, 1000),
 		closeChan: make(chan byte, 1),
@@ -41,9 +41,8 @@ func (conn *Connection) ReadMessage() (data []byte, err error) {
 	return
 }
 
-//WriteMessage ...
+//WriteMessage Write message sending client(写入消息发送客户端)
 func (conn *Connection) WriteMessage(data []byte) (err error) {
-
 	select {
 	case conn.outChan <- data:
 	case <-conn.closeChan:

@@ -3,7 +3,10 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/small-ek/ginp/net/gwebsocket"
+	"log"
 	"net/http"
+	"time"
 )
 
 var upGrader = websocket.Upgrader{
@@ -13,7 +16,7 @@ var upGrader = websocket.Upgrader{
 }
 
 func main() {
-	bindAddress := "127.0.0.1:2303"
+	bindAddress := "127.0.0.1:1234"
 	r := gin.Default()
 	r.GET("/ping", ping)
 	r.Run(bindAddress)
@@ -21,25 +24,43 @@ func main() {
 
 //webSocket请求ping 返回pong
 func ping(c *gin.Context) {
-	//升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
+	var (
+		websocket *websocket.Conn
+		err       error
+		conn      *gwebsocket.Connection
+		data      []byte
+	)
+	// 完成ws协议的握手操作
+	if websocket, err = upGrader.Upgrade(c.Writer, c.Request, nil); err != nil {
 		return
 	}
-	defer ws.Close()
-	for {
-		//读取ws中的数据
-		mt, message, err := ws.ReadMessage()
-		if err != nil {
-			break
-		}
-		if string(message) == "ping" {
-			message = []byte("pong")
-		}
-		//写入ws数据
-		err = ws.WriteMessage(mt, message)
-		if err != nil {
-			break
-		}
+
+	if conn, err = gwebsocket.New(websocket); err != nil {
+		goto ERR
 	}
+	// 启动线程，不断发消息
+	go func() {
+		var (
+			err error
+		)
+		for {
+			if err = conn.WriteMessage([]byte("heartbeat")); err != nil {
+				return
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	for {
+		if data, err = conn.ReadMessage(); err != nil {
+			goto ERR
+		}
+		if err = conn.WriteMessage(data); err != nil {
+			goto ERR
+		}
+		log.Println(string(data))
+	}
+
+ERR:
+	conn.Close()
 }
