@@ -8,7 +8,7 @@ import (
 
 //Connection ...
 type Connection struct {
-	wsConnect *websocket.Conn
+	Socket    *websocket.Conn // 用户连接
 	inChan    chan []byte
 	outChan   chan []byte
 	closeChan chan byte
@@ -19,7 +19,7 @@ type Connection struct {
 //New ...
 func New(websocket *websocket.Conn) (conn *Connection, err error) {
 	conn = &Connection{
-		wsConnect: websocket,
+		Socket:    websocket,
 		inChan:    make(chan []byte, 1000),
 		outChan:   make(chan []byte, 1000),
 		closeChan: make(chan byte, 1),
@@ -54,14 +54,14 @@ func (conn *Connection) WriteMessage(data []byte) (err error) {
 //Close ...
 func (conn *Connection) Close() {
 	// 线程安全，可多次调用
-	conn.wsConnect.Close()
+	conn.Socket.Close()
 	// 利用标记，让closeChan只关闭一次
 	conn.mutex.Lock()
 	if !conn.isClosed {
 		close(conn.closeChan)
 		conn.isClosed = true
 	}
-	conn.mutex.Unlock()
+	defer conn.mutex.Unlock()
 }
 
 //readLoop ...
@@ -71,7 +71,7 @@ func (conn *Connection) readLoop() {
 		err  error
 	)
 	for {
-		if _, data, err = conn.wsConnect.ReadMessage(); err != nil {
+		if _, data, err = conn.Socket.ReadMessage(); err != nil {
 			goto ERR
 		}
 		//阻塞在这里，等待inChan有空闲位置
@@ -100,7 +100,7 @@ func (conn *Connection) writeLoop() {
 		case <-conn.closeChan:
 			goto ERR
 		}
-		if err = conn.wsConnect.WriteMessage(websocket.TextMessage, data); err != nil {
+		if err = conn.Socket.WriteMessage(websocket.TextMessage, data); err != nil {
 			goto ERR
 		}
 	}

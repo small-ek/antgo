@@ -9,14 +9,17 @@ import (
 	"time"
 )
 
-var upGrader = websocket.Upgrader{
+var upGrader = (&websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// 允许所有CORS跨域请求
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
-}
+})
 
 func main() {
-	bindAddress := "127.0.0.1:1234"
+	bindAddress := "127.0.0.1:1111"
 	r := gin.Default()
 	r.GET("/ping", ping)
 	r.Run(bindAddress)
