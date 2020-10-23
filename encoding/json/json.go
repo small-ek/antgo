@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/small-ek/ginp/conv"
 	"log"
+	"strings"
 )
 
 //New Json parameter structure.
@@ -11,9 +12,17 @@ type New struct {
 	Child interface{} //json next level.
 }
 
-//DecodeJson Parse json.
-func DecodeJson(data string) *New {
-	var result map[string]interface{}
+//Decode Parse array.<解析json字符串>
+func Decode(data string) *New {
+	var result interface{}
+	data = strings.Trim(strings.Trim(data, "\n"), " ")
+
+	if data != "" && string(data[0]) == "[" {
+		result = []interface{}{}
+	} else {
+		result = make(map[string]interface{})
+	}
+
 	err := json.Unmarshal([]byte(data), &result)
 	if err != nil {
 		log.Println(err.Error())
@@ -23,19 +32,16 @@ func DecodeJson(data string) *New {
 	}
 }
 
-//DecodeArray Parse array.
-func DecodeArray(data string) *New {
-	var result []interface{}
-	err := json.Unmarshal([]byte(data), &result)
+//Encode Parses map to JSON string<解析map转json字符串>
+func Encode(data interface{}) string {
+	result, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	return &New{
-		Child: result,
-	}
+	return string(result)
 }
 
-//Get the next level of array or json.
+//Get the next level of array or json.<获取json的节点>
 func (get *New) Get(name interface{}) *New {
 	var child = get.Child
 	switch child.(type) {

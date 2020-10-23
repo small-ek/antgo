@@ -7,29 +7,18 @@ import (
 )
 
 func TestJson(t *testing.T) {
-	//var data = `{
-	//"users" : {
-	//    "count" : 2,
-	//    "list"  : [
-	//        {"name" : "Ming", "score" : 60},
-	//        {"name" : "John", "score" : 99.5}
-	//    ]
-	//	}
-	//}`
-	/*var bindRow = make(map[string]interface{})
-	conv.Struct(&bindRow, data)
-	log.Println(bindRow)*/
-	jsonStr := `
-        [{
-	"users" : {
+
+	for i := 0; i < 1000; i++ {
+		jsonStr := `[{"users" : {
 	    "count" : 2,
 	    "list"  : [
 	        {"name" : "Ming", "score" : 60},
 	        {"name" : "John", "score" : 99.5}
 	    ]
 		}
-	}]
-        `
-	var result = json.DecodeArray(jsonStr).Array()
-	log.Println(result)
+	}]`
+		var result = json.Decode(jsonStr).Get(0).Get("users").Get("list").Array()
+		log.Println(result)
+		log.Println(json.Encode(map[string]string{"name": "21"}))
+	}
 }
