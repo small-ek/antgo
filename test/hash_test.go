@@ -7,7 +7,8 @@ import (
 )
 
 func TestHash(t *testing.T) {
-	log.Println(hash.MD5("test"))
-	log.Println(hash.Sha("test"))
+	log.Println(hash.Md5("test"))
+	log.Println(hash.Sha1("test"))
 	log.Println(hash.Sha256("test"))
+	log.Println(hash.Crc32("test"))
 }
