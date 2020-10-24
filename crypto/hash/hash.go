@@ -17,7 +17,7 @@ func Sha256(str string) string {
 	return result
 }
 
-//MD5 encryption
+//Md5 encryption
 func Md5(str string) string {
 	var h = md5.New()
 	h.Write([]byte(str))
