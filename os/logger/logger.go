@@ -144,32 +144,32 @@ func FormateLog(args []interface{}) *zap.Logger {
 	return log
 }
 
-//Debug ...
+//Debug Debug printing<调试打印>
 func Debug(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Debugf(msg)
 }
 
-//Error ...
+//Error Error printing<错误打印>
 func Error(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Errorf(msg)
 }
 
-//Warn ...
+//Warn Warning print<警告打印>
 func Warn(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Warn(msg)
 }
 
-//Panic ...
+//Panic Abnormal printing<异常打印>
 func Panic(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Panic(msg)
 }
 
-//Info Print log by default
+//Info Print log by default<默认情况下打印日志>
 func Info(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Infof(msg)
 }
 
-//AsyncInfo Asynchronous print log
+//AsyncInfo Asynchronous print log<异步打印日志>
 func AsyncInfo(msg string, args ...interface{}) {
 	go func() {
 		FormateLog(args).Sugar().Infof(msg)
