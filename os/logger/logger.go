@@ -10,6 +10,9 @@ import (
 //Write Inherit zap log
 var Write *zap.Logger
 
+//Log 默认调用
+var Create New
+
 //New Log parameter structure
 type New struct {
 	Path        string //Save Path
@@ -33,8 +36,38 @@ func Default(path string) *New {
 	}
 }
 
+//SetServiceName setting log
+func (get *New) SetServiceName(ServiceName string) *New {
+	get.ServiceName = ServiceName
+	return get
+}
+
+//SetMaxAge setting log
+func (get *New) SetMaxAge(MaxAge int) *New {
+	get.MaxAge = MaxAge
+	return get
+}
+
+//SetMaxBackups setting log
+func (get *New) SetMaxBackups(MaxBackups int) *New {
+	get.MaxBackups = MaxBackups
+	return get
+}
+
+//SetMaxSize setting log
+func (get *New) SetMaxSize(MaxSize int) *New {
+	get.MaxSize = MaxSize
+	return get
+}
+
+//SetPath setting log
+func (get *New) SetPath(path string) *New {
+	get.Path = path
+	return get
+}
+
 //SetPath Set log path
-func (get *New) SetPath() *zap.Logger {
+func (get *New) Register() *zap.Logger {
 	// Log split
 	hook := lumberjack.Logger{
 		Filename:   get.Path,

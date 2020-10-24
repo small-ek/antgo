@@ -1,0 +1,3 @@
+{"level":"info","time":"2020-10-24T21:56:56.202+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:168","msg":"123","serviceName":"Ginp","detail":["{\"test\":\"1221\"}"]}
+{"level":"info","time":"2020-10-24T21:58:17.512+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:168","msg":"123","serviceName":"","detail":["{\"test\":\"1221\"}"]}
+{"level":"info","time":"2020-10-24T22:01:09.468+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:169","msg":"123","serviceName":"","detail":["{\"test\":\"1221\"}"]}
