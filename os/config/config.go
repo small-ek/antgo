@@ -23,8 +23,8 @@ type Result struct {
 	Child interface{}
 }
 
-//Default config
-func Default() *Result {
+//Decode config
+func Decode() *Result {
 	return &Result{
 		Child: Data,
 	}

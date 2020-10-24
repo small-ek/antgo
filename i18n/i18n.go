@@ -20,7 +20,7 @@ func SetPath(path string) {
 
 //SetLanguage Set language
 func SetLanguage(languages string) {
-	var getLang = config.Default().Get(languages).Map()
+	var getLang = config.Decode().Get(languages).Map()
 	var child = make(map[string]interface{})
 
 	for key, value := range getLang {
