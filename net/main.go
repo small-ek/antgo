@@ -37,23 +37,7 @@ func ping(c *gin.Context) {
 	if websocket, err = upGrader.Upgrade(c.Writer, c.Request, nil); err != nil {
 		return
 	}
-
-	if conn, err = gwebsocket.New(websocket); err != nil {
-		goto ERR
-	}
-	// 启动线程，不断发消息
-	go func() {
-		var (
-			err error
-		)
-		for {
-			if err = conn.WriteMessage([]byte("heartbeat")); err != nil {
-				return
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
+	conn = gwebsocket.New(websocket, c.ClientIP(), uint64(time.Now().Unix()))
 	for {
 		if data, err = conn.ReadMessage(); err != nil {
 			goto ERR
