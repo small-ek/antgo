@@ -10,7 +10,7 @@ import (
 //Connection ...
 type Connection struct {
 	Address       string          // 客户端地址
-	AppId         string          // 登录的平台Id app/web/ios
+	AppId         string          // 登录的平台Id
 	UserId        string          // 用户标识，用户登录以后才有
 	LoginTime     uint64          // 登录时间 登录以后才有
 	FirstTime     uint64          // 首次连接事件

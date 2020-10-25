@@ -47,6 +47,7 @@ func ping(c *gin.Context) {
 		}
 		log.Println(string(data))
 	}
+	gwebsocket.NewClient().Register <- conn
 
 ERR:
 	conn.Close()
