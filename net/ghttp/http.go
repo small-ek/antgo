@@ -28,6 +28,7 @@ var (
 
 //HttpSend Request parameter
 type HttpSend struct {
+	req      *http.Request
 	Link     string                 //Request address
 	SendType string                 //Request type
 	Header   map[string]string      //Request header
@@ -55,6 +56,14 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
 	h.Header = header
+	return h
+}
+
+//SetCookie set cookie
+func (h *HttpSend) SetCookie(c *http.Cookie) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.req.AddCookie(c)
 	return h
 }
 
@@ -134,12 +143,10 @@ func GetUrlBuild(link string, data map[string]string) string {
 //send ...
 func (h *HttpSend) send(method string) ([]byte, error) {
 	var (
-		req    *http.Request
 		resp   *http.Response
 		client http.Client
 		err    error
 	)
-
 	configData, err := json.Marshal(h.Body)
 	if err != nil {
 		log.Println(err.Error())
@@ -150,11 +157,11 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	req, err = http.NewRequest(method, h.Link, sendData)
+	h.req, err = http.NewRequest(method, h.Link, sendData)
 	if err != nil {
 		return nil, err
 	}
-	defer req.Body.Close()
+	defer h.req.Body.Close()
 
 	//设置默认header
 	if len(h.Header) == 0 {
@@ -172,13 +179,13 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 
 	for k, v := range h.Header {
 		if strings.ToLower(k) == "host" {
-			req.Host = v
+			h.req.Host = v
 		} else {
-			req.Header.Add(k, v)
+			h.req.Header.Add(k, v)
 		}
 	}
 
-	resp, err = client.Do(req)
+	resp, err = client.Do(h.req)
 	if err != nil {
 		return nil, err
 	}
