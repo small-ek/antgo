@@ -2,7 +2,6 @@ package ghttp
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -28,11 +27,14 @@ var (
 
 //HttpSend Request parameter
 type HttpSend struct {
-	req      *http.Request
-	Link     string                 //Request address
-	SendType string                 //Request type
-	Header   map[string]string      //Request header
-	Body     map[string]interface{} //Request body
+	Client   http.Client                           //Client
+	resp     *http.Response                        //Response
+	Req      *http.Request                         //Request
+	Proxy    func(*http.Request) (*url.URL, error) //Request proxy
+	Link     string                                //Request address
+	SendType string                                //Request type
+	Header   map[string]string                     //Request header
+	Body     map[string]interface{}                //Request body
 	sync.RWMutex
 }
 
@@ -51,6 +53,16 @@ func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	return h
 }
 
+//SetProxy Set proxy
+func (h *HttpSend) SetProxy(proxy string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.Proxy = func(_ *http.Request) (*url.URL, error) {
+		return url.Parse(proxy)
+	}
+	return h
+}
+
 //SetHeader set header
 func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
@@ -63,7 +75,7 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 func (h *HttpSend) SetCookie(c *http.Cookie) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
-	h.req.AddCookie(c)
+	h.Req.AddCookie(c)
 	return h
 }
 
@@ -142,26 +154,23 @@ func GetUrlBuild(link string, data map[string]string) string {
 
 //send ...
 func (h *HttpSend) send(method string) ([]byte, error) {
-	var (
-		resp   *http.Response
-		client http.Client
-		err    error
-	)
 	configData, err := json.Marshal(h.Body)
 	if err != nil {
 		log.Println(err.Error())
 	}
 	var sendData = bytes.NewBuffer(configData)
 
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	var Transport = &http.Transport{}
 
-	h.req, err = http.NewRequest(method, h.Link, sendData)
+	if h.Proxy != nil {
+		Transport.Proxy = h.Proxy
+	}
+	h.Client.Transport = Transport
+	h.Req, err = http.NewRequest(method, h.Link, sendData)
 	if err != nil {
 		return nil, err
 	}
-	defer h.req.Body.Close()
+	defer h.Req.Body.Close()
 
 	//设置默认header
 	if len(h.Header) == 0 {
@@ -179,18 +188,18 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 
 	for k, v := range h.Header {
 		if strings.ToLower(k) == "host" {
-			h.req.Host = v
+			h.Req.Host = v
 		} else {
-			h.req.Header.Add(k, v)
+			h.Req.Header.Add(k, v)
 		}
 	}
 
-	resp, err = client.Do(h.req)
+	h.resp, err = h.Client.Do(h.Req)
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer h.resp.Body.Close()
 
-	return ioutil.ReadAll(resp.Body)
+	return ioutil.ReadAll(h.resp.Body)
 }
