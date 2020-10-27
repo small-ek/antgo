@@ -161,25 +161,23 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 	var sendData = bytes.NewBuffer(configData)
 
 	var Transport = &http.Transport{}
-
 	if h.Proxy != nil {
 		Transport.Proxy = h.Proxy
 	}
 	h.Client.Transport = Transport
+
 	h.Req, err = http.NewRequest(method, h.Link, sendData)
 	if err != nil {
 		return nil, err
 	}
 	defer h.Req.Body.Close()
 
-	//设置默认header
 	if len(h.Header) == 0 {
-		//json
 		if strings.ToLower(h.SendType) == SENDTYPE_JSON {
 			h.Header = map[string]string{
 				"Content-Type": "application/json; charset=utf-8",
 			}
-		} else { //form
+		} else {
 			h.Header = map[string]string{
 				"Content-Type": "application/x-www-form-urlencoded",
 			}
@@ -198,8 +196,6 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer h.resp.Body.Close()
-
 	return ioutil.ReadAll(h.resp.Body)
 }
