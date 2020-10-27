@@ -6,3 +6,5 @@
 {"level":"info","time":"2020-10-24T21:49:20.935+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:136","msg":"123","serviceName":"Ginp","detail":["{“test”:\"1221\"}"]}
 {"level":"info","time":"2020-10-24T21:49:36.018+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:136","msg":"123","serviceName":"Ginp","detail":["{\"test\":\"1221\"}"]}
 {"level":"info","time":"2020-10-24T22:01:09.487+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:169","msg":"3333","serviceName":"Ginp","detail":["{\"test\":\"22222\"}"]}
+{"level":"info","time":"2020-10-28T01:26:53.785+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:169","msg":"3333","serviceName":"Ginp","detail":["{\"test\":\"22222\"}"]}
+{"level":"info","time":"2020-10-28T01:27:06.115+0800","linenum":"F:/www/src/ginp/os/logger/logger.go:169","msg":"3333","serviceName":"Ginp","detail":["{\"test\":\"22222\"}"]}

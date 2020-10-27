@@ -6,7 +6,17 @@ import (
 )
 
 func TestErr(t *testing.T) {
-	for i := 0; i < 100; i++ {
-		logs.Error("1234")
-	}
+	test1()
+}
+
+func test1() {
+	test2()
+}
+
+func test2() {
+	test3()
+}
+
+func test3() {
+	logs.Error("111")
 }
