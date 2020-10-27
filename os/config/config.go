@@ -89,6 +89,11 @@ func (get *Result) Int() int {
 	return conv.Int(get.Child)
 }
 
+//Bool Data type conversion.
+func (get *Result) Bool() bool {
+	return conv.Bool(get.Child)
+}
+
 //Ints Data type conversion.
 func (get *Result) Ints() []int {
 	return conv.Ints(get.Child)
