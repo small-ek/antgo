@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 )
 
 //GET POST PUT DELETE HEAD PATCH CONNECT OPTIONS TRACE SENDTYPE_JSON Requet Type
@@ -27,14 +29,15 @@ var (
 
 //HttpSend Request parameter
 type HttpSend struct {
-	Client   http.Client                           //Client
-	resp     *http.Response                        //Response
-	Req      *http.Request                         //Request
-	Proxy    func(*http.Request) (*url.URL, error) //Request proxy
-	Link     string                                //Request address
-	SendType string                                //Request type
-	Header   map[string]string                     //Request header
-	Body     map[string]interface{}                //Request body
+	Client   http.Client                                  //Client
+	Response *http.Response                               //Response
+	Req      *http.Request                                //Request
+	Proxy    func(*http.Request) (*url.URL, error)        //Request proxy
+	Link     string                                       //Request address
+	SendType string                                       //Request type
+	Header   map[string]string                            //Request header
+	Body     map[string]interface{}                       //Request body
+	Dial     func(network, addr string) (net.Conn, error) //Request Timeout
 	sync.RWMutex
 }
 
@@ -63,6 +66,21 @@ func (h *HttpSend) SetProxy(proxy string) *HttpSend {
 	return h
 }
 
+//SetTimeout Set Timeout
+func (h *HttpSend) SetTimeout(timeout time.Duration) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.Dial = func(netw, addr string) (net.Conn, error) {
+		c, err := net.DialTimeout(netw, addr, time.Second*timeout) //设置建立连接超时
+		if err != nil {
+			return nil, err
+		}
+		c.SetDeadline(time.Now().Add(timeout * time.Second)) //设置发送接收数据超时
+		return c, nil
+	}
+	return h
+}
+
 //SetHeader set header
 func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
@@ -85,6 +103,16 @@ func (h *HttpSend) SetSendType(sendType string) *HttpSend {
 	defer h.Unlock()
 	h.SendType = sendType
 	return h
+}
+
+//GetHeader Get Response Header
+func (h *HttpSend) GetHeader() map[string][]string {
+	h.Lock()
+	defer h.Unlock()
+	if h.Response != nil {
+		return h.Response.Header
+	}
+	return nil
 }
 
 //Get request
@@ -164,6 +192,11 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 	if h.Proxy != nil {
 		Transport.Proxy = h.Proxy
 	}
+
+	if h.Dial != nil {
+		Transport.Dial = h.Dial
+	}
+
 	h.Client.Transport = Transport
 
 	h.Req, err = http.NewRequest(method, h.Link, sendData)
@@ -192,10 +225,10 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 		}
 	}
 
-	h.resp, err = h.Client.Do(h.Req)
+	h.Response, err = h.Client.Do(h.Req)
 	if err != nil {
 		return nil, err
 	}
-	defer h.resp.Body.Close()
-	return ioutil.ReadAll(h.resp.Body)
+	defer h.Response.Body.Close()
+	return ioutil.ReadAll(h.Response.Body)
 }
