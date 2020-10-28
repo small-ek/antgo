@@ -14,20 +14,6 @@ import (
 	"time"
 )
 
-//GET POST PUT DELETE HEAD PATCH CONNECT OPTIONS TRACE SENDTYPE_JSON Requet Type
-var (
-	GET           = "GET"
-	POST          = "POST"
-	PUT           = "PUT"
-	DELETE        = "DELETE"
-	HEAD          = "HEAD"
-	PATCH         = "PATCH"
-	CONNECT       = "CONNECT"
-	OPTIONS       = "OPTIONS"
-	TRACE         = "TRACE"
-	SENDTYPE_JSON = "json"
-)
-
 //HttpSend Request parameter
 type HttpSend struct {
 	Client   http.Client                                  //Client
@@ -39,13 +25,14 @@ type HttpSend struct {
 	Header   map[string]string                            //Request header
 	Body     map[string]interface{}                       //Request body
 	Dial     func(network, addr string) (net.Conn, error) //Request Timeout
+	Method   string                                       //Request method
 	sync.RWMutex
 }
 
 //Client Default request
 func Client() *HttpSend {
 	return &HttpSend{
-		SendType: SENDTYPE_JSON,
+		SendType: "json",
 	}
 }
 
@@ -106,6 +93,14 @@ func (h *HttpSend) SetCookie(c *http.Cookie) *HttpSend {
 	return h
 }
 
+//SetMethod set method
+func (h *HttpSend) SetMethod(method string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.Method = method
+	return h
+}
+
 //SetSendType Set Type
 func (h *HttpSend) SetSendType(sendType string) *HttpSend {
 	h.Lock()
@@ -127,55 +122,100 @@ func (h *HttpSend) GetHeader() map[string][]string {
 //Get request
 func (h *HttpSend) Get(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(GET)
+	h.Method = "GET"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Post request
 func (h *HttpSend) Post(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(POST)
+	h.Method = "POST"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Put request
 func (h *HttpSend) Put(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(PUT)
+	h.Method = "PUT"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Delete request
 func (h *HttpSend) Delete(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(DELETE)
+	h.Method = "DELETE"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Connect request
 func (h *HttpSend) Connect(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(CONNECT)
+	h.Method = "CONNECT"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Head request
 func (h *HttpSend) Head(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(HEAD)
+	h.Method = "HEAD"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Options request
 func (h *HttpSend) Options(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(OPTIONS)
+	h.Method = "OPTIONS"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Trace request
 func (h *HttpSend) Trace(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(TRACE)
+	h.Method = "TRACE"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //Patch ...
 func (h *HttpSend) Patch(url string) ([]byte, error) {
 	h.Url = url
-	return h.send(PATCH)
+	h.Method = "PATCH"
+	var result, err = h.Send()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(result)
 }
 
 //GetUrlBuild ...
@@ -189,61 +229,8 @@ func GetUrlBuild(urls string, data map[string]string) string {
 	return u.String()
 }
 
-//send ...
-func (h *HttpSend) send(method string) ([]byte, error) {
-	configData, err := json.Marshal(h.Body)
-	if err != nil {
-		log.Println(err.Error())
-	}
-	var sendData = bytes.NewBuffer(configData)
-
-	var Transport = &http.Transport{}
-	if h.Proxy != nil {
-		Transport.Proxy = h.Proxy
-	}
-
-	if h.Dial != nil {
-		Transport.Dial = h.Dial
-	}
-
-	h.Client.Transport = Transport
-
-	h.Req, err = http.NewRequest(method, h.Url, sendData)
-	if err != nil {
-		return nil, err
-	}
-	defer h.Req.Body.Close()
-
-	if len(h.Header) == 0 {
-		if strings.ToLower(h.SendType) == SENDTYPE_JSON {
-			h.Header = map[string]string{
-				"Content-Type": "application/json; charset=utf-8",
-			}
-		} else {
-			h.Header = map[string]string{
-				"Content-Type": "application/x-www-form-urlencoded",
-			}
-		}
-	}
-
-	for k, v := range h.Header {
-		if strings.ToLower(k) == "host" {
-			h.Req.Host = v
-		} else {
-			h.Req.Header.Add(k, v)
-		}
-	}
-
-	h.Response, err = h.Client.Do(h.Req)
-	if err != nil {
-		return nil, err
-	}
-	defer h.Response.Body.Close()
-	return ioutil.ReadAll(h.Response.Body)
-}
-
 //Send<扩展一般用于手动请求>
-func (h *HttpSend) Send(method string) (io.ReadCloser, error) {
+func (h *HttpSend) Send() (io.ReadCloser, error) {
 	configData, err := json.Marshal(h.Body)
 	if err != nil {
 
@@ -261,14 +248,16 @@ func (h *HttpSend) Send(method string) (io.ReadCloser, error) {
 	}
 
 	h.Client.Transport = Transport
-
-	h.Req, err = http.NewRequest(method, h.Url, sendData)
+	if h.Method == "" {
+		h.Method = "GET"
+	}
+	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(h.Header) == 0 {
-		if strings.ToLower(h.SendType) == SENDTYPE_JSON {
+		if strings.ToLower(h.SendType) == "json" {
 			h.Header = map[string]string{
 				"Content-Type": "application/json; charset=utf-8",
 			}
