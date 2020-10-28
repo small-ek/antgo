@@ -127,6 +127,7 @@ func (h *HttpSend) Get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -138,6 +139,7 @@ func (h *HttpSend) Post(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -149,6 +151,7 @@ func (h *HttpSend) Put(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -160,6 +163,7 @@ func (h *HttpSend) Delete(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -171,6 +175,7 @@ func (h *HttpSend) Connect(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -182,6 +187,7 @@ func (h *HttpSend) Head(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -193,6 +199,7 @@ func (h *HttpSend) Options(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -204,6 +211,7 @@ func (h *HttpSend) Trace(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
@@ -215,6 +223,7 @@ func (h *HttpSend) Patch(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer h.Close()
 	return ioutil.ReadAll(result)
 }
 
