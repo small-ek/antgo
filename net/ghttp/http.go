@@ -34,7 +34,7 @@ type HttpSend struct {
 	Response *http.Response                               //Response
 	Req      *http.Request                                //Request
 	Proxy    func(*http.Request) (*url.URL, error)        //Request proxy
-	Link     string                                       //Request address
+	Url      string                                       //Request address
 	SendType string                                       //Request type
 	Header   map[string]string                            //Request header
 	Body     map[string]interface{}                       //Request body
@@ -54,6 +54,14 @@ func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
 	h.Body = body
+	return h
+}
+
+//SetUrl Set url
+func (h *HttpSend) SetUrl(url string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.Url = url
 	return h
 }
 
@@ -118,61 +126,61 @@ func (h *HttpSend) GetHeader() map[string][]string {
 
 //Get request
 func (h *HttpSend) Get(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(GET)
 }
 
 //Post request
 func (h *HttpSend) Post(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(POST)
 }
 
 //Put request
 func (h *HttpSend) Put(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(PUT)
 }
 
 //Delete request
 func (h *HttpSend) Delete(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(DELETE)
 }
 
 //Connect request
 func (h *HttpSend) Connect(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(CONNECT)
 }
 
 //Head request
 func (h *HttpSend) Head(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(HEAD)
 }
 
 //Options request
 func (h *HttpSend) Options(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(OPTIONS)
 }
 
 //Trace request
 func (h *HttpSend) Trace(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(TRACE)
 }
 
 //Patch ...
 func (h *HttpSend) Patch(url string) ([]byte, error) {
-	h.Link = url
+	h.Url = url
 	return h.send(PATCH)
 }
 
 //GetUrlBuild ...
-func GetUrlBuild(link string, data map[string]string) string {
-	u, _ := url.Parse(link)
+func GetUrlBuild(urls string, data map[string]string) string {
+	u, _ := url.Parse(urls)
 	q := u.Query()
 	for k, v := range data {
 		q.Set(k, v)
@@ -200,7 +208,7 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 
 	h.Client.Transport = Transport
 
-	h.Req, err = http.NewRequest(method, h.Link, sendData)
+	h.Req, err = http.NewRequest(method, h.Url, sendData)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +262,7 @@ func (h *HttpSend) Send(method string) (io.ReadCloser, error) {
 
 	h.Client.Transport = Transport
 
-	h.Req, err = http.NewRequest(method, h.Link, sendData)
+	h.Req, err = http.NewRequest(method, h.Url, sendData)
 	if err != nil {
 		return nil, err
 	}
