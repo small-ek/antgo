@@ -3,6 +3,7 @@ package ghttp
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -231,4 +232,62 @@ func (h *HttpSend) send(method string) ([]byte, error) {
 	}
 	defer h.Response.Body.Close()
 	return ioutil.ReadAll(h.Response.Body)
+}
+
+//Send<扩展一般用于手动请求>
+func (h *HttpSend) Send(method string) (io.ReadCloser, error) {
+	configData, err := json.Marshal(h.Body)
+	if err != nil {
+
+		log.Println(err.Error())
+	}
+	var sendData = bytes.NewBuffer(configData)
+
+	var Transport = &http.Transport{}
+	if h.Proxy != nil {
+		Transport.Proxy = h.Proxy
+	}
+
+	if h.Dial != nil {
+		Transport.Dial = h.Dial
+	}
+
+	h.Client.Transport = Transport
+
+	h.Req, err = http.NewRequest(method, h.Link, sendData)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(h.Header) == 0 {
+		if strings.ToLower(h.SendType) == SENDTYPE_JSON {
+			h.Header = map[string]string{
+				"Content-Type": "application/json; charset=utf-8",
+			}
+		} else {
+			h.Header = map[string]string{
+				"Content-Type": "application/x-www-form-urlencoded",
+			}
+		}
+	}
+
+	for k, v := range h.Header {
+		if strings.ToLower(k) == "host" {
+			h.Req.Host = v
+		} else {
+			h.Req.Header.Add(k, v)
+		}
+	}
+
+	h.Response, err = h.Client.Do(h.Req)
+	if err != nil {
+		return nil, err
+	}
+	return h.Response.Body, nil
+}
+
+//Close <必须默认关闭>
+func (h *HttpSend) Close() {
+	defer h.Response.Body.Close()
+	defer h.Req.Body.Close()
 }
