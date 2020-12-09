@@ -14,7 +14,7 @@ import (
 //Write Inherit zap log
 var Write *zap.Logger
 
-//Log 默认调用
+//Create 默认调用
 var Create New
 
 //New Log parameter structure
@@ -58,19 +58,19 @@ func (get *New) SetMaxBackups(MaxBackups int) *New {
 	return get
 }
 
-//SetMaxSize setting log
+//SetMaxSize Set log maximum
 func (get *New) SetMaxSize(MaxSize int) *New {
 	get.MaxSize = MaxSize
 	return get
 }
 
-//SetPath setting log
+//SetPath setting log path
 func (get *New) SetPath(path string) *New {
 	get.Path = path
 	return get
 }
 
-//SetPath Set log path
+//Register Set log
 func (get *New) Register() *zap.Logger {
 	// Log split
 	hook := lumberjack.Logger{

@@ -36,7 +36,7 @@ func (get *Client) IsClient(client *Connection) bool {
 	return get.Clients[client]
 }
 
-//GetClient Get client<获取客户端连接>
+//GetClient Get client 获取客户端连接
 func (manager *Client) GetClient() (clients map[*Connection]bool) {
 	clients = make(map[*Connection]bool)
 	manager.GetClientsLoop(func(client *Connection, value bool) (result bool) {
@@ -64,7 +64,7 @@ func (get *Client) GetClientsCount() int {
 	return len(get.Clients)
 }
 
-//AddClients Adding a connection<添加客户端>
+//AddClients Adding a connection 添加客户端
 func (get *Client) AddClients(client *Connection) {
 	get.ClientsLock.Lock()
 	get.Clients[client] = true
@@ -176,7 +176,7 @@ func (get *Client) OnRegister(connection *Connection) {
 	get.AddClients(connection)
 }
 
-//EventLogin 用户登录
+//OnLogin 用户登录
 func (get *Client) OnLogin(login *Login) {
 	var client = login.Client
 	// 连接存在，在添加
@@ -186,7 +186,7 @@ func (get *Client) OnLogin(login *Login) {
 	}
 }
 
-//EventUnregister 用户断开连接
+//OnUserLogout 用户断开连接
 func (get *Client) OnUserLogout(client *Connection) {
 	get.DeleteClients(client)
 	deleteResult := get.DeleteUsers(client)

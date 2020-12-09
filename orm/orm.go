@@ -27,7 +27,7 @@ func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// WhereIn WhereIn search when there is value
+//WhereIn WhereIn search when there is value
 func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		switch value := value.(type) {
@@ -76,7 +76,7 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 	}
 }
 
-// WhereBuildQuery Build a where query
+//WhereBuildQuery Build a where query
 func WhereBuildQuery(where interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if where == nil {

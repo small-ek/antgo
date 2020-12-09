@@ -238,7 +238,7 @@ func GetUrlBuild(urls string, data map[string]string) string {
 	return u.String()
 }
 
-//Send<扩展一般用于手动请求>
+//Send <扩展一般用于手动请求>
 func (h *HttpSend) Send() (io.ReadCloser, error) {
 	configData, err := json.Marshal(h.Body)
 	if err != nil {
