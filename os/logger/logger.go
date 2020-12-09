@@ -3,8 +3,11 @@ package logger
 import (
 	"fmt"
 	"github.com/natefinch/lumberjack"
+	"github.com/small-ek/ginp/conv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"log"
+	"runtime"
 	"time"
 )
 
@@ -154,8 +157,8 @@ func Debug(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Debugf(msg)
 }
 
-//Error Error printing<错误打印>
-func Error(msg string, args ...interface{}) {
+//Errors Error printing<错误打印>
+func Errors(msg string, args ...interface{}) {
 	FormateLog(args).Sugar().Errorf(msg)
 }
 
@@ -179,4 +182,14 @@ func AsyncInfo(msg string, args ...interface{}) {
 	go func() {
 		FormateLog(args).Sugar().Infof(msg)
 	}()
+}
+
+//Error Error print log<捕获异常>
+func Error(err error) {
+	if err != nil {
+		pc, file, line, _ := runtime.Caller(1)
+		f := runtime.FuncForPC(pc)
+		log.Println(file + ":" + conv.String(line) + "<" + err.Error() + ">")
+		FormateLog([]interface{}{file, line, f.Name()}).Sugar().Infof(err.Error())
+	}
 }
