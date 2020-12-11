@@ -10,6 +10,16 @@ import (
 	"net/http"
 )
 
+//PageParam Paging parameters
+type PageParam struct {
+	CurrentPage int         `form:"current_page"`
+	PageSize    int         `form:"page_size"`
+	Total       int64       `form:"total"`
+	Filter      interface{} `form:"filter"`
+	Order       string      `form:"order"`
+	Details     interface{} `json:"details"`
+}
+
 //GetBody Get the requested data
 func GetBody(c *gin.Context) map[string]interface{} {
 	var request map[string]interface{}
