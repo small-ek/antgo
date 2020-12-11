@@ -22,7 +22,7 @@ type Write struct {
 
 //Page Pagination return
 type Page struct {
-	Total int         `json:"total"` //Total total pages
+	Total int64       `json:"total"` //Total total pages
 	List  interface{} `json:"list"`  //List json data
 }
 
