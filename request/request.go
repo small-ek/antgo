@@ -20,6 +20,14 @@ type PageParam struct {
 	Details     interface{} `json:"details"`
 }
 
+//DefaultPage Default pagination
+func DefaultPage() PageParam {
+	return PageParam{
+		CurrentPage: 1,
+		PageSize:    10,
+	}
+}
+
 //GetBody Get the requested data
 func GetBody(c *gin.Context) map[string]interface{} {
 	var request map[string]interface{}
@@ -53,6 +61,36 @@ func GetBool(name string, c *gin.Context) bool {
 	return conv.Bool(request[name])
 }
 
+//GetUint ...
+func GetUint(name string, c *gin.Context) uint {
+	var request = GetBody(c)
+	return conv.Uint(request[name])
+}
+
+//GetUint8 ...
+func GetUint8(name string, c *gin.Context) uint8 {
+	var request = GetBody(c)
+	return conv.Uint8(request[name])
+}
+
+//GetUint16 ...
+func GetUint16(name string, c *gin.Context) uint16 {
+	var request = GetBody(c)
+	return conv.Uint16(request[name])
+}
+
+//GetUint32 ...
+func GetUint32(name string, c *gin.Context) uint32 {
+	var request = GetBody(c)
+	return conv.Uint32(request[name])
+}
+
+//GetUint64 ...
+func GetUint64(name string, c *gin.Context) uint64 {
+	var request = GetBody(c)
+	return conv.Uint64(request[name])
+}
+
 //GetFloat32 ...
 func GetFloat32(name string, c *gin.Context) float32 {
 	var request = GetBody(c)
@@ -69,6 +107,30 @@ func GetFloat64(name string, c *gin.Context) float64 {
 func GetInt(name string, c *gin.Context) int {
 	var request = GetBody(c)
 	return conv.Int(request[name])
+}
+
+//GetInt8 ...
+func GetInt8(name string, c *gin.Context) int8 {
+	var request = GetBody(c)
+	return conv.Int8(request[name])
+}
+
+//GetInt16 ...
+func GetInt16(name string, c *gin.Context) int16 {
+	var request = GetBody(c)
+	return conv.Int16(request[name])
+}
+
+//GetInt32 ...
+func GetInt32(name string, c *gin.Context) int32 {
+	var request = GetBody(c)
+	return conv.Int32(request[name])
+}
+
+//GetInt64 ...
+func GetInt64(name string, c *gin.Context) int64 {
+	var request = GetBody(c)
+	return conv.Int64(request[name])
 }
 
 //Cors Cross-domain request
