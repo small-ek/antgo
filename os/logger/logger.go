@@ -190,6 +190,6 @@ func Error(err error) {
 		pc, file, line, _ := runtime.Caller(1)
 		f := runtime.FuncForPC(pc)
 		log.Println(file + ":" + conv.String(line) + "<" + err.Error() + ">")
-		FormateLog([]interface{}{file, line, f.Name()}).Sugar().Infof(err.Error())
+		FormateLog([]interface{}{file, line, f.Name()}).Sugar().Error(err.Error())
 	}
 }
