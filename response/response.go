@@ -2,6 +2,7 @@ package response
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/ginp/os/config"
 	"github.com/small-ek/ginp/os/logger"
 	"go.uber.org/zap"
 )
@@ -49,7 +50,7 @@ func Success(msg string, data ...interface{}) *Write {
 
 //Fail Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...interface{}) *Write {
-	if len(err) > 0 {
+	if len(err) > 0 && config.Decode().Get("system").Get("debug").Bool() == true {
 		logger.Write.Error("错误", zap.Any("error", err[0].(string)))
 		return &Write{Code: ERROR, Msg: msg, Error: err[0].(string), Data: ""}
 	}
