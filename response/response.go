@@ -121,7 +121,7 @@ func String(result interface{}, format string, c *gin.Context, code ...int) {
 }
 
 //ProtoBuf ...
-func ProtoBuf(result interface{}, name string, c *gin.Context, code ...int) {
+func ProtoBuf(result interface{}, c *gin.Context, code ...int) {
 	var codes = 200
 	if len(code) > 0 {
 		codes = code[0]

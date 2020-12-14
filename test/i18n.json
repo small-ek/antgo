@@ -1,0 +1,10 @@
+{
+  "zh": {
+    "name": "名字",
+    "hello": "你好"
+  },
+  "en": {
+    "name": "Name",
+    "hello": "Hello"
+  }
+}

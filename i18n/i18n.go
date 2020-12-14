@@ -1,41 +1,85 @@
 package i18n
 
 import (
-	"github.com/small-ek/ginp/os/config"
+	"encoding/json"
+	"github.com/small-ek/ginp/conv"
+	"io/ioutil"
+	"log"
+	"strings"
 )
 
-//New i18n
-type New struct {
-	Tag string
-	Msg map[string]interface{}
-}
+//Datas ...
+var Datas map[string]interface{}
 
-//Result ...
-var Result *New
+//Maps ...
+var Maps map[string]interface{}
+
+//Array ...
+var Array []interface{}
 
 //SetPath Set path
 func SetPath(path string) {
-	config.SetPath(path)
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	err2 := json.Unmarshal(bytes, &Datas)
+	if err2 != nil {
+		log.Println(err2.Error())
+		return
+	}
 }
 
-//SetLanguage Set language
-func SetLanguage(languages string) {
-	var getLang = config.Decode().Get(languages).Map()
-	var child = make(map[string]interface{})
-
-	for key, value := range getLang {
-		if languages != "" && key != "" && value != nil {
-			child[key] = value
-		}
-	}
-
-	Result = &New{
-		Tag: languages,
-		Msg: child,
-	}
+//SetLanguage language setting
+func SetLanguage(lang string) {
+	Maps = Datas[lang].(map[string]interface{})
 }
 
 //Get language
 func Get(name string) string {
-	return Result.Msg[name].(string)
+	var list = strings.Split(name, ".")
+	if len(list) > 1 {
+		for _, value := range list {
+			if value != "" {
+				switch values := Maps[value].(type) {
+				case map[string]interface{}:
+					Maps = values
+					names := name[len(value)+1:]
+					return Get(names)
+				case string:
+					return conv.String(Maps)
+				case []interface{}:
+					Array = values
+					names := name[len(value)+1:]
+					return array(names)
+				}
+			}
+		}
+	}
+	return conv.String(Maps[name])
+}
+
+//array Slice analysis
+func array(name string) string {
+	var list = strings.Split(name, ".")
+	if len(list) > 1 {
+		for _, value := range list {
+			if value != "" {
+				switch values := Array[conv.Int(value)].(type) {
+				case map[string]interface{}:
+					Maps = values
+					names := name[len(value)+1:]
+					return Get(names)
+				case string:
+					return conv.String(values)
+				case []interface{}:
+					Array = values
+					names := name[len(value)+1:]
+					return array(names)
+				}
+			}
+		}
+	}
+	return conv.String(Array[conv.Int(name)])
 }

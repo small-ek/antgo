@@ -1,20 +1,22 @@
 package test
 
 import (
+	"flag"
 	"github.com/small-ek/ginp/i18n"
 	"log"
+	"reflect"
 	"testing"
 )
 
-/*var Lang map[string]map[string]interface{}
-var Tag string*/
-
 func TestI18n(t *testing.T) {
-	i18n.SetPath("config.toml")
-	i18n.SetLanguage("zh")
-	/*i18n.SetLanguage("en")*/
-	for i := 0; i < 1000; i++ {
+	log.SetFlags(log.Llongfile | log.LstdFlags)
+	flag.Parse()
 
-		log.Println(i18n.Get("hello"))
+	i18n.SetPath("i18n.json")
+	for i := 0; i < 1000; i++ {
+		i18n.SetLanguage("zh")
+		var result = i18n.Get("hello")
+		log.Println(result)
+		log.Println(reflect.TypeOf(result))
 	}
 }
