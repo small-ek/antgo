@@ -1,7 +1,7 @@
 package gwebsocket
 
 import (
-	"github.com/small-ek/ginp/crypto/hash"
+	"github.com/small-ek/antgo/crypto/hash"
 	"sync"
 )
 
@@ -37,9 +37,9 @@ func (get *Client) IsClient(client *Connection) bool {
 }
 
 //GetClient Get client 获取客户端连接
-func (manager *Client) GetClient() (clients map[*Connection]bool) {
+func (get *Client) GetClient() (clients map[*Connection]bool) {
 	clients = make(map[*Connection]bool)
-	manager.GetClientsLoop(func(client *Connection, value bool) (result bool) {
+	get.GetClientsLoop(func(client *Connection, value bool) (result bool) {
 		clients[client] = value
 		return true
 	})
@@ -86,10 +86,10 @@ func GetUserKey(appId string, userId string) string {
 }
 
 //AddUsers 添加用户
-func (manager *Client) AddUsers(key string, connection *Connection) {
-	manager.UserLock.Lock()
-	manager.Users[key] = connection
-	defer manager.UserLock.Unlock()
+func (get *Client) AddUsers(key string, connection *Connection) {
+	get.UserLock.Lock()
+	get.Users[key] = connection
+	defer get.UserLock.Unlock()
 }
 
 //GetUserClient 获取用户的连接

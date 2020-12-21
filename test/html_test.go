@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/encoding/html"
+	"github.com/small-ek/antgo/encoding/html"
 	"log"
 	"testing"
 )

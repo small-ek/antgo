@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/os/logs"
+	"github.com/small-ek/antgo/os/logs"
 	"testing"
 )
 

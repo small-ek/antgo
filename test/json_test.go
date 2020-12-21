@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/encoding/json"
+	"github.com/small-ek/antgo/encoding/json"
 	"log"
 	"testing"
 )

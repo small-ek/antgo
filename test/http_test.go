@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/net/ghttp"
+	"github.com/small-ek/antgo/net/ghttp"
 	"log"
 	"testing"
 )

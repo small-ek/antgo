@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/crypto/uuid"
+	"github.com/small-ek/antgo/crypto/uuid"
 	"log"
 	"testing"
 )

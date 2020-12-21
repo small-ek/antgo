@@ -2,7 +2,7 @@ package test
 
 import (
 	"flag"
-	"github.com/small-ek/ginp/i18n"
+	"github.com/small-ek/antgo/i18n"
 	"log"
 	"reflect"
 	"testing"

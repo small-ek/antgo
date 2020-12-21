@@ -1,4 +1,4 @@
-package ginp
+package antgo
 
 //VERSION ...
 const VERSION = "v1.0.7"

@@ -2,8 +2,8 @@ package cache
 
 import (
 	"github.com/coocood/freecache"
-	"github.com/small-ek/ginp/conv"
-	"github.com/small-ek/ginp/crypto/hash"
+	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/crypto/hash"
 )
 
 const (

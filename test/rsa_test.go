@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/crypto/rsa"
+	"github.com/small-ek/antgo/crypto/rsa"
 	"log"
 	"testing"
 )

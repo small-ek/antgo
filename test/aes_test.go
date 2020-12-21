@@ -2,8 +2,8 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/small-ek/ginp/crypto/aes"
-	"github.com/small-ek/ginp/encoding/base64"
+	"github.com/small-ek/antgo/crypto/aes"
+	"github.com/small-ek/antgo/encoding/base64"
 	"log"
 	"testing"
 )

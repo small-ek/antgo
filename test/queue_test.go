@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/queue"
+	"github.com/small-ek/antgo/queue"
 	"log"
 	"testing"
 	"time"

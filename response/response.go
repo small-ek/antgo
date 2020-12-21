@@ -2,8 +2,8 @@ package response
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/small-ek/ginp/os/config"
-	"github.com/small-ek/ginp/os/logger"
+	"github.com/small-ek/antgo/os/config"
+	"github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"
 )
 

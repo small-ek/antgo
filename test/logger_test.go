@@ -3,7 +3,7 @@ package test
 import (
 	"errors"
 	"flag"
-	"github.com/small-ek/ginp/os/logger"
+	"github.com/small-ek/antgo/os/logger"
 	"log"
 	"testing"
 )

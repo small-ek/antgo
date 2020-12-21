@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/encoding/base64"
+	"github.com/small-ek/antgo/encoding/base64"
 	"log"
 	"testing"
 )

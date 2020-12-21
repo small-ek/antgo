@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/email"
+	"github.com/small-ek/antgo/email"
 	"testing"
 )
 

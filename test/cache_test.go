@@ -1,8 +1,8 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/conv"
-	"github.com/small-ek/ginp/os/cache"
+	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/os/cache"
 	"log"
 	"testing"
 )

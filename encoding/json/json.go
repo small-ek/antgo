@@ -2,7 +2,7 @@ package json
 
 import (
 	"encoding/json"
-	"github.com/small-ek/ginp/conv"
+	"github.com/small-ek/antgo/conv"
 	"log"
 	"strings"
 )

@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"github.com/small-ek/ginp/container/array"
+	"github.com/small-ek/antgo/container/array"
 	"testing"
 )
 

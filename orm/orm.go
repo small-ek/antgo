@@ -2,7 +2,7 @@ package orm
 
 import (
 	"encoding/json"
-	"github.com/small-ek/ginp/conv"
+	"github.com/small-ek/antgo/conv"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -35,11 +35,19 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 			if len(value) == 0 {
 				return db
 			}
+		case []int16:
+			if len(value) == 0 {
+				return db
+			}
 		case []int32:
 			if len(value) == 0 {
 				return db
 			}
 		case []int64:
+			if len(value) == 0 {
+				return db
+			}
+		case []uint16:
 			if len(value) == 0 {
 				return db
 			}
@@ -55,8 +63,11 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 			if len(value) == 0 {
 				return db
 			}
+		case []interface{}:
+			if len(value) == 0 {
+				return db
+			}
 		}
-
 		if key != "" && value != nil && value != "" {
 			return db.Where(""+key+" IN (?)", value)
 		}
@@ -67,66 +78,10 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 // Where Where to search when there is value
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-
 		if key != "" && conditions != "" && value != "" {
 			return db.Where(""+key+" "+conditions+" ?", value)
 		}
-
 		return db
-	}
-}
-
-//WhereBuildQuery Build a where query
-func WhereBuildQuery(where interface{}) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if where == nil {
-			return db
-		}
-
-		whereArray := where.([]string)
-		var column string
-		var value []interface{}
-		for _, v := range whereArray {
-			var arr []interface{}
-			json.Unmarshal([]byte(v), &arr)
-
-			if len(arr) == 3 && arr[2] != "" {
-
-				//判断是否需要拼接
-				if column != "" {
-					column = column + " AND "
-				}
-
-				//检索where条件
-				if arr[1] == "like" || arr[1] == "notlike" || arr[1] == "ilike" || arr[1] == "rlike" {
-					column = column + conv.String(arr[0]) + " " + conv.String(arr[1]) + " ?"
-					value = append(value, conv.String(arr[2])+"%")
-
-				} else if arr[1] == "between" && arr[2] != "" { //搜索between
-					var betweenStr []string
-					json.Unmarshal(conv.Bytes(arr[2]), &betweenStr)
-					if len(betweenStr) > 1 {
-						column = column + conv.String(arr[0]) + " BETWEEN ? AND ?"
-						value = append(value, betweenStr[0], betweenStr[1])
-					}
-
-				} else if strings.Index(" in not in", conv.String(arr[1])) > -1 {
-					column = column + conv.String(arr[0]) + " " + conv.String(arr[1]) + " (?)"
-					value = append(value, arr[2])
-
-				} else {
-					column = column + conv.String(arr[0]) + " " + conv.String(arr[1]) + " ?"
-					value = append(value, arr[2])
-				}
-			} else if strings.Index("is null is not null", conv.String(arr[1])) > -1 {
-				if column != "" {
-					column = column + " AND "
-				}
-				column = column + conv.String(arr[0]) + " " + conv.String(arr[1])
-			}
-		}
-
-		return db.Where(column, value...)
 	}
 }
 
@@ -145,4 +100,88 @@ func Paginate(pageSize, currentPage int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Limit(pageSize).Offset((currentPage - 1) * pageSize)
 	}
+}
+
+//OnlyTrashed ...
+func OnlyTrashed(res bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if res == true {
+			return db.Unscoped().Where("deleted_at IS NOT NULL")
+		} else {
+			return db
+		}
+	}
+}
+
+//Filters ...
+func Filters(where interface{}) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if where == nil {
+			return db
+		}
+		whereArray := where.([]string)
+		for _, v := range whereArray {
+			var arr []interface{}
+			json.Unmarshal([]byte(v), &arr)
+			db = buildWhere(arr, db)
+		}
+		return db
+	}
+}
+
+//buildWhere
+func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
+	if len(arr) == 3 && arr[2] != "" {
+		db = and(arr[0].(string), arr[1].(string), arr[2], db)
+	}
+	if len(arr) == 4 && arr[3] != "" && arr[0] == "or" {
+		db = or(arr[1].(string), arr[2].(string), arr[3], db)
+	}
+	return db
+}
+
+//and
+func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
+	switch condition {
+	case "like", "notlike", "ilike", "rlike":
+		db = db.Where(key+" "+condition+" ?", value.(string)+"%")
+	case "in", "not in":
+		db = db.Where(key+" "+condition+" (?)", value)
+	case "between":
+		var betweenStr []string
+		json.Unmarshal(conv.Bytes(value), &betweenStr)
+		if len(betweenStr) > 1 {
+			db = db.Where(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
+		}
+	case "<", "<=", ">", ">=", "=", "<>":
+		if strings.Index("is null is not null", value.(string)) > -1 {
+			db = db.Where(key + " " + value.(string))
+		} else {
+			db = db.Where(key+" "+condition+" ?", value.(string))
+		}
+	}
+	return db
+}
+
+//or
+func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
+	switch condition {
+	case "like", "notlike", "ilike", "rlike":
+		db = db.Or(key+" "+condition+" ?", value.(string)+"%")
+	case "in", "not in":
+		db = db.Or(key+" "+condition+" (?)", value.([]interface{}))
+	case "between":
+		var betweenStr []string
+		json.Unmarshal(conv.Bytes(value), &betweenStr)
+		if len(betweenStr) > 1 {
+			db = db.Or(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
+		}
+	case "<", "<=", ">", ">=", "=", "<>":
+		if strings.Index("is null is not null", value.(string)) > -1 {
+			db = db.Or(key + " " + value.(string))
+		} else {
+			db = db.Or(key+" "+condition+" ?", value.(string))
+		}
+	}
+	return db
 }

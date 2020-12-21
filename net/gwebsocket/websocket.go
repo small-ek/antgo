@@ -3,7 +3,7 @@ package gwebsocket
 import (
 	"errors"
 	"github.com/gorilla/websocket"
-	"github.com/small-ek/ginp/crypto/hash"
+	"github.com/small-ek/antgo/crypto/hash"
 	"sync"
 )
 

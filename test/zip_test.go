@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/encoding/zip"
+	"github.com/small-ek/antgo/encoding/zip"
 	"log"
 	"testing"
 )

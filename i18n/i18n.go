@@ -2,7 +2,7 @@ package i18n
 
 import (
 	"encoding/json"
-	"github.com/small-ek/ginp/conv"
+	"github.com/small-ek/antgo/conv"
 	"io/ioutil"
 	"log"
 	"strings"

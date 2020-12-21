@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/ginp/os/cron"
+	"github.com/small-ek/antgo/os/cron"
 	"log"
 	"os"
 	"testing"
