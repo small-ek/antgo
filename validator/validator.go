@@ -13,9 +13,8 @@ import (
 
 //New Validator default structure
 type New struct {
-	Rule    map[string][]string //Validation rules {"require|required", "max:25|maximum length","min:5|minimum length","number|number","email|mailbox",">:8|greater than 8"," <:8|Less than 8","=:8|equal to 8"}
-	Scene   []string            //Detected field
-	Message map[string]string
+	Rule  map[string][]string //Validation rules {"require|required", "max:25|maximum length","min:5|minimum length","number|number","email|mailbox",">:8|greater than 8"," <:8|Less than 8","=:8|equal to 8"}
+	Scene []string            //Detected field
 }
 
 //Default
@@ -56,15 +55,8 @@ func (get *New) Check(Request interface{}) error {
 	return nil
 }
 
-//StructMessage
-func StructMsg(msg map[string]string) *New {
-	return &New{
-		Message: msg,
-	}
-}
-
 //CheckStruct TODO
-func (get *New) CheckStruct(structModel interface{}) error {
+func CheckStruct(structModel interface{}) error {
 	var types = reflect.TypeOf(structModel)
 	if types.Kind() == reflect.Ptr {
 		types = types.Elem()
@@ -72,21 +64,15 @@ func (get *New) CheckStruct(structModel interface{}) error {
 	var value = reflect.ValueOf(structModel)
 	for i := 0; i < value.NumField(); i++ {
 		var validate = types.Field(i).Tag.Get("validate")
-		log.Print(validate)
-		var jsonName = types.Field(i).Tag.Get("json")
+		var val = value.Field(i).Interface()
+		var validateArray = strings.Split(validate, ";")
 
-		var validateStr = strings.Split(validate, "|")
-		var val = value.Field(i).String()
-
-		for j := 0; j < len(validateStr); j++ {
-			var ruleType = validateStr[j]
-			if strings.Index(ruleType, ":") > -1 {
-				ruleType = strings.Split(ruleType, ":")[0]
-			}
-			var message = get.Message[jsonName+"."+ruleType]
-			var err = CheckItem(val, validateStr[j]+"|"+message)
-			if err != nil {
-				return err
+		for i := 0; i < len(validateArray); i++ {
+			if validateArray[i] != "" {
+				var err = CheckItem(conv.String(val), validateArray[i])
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

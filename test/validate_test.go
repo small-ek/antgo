@@ -13,8 +13,8 @@ var Rule = map[string][]string{
 }
 
 type Tests struct {
-	Name  string `json:"name" validate:"['require|请输入name','require|请输入name']"`
-	Name2 string `json:"name2" validate:"require"`
+	Name  int    `json:"name" validate:"require|请输入name;number:2|请输入name2"`
+	Name2 string `json:"name2" validate:"require|请输入name2"`
 }
 
 func TestValidate(t *testing.T) {
@@ -24,13 +24,6 @@ func TestValidate(t *testing.T) {
 	var err = validator.Default([]string{"old_password", "password"}, Rule).Check(Request)
 	log.Print(err)
 
-	var msg = map[string]string{
-		"name.require":  "请输入name",
-		"name.in":       "请输入正确的名称",
-		"name2.require": "请输入name2",
-		"name2.in":      "不在范围",
-	}
-	var err2 = validator.StructMsg(msg).CheckStruct(Tests{Name: "asaas", Name2: "2"})
+	var err2 = validator.CheckStruct(Tests{Name: 11111, Name2: "2222"})
 	log.Println(err2)
-
 }
