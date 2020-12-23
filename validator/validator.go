@@ -69,7 +69,7 @@ func CheckStruct(structModel interface{}) error {
 
 		for i := 0; i < len(validateArray); i++ {
 			if validateArray[i] != "" {
-				var err = CheckItem(conv.String(val), validateArray[i])
+				var err = CheckItem(val, validateArray[i])
 				if err != nil {
 					return err
 				}
@@ -85,7 +85,6 @@ func CheckItem(value interface{}, Rule string) error {
 	var rulesSplitStr = strings.Split(ruleSplit[0], ":")
 	var rules = rulesSplitStr[0]
 	var message = ruleSplit[1]
-	var values = value.(string)
 	if len(ruleSplit) == 1 {
 		log.Println("Validator parameter syntax error")
 		return nil
@@ -94,77 +93,77 @@ func CheckItem(value interface{}, Rule string) error {
 	switch rules {
 	//必填
 	case "require":
-		if isRequire(values) == false {
+		if isRequire(conv.String(value)) == false {
 			return errors.New(message)
 		}
 	//在多少范围
 	case "between":
-		if between(values, rulesSplitStr[1]) == false {
+		if between(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//不在多少范围
 	case "notBetween":
-		if notBetween(values, rulesSplitStr[1]) == false {
+		if notBetween(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//多少范围
 	case "length":
-		if length(values, rulesSplitStr[1]) == false {
+		if length(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//最大长度
 	case "max":
-		if isMax(values, rulesSplitStr[1]) == false {
+		if isMax(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//最小长度
 	case "min":
-		if isMin(values, rulesSplitStr[1]) == false {
+		if isMin(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//是否包含
 	case "in":
-		if in(values, rulesSplitStr[1]) == false {
+		if in(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//是否不包含
 	case "notIn":
-		if notIn(values, rulesSplitStr[1]) == false {
+		if notIn(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//数字类型包含小数点
 	case "number":
-		if isNumber(values) == false {
+		if isNumber(conv.String(value)) == false {
 			return errors.New(message)
 		}
 	//邮箱
 	case "email":
-		if isEmail(values) == false {
+		if isEmail(conv.String(value)) == false {
 			return errors.New(message)
 		}
 	//日期
 	case "date":
-		if date(values) == false {
+		if date(conv.String(value)) == false {
 			return errors.New(message)
 		}
 	//url验证
 	case "url":
-		if isUrl(values) == false {
+		if isUrl(conv.String(value)) == false {
 			return errors.New(message)
 		}
 	//大于多少
 	case ">":
-		if moreThan(values, rulesSplitStr[1]) == false {
+		if moreThan(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//小于多少
 	case "<":
-		if lessThan(values, rulesSplitStr[1]) == false {
+		if lessThan(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	//等于多少
 	case "=":
-		if equal(values, rulesSplitStr[1]) == false {
+		if equal(conv.String(value), rulesSplitStr[1]) == false {
 			return errors.New(message)
 		}
 	}
