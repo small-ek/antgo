@@ -81,6 +81,16 @@ func (get *Result) Strings() []string {
 	return conv.Strings(get.Child)
 }
 
+//Byte Data type conversion.
+func (get *Result) Byte() byte {
+	return conv.Byte(get.Child)
+}
+
+//Bytes Data type conversion.
+func (get *Result) Bytes() []byte {
+	return conv.Bytes(get.Child)
+}
+
 //Int Data type conversion.
 func (get *Result) Int() int {
 	if get.Child == nil {
