@@ -32,7 +32,7 @@ type Page struct {
 func ErrorResponse(err error) *Write {
 	return &Write{
 		Code:  ERROR,
-		Msg:   "错误",
+		Msg:   "Error",
 		Error: err.Error(),
 	}
 }
