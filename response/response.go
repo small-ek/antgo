@@ -49,10 +49,10 @@ func Success(msg string, data ...interface{}) *Write {
 }
 
 //Fail Error return, the second parameter is passed back to the front end and printed
-func Fail(msg string, err ...interface{}) *Write {
+func Fail(msg string, err ...error) *Write {
 	if len(err) > 0 && config.Decode().Get("system").Get("debug").Bool() == true {
-		logger.Write.Error("错误", zap.Any("error", err[0].(string)))
-		return &Write{Code: ERROR, Msg: msg, Error: err[0].(string), Data: ""}
+		logger.Write.Error("Return error", zap.Any("error", err[0].Error()))
+		return &Write{Code: ERROR, Msg: msg, Error: err[0].Error(), Data: ""}
 	}
 	return &Write{Code: ERROR, Msg: msg}
 }
