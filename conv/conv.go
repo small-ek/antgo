@@ -183,7 +183,7 @@ func Int64(i interface{}) int64 {
 	}
 	switch value := i.(type) {
 	case int, int8, int16, int32, uint, uint8, uint16, uint32, uint64, float32, float64:
-		return value.(int64)
+		return int64(i.(float64))
 	case int64:
 		return value
 	case bool:
