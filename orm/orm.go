@@ -144,7 +144,7 @@ func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
 func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	switch condition {
 	case "like", "LIKE", "notlike", "NOTLIKE", "ilike", "ILIKE", "rlike", "RLIKE":
-		db = db.Where(key+" "+condition+" ?", value.(string)+"%")
+		db = db.Where(key+" "+condition+" ?", conv.String(value)+"%")
 	case "in", "IN", "not in", "NOT IN":
 		db = db.Where(key+" "+condition+" (?)", value)
 	case "between", "BETWEEN":
@@ -154,10 +154,11 @@ func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 			db = db.Where(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
 		}
 	case "<", "<=", ">", ">=", "=", "<>":
-		if strings.Index("is null is not null", value.(string)) > -1 {
-			db = db.Where(key + " " + value.(string))
+		var values = conv.String(value)
+		if strings.Index("is null is not null", values) > -1 {
+			db = db.Where(key + " " + values)
 		} else {
-			db = db.Where(key+" "+condition+" ?", value.(string))
+			db = db.Where(key+" "+condition+" ?", values)
 		}
 	}
 	return db
@@ -167,7 +168,7 @@ func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	switch condition {
 	case "like", "LIKE", "notlike", "NOTLIKE", "ilike", "ILIKE", "rlike", "RLIKE":
-		db = db.Or(key+" "+condition+" ?", value.(string)+"%")
+		db = db.Or(key+" "+condition+" ?", conv.String(value)+"%")
 	case "in", "IN", "not in", "NOT IN":
 		db = db.Or(key+" "+condition+" (?)", value.([]interface{}))
 	case "between", "BETWEEN":
@@ -177,10 +178,11 @@ func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 			db = db.Or(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
 		}
 	case "<", "<=", ">", ">=", "=", "<>":
-		if strings.Index("is null is not null", value.(string)) > -1 {
-			db = db.Or(key + " " + value.(string))
+		var values = conv.String(value)
+		if strings.Index("is null is not null", values) > -1 {
+			db = db.Or(key + " " + values)
 		} else {
-			db = db.Or(key+" "+condition+" ?", value.(string))
+			db = db.Or(key+" "+condition+" ?", values)
 		}
 	}
 	return db
