@@ -143,9 +143,9 @@ func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
 //and
 func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	switch condition {
-	case "like", "LIKE", "notlike", "NOTLIKE", "ilike", "ILIKE", "rlike", "RLIKE":
+	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":
 		db = db.Where(key+" "+condition+" ?", conv.String(value)+"%")
-	case "in", "IN", "not in", "NOT IN":
+	case "in", "IN", "In", "not in", "NOT IN", "Not in", "notin", "NOTIN", "NotIn", "Notin":
 		db = db.Where(key+" "+condition+" (?)", value)
 	case "between", "BETWEEN":
 		var betweenStr []string
@@ -167,11 +167,11 @@ func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 //or
 func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	switch condition {
-	case "like", "LIKE", "notlike", "NOTLIKE", "ilike", "ILIKE", "rlike", "RLIKE":
+	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":
 		db = db.Or(key+" "+condition+" ?", conv.String(value)+"%")
-	case "in", "IN", "not in", "NOT IN":
+	case "in", "IN", "In", "not in", "NOT IN", "Not in", "notin", "NOTIN", "NotIn", "Notin":
 		db = db.Or(key+" "+condition+" (?)", value.([]interface{}))
-	case "between", "BETWEEN":
+	case "between", "BETWEEN", "Between":
 		var betweenStr []string
 		json.Unmarshal(conv.Bytes(value), &betweenStr)
 		if len(betweenStr) > 1 {

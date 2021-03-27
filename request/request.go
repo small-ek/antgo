@@ -12,12 +12,12 @@ import (
 
 //PageParam Paging parameters
 type PageParam struct {
-	CurrentPage int         `form:"current_page"`
-	PageSize    int         `form:"page_size"`
-	Total       int64       `form:"total"`
-	Filter      interface{} `form:"filter"`
-	Order       string      `form:"order"`
-	Details     interface{} `json:"details"`
+	CurrentPage int         `form:"current_page" json:"current_page"`
+	PageSize    int         `form:"page_size" json:"page_size"`
+	Total       int64       `form:"total" json:"total"`
+	Filter      interface{} `form:"filter" json:"filter"`
+	Order       string      `form:"order" json:"order"`
+	Details     interface{} `form:"details" json:"details"`
 }
 
 //DefaultPage Default pagination
