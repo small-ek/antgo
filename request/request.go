@@ -15,7 +15,7 @@ type PageParam struct {
 	CurrentPage int         `form:"current_page" json:"current_page"`
 	PageSize    int         `form:"page_size" json:"page_size"`
 	Total       int64       `form:"total" json:"total"`
-	Filter      interface{} `form:"filter" json:"filter"`
+	Filter      []string    `form:"filter[]" json:"filter[]"`
 	Order       string      `form:"order" json:"order"`
 	Details     interface{} `form:"details" json:"details"`
 }
@@ -43,8 +43,28 @@ func GetBody(c *gin.Context) map[string]interface{} {
 	return request
 }
 
-//Input ...
-func Input(name string, c *gin.Context) interface{} {
+//Query ...
+func Query(name string, c *gin.Context) string {
+	return c.Query(name)
+}
+
+//QueryArray ...
+func QueryArray(name string, c *gin.Context) []string {
+	return c.QueryArray(name)
+}
+
+//QueryMap ...
+func QueryMap(name string, c *gin.Context) map[string]string {
+	return c.QueryMap(name)
+}
+
+//Param ...
+func Param(name string, c *gin.Context) string {
+	return c.Param(name)
+}
+
+//GetInterface ...
+func GetInterface(name string, c *gin.Context) interface{} {
 	var request = GetBody(c)
 	return request[name]
 }
