@@ -1,7 +1,7 @@
 package antgo
 
 //VERSION ...
-const VERSION = "v1.0.7"
+const VERSION = "v2.0.1"
 
 //AUTHORS ...
 const AUTHORS = "zhuxianglong<56494565@qq.com>"
