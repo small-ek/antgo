@@ -23,7 +23,6 @@ func TestCron(t *testing.T) {
 		log.Printf("error to add crontab task:%s", err)
 		os.Exit(-1)
 	}
-
 	// 添加函数作为定时任务
 	taskFunc := func() {
 		log.Println("hello world")
