@@ -13,10 +13,14 @@ type Crontab struct {
 	mutex sync.Mutex
 }
 
-// NewCrontab new crontab
-func NewCrontab() *Crontab {
+// Default new crontab
+func Default() *Crontab {
+	//设定支持秒级
+	secondParser := cron.NewParser(cron.Second | cron.Minute |
+		cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
+
 	return &Crontab{
-		inner: cron.New(),
+		inner: cron.New(cron.WithParser(secondParser), cron.WithChain()),
 		ids:   make(map[string]cron.EntryID),
 	}
 }
