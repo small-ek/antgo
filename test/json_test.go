@@ -7,8 +7,8 @@ import (
 )
 
 func TestJson(t *testing.T) {
-
-	for i := 0; i < 1000; i++ {
+	log.Println(string(json.Open("i18n.json")))
+	for i := 0; i < 1; i++ {
 		jsonStr := `[{"users" : {
 	    "count" : 2,
 	    "list"  : [
@@ -20,5 +20,8 @@ func TestJson(t *testing.T) {
 		var result = json.Decode(jsonStr).Get(0).Get("users").Get("list").Array()
 		log.Println(result)
 		log.Println(json.Encode(map[string]string{"name": "21"}))
+
+		var result2 = json.Decode(jsonStr).Read("0.users.list").Array()
+		log.Println(result2)
 	}
 }

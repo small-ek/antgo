@@ -3,17 +3,34 @@ package json
 import (
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
+	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 )
 
-//New Json parameter structure.
-type New struct {
+//Json Json parameter structure.
+type Json struct {
 	Child interface{} //json next level.
 }
 
+//Open 读取json文件
+func Open(file string) []byte {
+	jsonFile, err := os.Open(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, err2 := ioutil.ReadAll(jsonFile)
+	if err2 != nil {
+		log.Println(err2)
+	}
+	return byteValue
+}
+
 //Decode Parse array.<解析json字符串>
-func Decode(data string) *New {
+func Decode(data string) *Json {
 	var result interface{}
 	data = strings.Trim(strings.Trim(data, "\n"), " ")
 
@@ -27,7 +44,7 @@ func Decode(data string) *New {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	return &New{
+	return &Json{
 		Child: result,
 	}
 }
@@ -42,65 +59,101 @@ func Encode(data interface{}) string {
 }
 
 //Get the next level of array or json.<获取json的节点>
-func (get *New) Get(name interface{}) *New {
-	var child = get.Child
+func (j *Json) Get(name interface{}) *Json {
+	var child = j.Child
 	switch child.(type) {
 	case map[string]interface{}:
-		return &New{
+		return &Json{
 			Child: child.(map[string]interface{})[conv.String(name)],
 		}
 	case map[string]string:
-		return &New{
+		return &Json{
 			Child: child.(map[string]string)[conv.String(name)],
 		}
 	case []interface{}:
-		return &New{
+		return &Json{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []string:
-		return &New{
+		return &Json{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []int:
-		return &New{
+		return &Json{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []int64:
-		return &New{
+		return &Json{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	}
-	return &New{
+	return &Json{
 		Child: child,
 	}
 }
 
+//Read Parse json according to point split
+func (j *Json) Read(name string) *Json {
+	var list = strings.Split(name, ".")
+	for i := 0; i < len(list); i++ {
+		var value = list[i]
+		var result = j.Get(value)
+		j.Child = result.Child
+	}
+	return j
+}
+
 //String Data type conversion.
-func (get *New) String() string {
-	return conv.String(get.Child)
+func (j *Json) String() string {
+	return conv.String(j.Child)
 }
 
 //Int Data type conversion.
-func (get *New) Int() int {
-	return conv.Int(get.Child)
+func (j *Json) Int() int {
+	return conv.Int(j.Child)
+}
+
+//Int32 Data type conversion.
+func (j *Json) Int32() int32 {
+	return conv.Int32(j.Child)
 }
 
 //Int64 Data type conversion.
-func (get *New) Int64() int64 {
-	return conv.Int64(get.Child)
+func (j *Json) Int64() int64 {
+	return conv.Int64(j.Child)
+}
+
+//Float32 Data type conversion.
+func (j *Json) Float32() float32 {
+	return conv.Float32(j.Child)
 }
 
 //Float64 Data type conversion.
-func (get *New) Float64() float64 {
-	return conv.Float64(get.Child)
+func (j *Json) Float64() float64 {
+	return conv.Float64(j.Child)
 }
 
 //Map Data type conversion.
-func (get *New) Map() map[string]interface{} {
-	return get.Child.(map[string]interface{})
+func (j *Json) Map() map[string]interface{} {
+	return j.Child.(map[string]interface{})
+}
+
+//MapString Data type conversion.
+func (j *Json) MapString() map[string]string {
+	return j.Child.(map[string]string)
 }
 
 //Array Data type conversion.
-func (get *New) Array() []interface{} {
-	return get.Child.([]interface{})
+func (j *Json) Array() []interface{} {
+	return j.Child.([]interface{})
+}
+
+//Strings Data type conversion.
+func (j *Json) Strings() []string {
+	return conv.Strings(j.Child)
+}
+
+//Ints Data type conversion.
+func (j *Json) Ints() []int {
+	return conv.Ints(j.Child)
 }
