@@ -30,14 +30,14 @@ func ping(c *gin.Context) {
 	var (
 		websocket *websocket.Conn
 		err       error
-		conn      *gwebsocket.Connection
+		conn      *awebsocket.Connection
 		data      []byte
 	)
 	// 完成ws协议的握手操作
 	if websocket, err = upGrader.Upgrade(c.Writer, c.Request, nil); err != nil {
 		return
 	}
-	conn = gwebsocket.New(websocket, c.ClientIP(), uint64(time.Now().Unix()))
+	conn = awebsocket.New(websocket, c.ClientIP(), uint64(time.Now().Unix()))
 	for {
 		if data, err = conn.ReadMessage(); err != nil {
 			goto ERR
@@ -47,7 +47,7 @@ func ping(c *gin.Context) {
 		}
 		log.Println(string(data))
 	}
-	gwebsocket.NewClient().Register <- conn
+	awebsocket.NewClient().Register <- conn
 
 ERR:
 	conn.Close()

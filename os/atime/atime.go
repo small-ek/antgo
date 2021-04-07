@@ -1,35 +1,30 @@
-package gtime
+package atime
 
 import (
-	"log"
 	"time"
 )
 
-//时间类型转换
+var layout = "2006-01-02 15:04:05"
 
 //Timestamp Get timestamp.时间转时间戳
-func Timestamp(i time.Time) float64 {
-	return float64(i.Unix())
+func Timestamp(i time.Time) int64 {
+	return i.Unix()
+}
+
+//Millisecond ...
+func Millisecond(i time.Time) int64 {
+	return i.UnixNano() / 1e6
 }
 
 //TimeString Time conversion String. 时间转string
 func TimeString(i time.Time) string {
 	if !i.IsZero() {
-		return time.Unix(i.Unix(), 0).Format("2006-01-02 15:04:05")
+		return time.Unix(i.Unix(), 0).Format(layout)
 	}
 	return ""
 }
 
-//TimeFormat Time string conversion time. 字符串转时间
-func Format(i interface{}, str string) time.Time {
-	result, err := time.Parse(str, i.(string))
-	if err != nil {
-		log.Println(err.Error())
-	}
-	return result
-}
-
-//GetBeforeTime 获取之前的时间
+//GetBefore 获取之前的时间
 func GetBefore(minusTimes string) time.Time {
 	curTime := time.Now()
 	dh, _ := time.ParseDuration("-" + minusTimes)
@@ -37,7 +32,7 @@ func GetBefore(minusTimes string) time.Time {
 	return timeStr
 }
 
-//GetAfterTime 获取之后的时间
+//GetAfter 获取之后的时间
 func GetAfter(addTimes string) time.Time {
 	curTime := time.Now()
 	dh, _ := time.ParseDuration("+" + addTimes)

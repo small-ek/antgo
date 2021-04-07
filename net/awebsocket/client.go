@@ -1,4 +1,4 @@
-package gwebsocket
+package awebsocket
 
 import (
 	"github.com/small-ek/antgo/crypto/hash"
