@@ -33,7 +33,9 @@ func SetPath(path string) {
 
 //SetLanguage language setting
 func SetLanguage(lang string) {
-	Maps = Datas[lang].(map[string]interface{})
+	if Datas[lang] != nil {
+		Maps = Datas[lang].(map[string]interface{})
+	}
 }
 
 //Get language
@@ -57,7 +59,12 @@ func Get(name string) string {
 			}
 		}
 	}
-	return conv.String(Maps[name])
+
+	if Maps[name] != nil {
+		return conv.String(Maps[name])
+	} else {
+		return name
+	}
 }
 
 //array Slice analysis
