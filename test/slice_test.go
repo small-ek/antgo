@@ -9,4 +9,5 @@ import (
 func TestSlice(t *testing.T) {
 	var result = conv.Strings([]int{1, 2, 3, 4})
 	log.Println(result)
+
 }

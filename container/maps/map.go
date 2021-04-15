@@ -7,7 +7,7 @@ import (
 //Map parameter structure
 type Map struct {
 	Map  map[string]interface{} //
-	lock *sync.RWMutex          // 加锁
+	lock sync.RWMutex           // 加锁
 }
 
 //New ...
@@ -24,8 +24,8 @@ func (get *Map) Set(key string, value interface{}) {
 
 //Get ...
 func (get *Map) Get(key string) interface{} {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 	_, err := get.Map[key]
 	if err {
 		return nil
@@ -47,8 +47,8 @@ func (get *Map) GetOrSet(key string, value interface{}) interface{} {
 
 //Count ...
 func (get *Map) Count() int {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 	return len(get.Map)
 }
 

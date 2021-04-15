@@ -108,7 +108,7 @@ func (get *New) Register() *zap.Logger {
 		}, // ISO8601 UTC 时间格式
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
-		},                                       //
+		}, //
 		EncodeCaller: zapcore.FullCallerEncoder, // Full path encoder
 		EncodeName:   zapcore.FullNameEncoder,
 	}

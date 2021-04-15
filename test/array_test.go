@@ -12,8 +12,8 @@ func TestArray(t *testing.T) {
 	a := array.New()
 
 	// 添加数据项
-	for i := 0; i < 10; i++ {
-		a.Append(i)
+	for i := 0; i < 100; i++ {
+		go a.Append(i)
 	}
 	// 获取当前数组长度
 	fmt.Println(a.Len())
@@ -37,9 +37,6 @@ func TestArray(t *testing.T) {
 	// 搜索数据项，返回搜索到的索引位置
 	fmt.Println(a.Search(100))
 
-	// 删除指定索引的数据项
-	a.Delete(9)
-	fmt.Println(a.List())
 	a.Clear()
 	fmt.Println(a.List())
 }

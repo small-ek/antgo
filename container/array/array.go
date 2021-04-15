@@ -5,7 +5,7 @@ import "sync"
 //Array parameter structure
 type Array struct {
 	Slice []interface{}
-	lock  *sync.RWMutex // 加锁
+	lock  sync.RWMutex // 加锁
 }
 
 //New Array
@@ -22,15 +22,15 @@ func (get *Array) Append(value interface{}) {
 
 //Len Count Array
 func (get *Array) Len() int {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 	return len(get.Slice)
 }
 
 //List Array
 func (get *Array) List() []interface{} {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 	return get.Slice
 }
 
@@ -65,15 +65,15 @@ func (get *Array) Set(index int, value interface{}) {
 
 //Get Array
 func (get *Array) Get(index int) interface{} {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 	return get.Slice[index]
 }
 
 //Search Array
 func (get *Array) Search(value interface{}) int {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+	get.lock.RLock()
+	defer get.lock.RUnlock()
 	for i := 0; i < len(get.Slice); i++ {
 		if get.Slice[i] == value {
 			return i
