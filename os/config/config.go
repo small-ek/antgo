@@ -5,6 +5,7 @@ import (
 	"github.com/small-ek/antgo/conv"
 	"log"
 	"os"
+	"strings"
 )
 
 //Data config data
@@ -66,6 +67,17 @@ func (get *Result) Get(name interface{}) *Result {
 	return &Result{
 		Child: child,
 	}
+}
+
+//Read Parse config according to point split
+func (get *Result) Read(name string) *Result {
+	var list = strings.Split(name, ".")
+	for i := 0; i < len(list); i++ {
+		var value = list[i]
+		var result = get.Get(value)
+		get.Child = result.Child
+	}
+	return get
 }
 
 //String Data type conversion.
