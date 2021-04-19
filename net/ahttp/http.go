@@ -3,9 +3,9 @@ package ahttp
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/small-ek/antgo/os/logs"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -242,8 +242,7 @@ func GetUrlBuild(urls string, data map[string]string) string {
 func (h *HttpSend) Send() (io.ReadCloser, error) {
 	configData, err := json.Marshal(h.Body)
 	if err != nil {
-
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	var sendData = bytes.NewBuffer(configData)
 

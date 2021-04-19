@@ -2,7 +2,7 @@ package uuid
 
 import (
 	"github.com/google/uuid"
-	"log"
+	"github.com/small-ek/antgo/os/logs"
 	"os"
 )
 
@@ -34,7 +34,7 @@ func New() UUID {
 func Create() UUID {
 	var result, err = uuid.NewUUID()
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return result
 }
@@ -46,7 +46,7 @@ func Create() UUID {
 func NewDCEGroup() UUID {
 	var result, err = uuid.NewDCESecurity(DomainGroup, uint32(os.Getgid()))
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return result
 }
@@ -58,7 +58,7 @@ func NewDCEGroup() UUID {
 func NewDCEPerson() UUID {
 	var result, err = uuid.NewDCESecurity(DomainPerson, uint32(os.Getuid()))
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return result
 }
@@ -86,7 +86,7 @@ func NewMD5(space UUID, data []byte) UUID {
 func NewRandom() UUID {
 	var result, err = uuid.NewRandom()
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return result
 }

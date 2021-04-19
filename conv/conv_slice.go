@@ -1,5 +1,10 @@
 package conv
 
+import (
+	"encoding/json"
+	"github.com/small-ek/antgo/os/logs"
+)
+
 //Slice type conversion
 
 //Ints Convert <i> to []int.
@@ -89,6 +94,11 @@ func Ints(i interface{}) []int {
 		array = make([]int, len(value))
 		for k, v := range value {
 			array[k] = Int(v)
+		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
 		}
 	}
 	return array
@@ -182,6 +192,11 @@ func Int32s(i interface{}) []int32 {
 		for k, v := range value {
 			array[k] = Int32(v)
 		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
+		}
 	}
 	return array
 }
@@ -274,6 +289,11 @@ func Int64s(i interface{}) []int64 {
 		for k, v := range value {
 			array[k] = Int64(v)
 		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
+		}
 	}
 
 	return array
@@ -363,6 +383,11 @@ func Strings(i interface{}) []string {
 		for k, v := range value {
 			array[k] = String(v)
 		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
+		}
 	}
 	return array
 }
@@ -451,6 +476,11 @@ func Uints(i interface{}) []uint {
 		for k, v := range value {
 			array[k] = Uint(v)
 		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
+		}
 	}
 	return array
 }
@@ -538,6 +568,11 @@ func Uint32s(i interface{}) []uint32 {
 		for k, v := range value {
 			array[k] = Uint32(v)
 		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
+		}
 	}
 	return array
 }
@@ -624,6 +659,11 @@ func Uint64s(i interface{}) []uint64 {
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			array[k] = Uint64(v)
+		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
 		}
 	}
 	return array

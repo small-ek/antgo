@@ -220,7 +220,7 @@ func lessThan(value, ruleStr string) bool {
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
 	if err2 != nil {
-		log.Println(err2.Error())
+		logs.Error(err2.Error())
 	}
 
 	if newValue < newValue2 {
@@ -253,7 +253,7 @@ func length(value, ruleStr string) bool {
 func isMax(value, ruleStr string) bool {
 	newMax, err := strconv.Atoi(ruleStr)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	if len(value) > newMax {
 		return false
@@ -266,7 +266,7 @@ func isMin(value, ruleStr string) bool {
 	newMin, err := strconv.Atoi(ruleStr)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	if len(value) < newMin {
@@ -300,17 +300,17 @@ func between(value, ruleStr string) bool {
 	values, err := strconv.Atoi(value)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	mins, err2 := strconv.Atoi(str[0])
 	if err2 != nil {
-		log.Println(err2.Error())
+		logs.Error(err2.Error())
 	}
 
 	maxs, err3 := strconv.Atoi(str[1])
 	if err2 != nil {
-		log.Println(err3.Error())
+		logs.Error(err3.Error())
 	}
 
 	if values > mins && values < maxs {
@@ -328,17 +328,17 @@ func notBetween(value, ruleStr string) bool {
 	values, err := strconv.Atoi(value)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	mins, err2 := strconv.Atoi(str[0])
 	if err2 != nil {
-		log.Println(err2.Error())
+		logs.Error(err2.Error())
 	}
 
 	maxs, err3 := strconv.Atoi(str[1])
 	if err2 != nil {
-		log.Println(err3.Error())
+		logs.Error(err3.Error())
 	}
 
 	if values < mins && values > maxs {

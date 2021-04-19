@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"log"
+	"github.com/small-ek/antgo/os/logs"
 	"math"
 	"strconv"
 	"strings"
@@ -61,7 +61,7 @@ func Bytes(i interface{}) []byte {
 	default:
 		result, err := json.Marshal(value)
 		if err != nil {
-			log.Println(err.Error())
+			logs.Error(err.Error())
 		}
 		return result
 	}
@@ -102,7 +102,7 @@ func String(i interface{}) string {
 	default:
 		result, err := json.Marshal(value)
 		if err != nil {
-			log.Println(err.Error())
+			logs.Error(err.Error())
 		}
 		return string(result)
 	}
@@ -196,7 +196,7 @@ func Int64(i interface{}) int64 {
 	case string:
 		str, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			log.Println(err.Error())
+			logs.Error(err.Error())
 		}
 		return str
 	}
@@ -311,7 +311,7 @@ func intToBytes(i interface{}) []byte {
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	var err = binary.Write(bytesBuffer, binary.BigEndian, x)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return bytesBuffer.Bytes()
 }
