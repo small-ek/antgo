@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/small-ek/antgo/net/gwebsocket"
+	"github.com/small-ek/antgo/net/awebsocket"
 	"log"
 	"net/http"
 	"time"

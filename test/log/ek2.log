@@ -1,0 +1,8 @@
+{"level":"info","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/os/logger/logger.go:177","msg":"123","serviceName":"api","detail":["{\"test\":\"1221\"}"]}
+{"level":"info","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/test/logger_test.go:16","msg":"22333","serviceName":"api"}
+{"level":"error","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","24","github.com/small-ek/antgo/test.test23"]}
+{"level":"error","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"错误测试2","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","26","github.com/small-ek/antgo/test.test23"]}
+{"level":"info","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/os/logger/logger.go:177","msg":"123","serviceName":"api","detail":["{\"test\":\"1221\"}"]}
+{"level":"info","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/test/logger_test.go:16","msg":"22333","serviceName":"api"}
+{"level":"error","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","24","github.com/small-ek/antgo/test.test23"]}
+{"level":"error","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"错误测试2","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","26","github.com/small-ek/antgo/test.test23"]}

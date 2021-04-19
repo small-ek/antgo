@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
-	"log"
+	"github.com/small-ek/antgo/os/logs"
 	"time"
 )
 
@@ -36,7 +36,7 @@ func (get *New) Client() New {
 	_, err := client.Ping(ctx).Result()
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return New{
 		Clients: client,
@@ -65,6 +65,6 @@ func Set(key string, value interface{}, expiration ...int64) {
 
 	err := Option.Set(ctx, key, value, ex).Err()
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 }

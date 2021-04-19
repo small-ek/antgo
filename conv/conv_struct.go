@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
-	"log"
+	"github.com/small-ek/antgo/os/logs"
 )
 
 //Struct conversion binding
@@ -14,7 +14,7 @@ func Struct(model interface{}, data interface{}) {
 	result, err := json.Marshal(data)
 	err = json.Unmarshal(result, model)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 }
 
@@ -24,7 +24,7 @@ func StructToBytes(data interface{}) []byte {
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(data)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return buf.Bytes()
 }

@@ -2,7 +2,7 @@ package conv
 
 import (
 	"encoding/json"
-	"log"
+	"github.com/small-ek/antgo/os/logs"
 )
 
 //Map converts <i> to map[string]interface{}.
@@ -10,12 +10,12 @@ func Map(i interface{}) map[string]interface{} {
 	var data = make(map[string]interface{})
 	result, err := json.Marshal(i)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	err = json.Unmarshal(result, &data)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return data
 }
@@ -26,13 +26,13 @@ func MapString(i interface{}) map[string]string {
 	result, err := json.Marshal(i)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	err = json.Unmarshal(result, &data)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return data
 }
@@ -43,13 +43,13 @@ func MapInt(i interface{}) map[int]interface{} {
 	result, err := json.Marshal(i)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	err = json.Unmarshal(result, &data)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return data
 }

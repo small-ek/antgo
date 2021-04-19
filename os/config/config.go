@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/small-ek/antgo/conv"
-	"log"
+	"github.com/small-ek/antgo/os/logs"
 	"os"
 	"strings"
 )
@@ -14,7 +14,7 @@ var Data map[string]interface{}
 //SetPath Set path.
 func SetPath(path string) {
 	if _, err := toml.DecodeFile(path, &Data); err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 		os.Exit(1)
 	}
 }

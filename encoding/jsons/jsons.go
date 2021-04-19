@@ -3,8 +3,8 @@ package jsons
 import (
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/os/logs"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 )
@@ -18,13 +18,13 @@ type Json struct {
 func Open(file string) []byte {
 	jsonFile, err := os.Open(file)
 	if err != nil {
-		log.Println(err)
+		logs.Error(err.Error())
 	}
 	defer jsonFile.Close()
 
 	byteValue, err2 := ioutil.ReadAll(jsonFile)
 	if err2 != nil {
-		log.Println(err2)
+		logs.Error(err2.Error())
 	}
 	return byteValue
 }
@@ -42,7 +42,7 @@ func Decode(data string) *Json {
 
 	err := json.Unmarshal([]byte(data), &result)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return &Json{
 		Child: result,
@@ -53,7 +53,7 @@ func Decode(data string) *Json {
 func Encode(data interface{}) string {
 	result, err := json.Marshal(data)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 	return string(result)
 }

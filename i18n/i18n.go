@@ -3,8 +3,8 @@ package i18n
 import (
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/os/logs"
 	"io/ioutil"
-	"log"
 	"strings"
 )
 
@@ -21,12 +21,12 @@ var Array []interface{}
 func SetPath(path string) {
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 		return
 	}
 	err2 := json.Unmarshal(bytes, &Datas)
 	if err2 != nil {
-		log.Println(err2.Error())
+		logs.Error(err.Error())
 		return
 	}
 }

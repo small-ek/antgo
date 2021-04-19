@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/os/logs"
 	"log"
 	"reflect"
 	"regexp"
@@ -176,12 +177,12 @@ func moreThan(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(value)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
 	if err2 != nil {
-		log.Println(err2.Error())
+		logs.Error(err2.Error())
 	}
 
 	if newValue > newValue2 {
@@ -195,12 +196,12 @@ func equal(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(value)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
 	if err2 != nil {
-		log.Println(err2.Error())
+		logs.Error(err.Error())
 	}
 
 	if newValue == newValue2 {
@@ -214,7 +215,7 @@ func lessThan(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(ruleStr)
 
 	if err != nil {
-		log.Println(err.Error())
+		logs.Error(err.Error())
 	}
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
