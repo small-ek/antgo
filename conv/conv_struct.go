@@ -5,7 +5,9 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"github.com/small-ek/antgo/os/logs"
+	"os"
 	"reflect"
+	"strings"
 )
 
 //Struct conversion binding
@@ -40,9 +42,17 @@ func BytesToStruct(data []byte, to interface{}) error {
 //InterfaceToStruct interface conversion Struct
 func InterfaceToStruct(data interface{}) interface{} {
 	if data == nil {
+		logs.Error("Please pass in the correct Struct")
+		os.Exit(1)
 		return nil
 	}
 	var result = reflect.New(Indirect(reflect.ValueOf(data)).Type()).Interface()
+
+	jsonStr, err := json.Marshal(data)
+	if err != nil {
+		logs.Error(err.Error())
+	}
+	json.NewDecoder(strings.NewReader(string(jsonStr))).Decode(result)
 	return result
 }
 
