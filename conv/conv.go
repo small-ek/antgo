@@ -280,7 +280,12 @@ func Float32(i interface{}) float32 {
 		return float32(value)
 	case []byte:
 		return math.Float32frombits(binary.LittleEndian.Uint32(value))
-
+	case string:
+		var result, err = strconv.ParseFloat(value, 32/64)
+		if err != nil {
+			logs.Error(err.Error())
+		}
+		return Float32(result)
 	default:
 		v, _ := strconv.ParseFloat(String(i), 64)
 		return float32(v)
@@ -297,6 +302,12 @@ func Float64(i interface{}) float64 {
 		return float64(value)
 	case float64:
 		return value
+	case string:
+		var result, err = strconv.ParseFloat(value, 32/64)
+		if err != nil {
+			logs.Error(err.Error())
+		}
+		return result
 	case []byte:
 		return math.Float64frombits(binary.LittleEndian.Uint64(value))
 	default:
