@@ -194,10 +194,7 @@ func Int64(i interface{}) int64 {
 	case []byte:
 		return int64(binary.BigEndian.Uint64(value))
 	case string:
-		str, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			logs.Error(err.Error())
-		}
+		str, _ := strconv.ParseInt(value, 10, 64)
 		return str
 	}
 	return i.(int64)
@@ -264,6 +261,9 @@ func Uint64(i interface{}) uint64 {
 		return 0
 	case []byte:
 		return binary.LittleEndian.Uint64(value)
+	case string:
+		u64, _ := strconv.ParseUint(value, 10, 32)
+		return u64
 	}
 	return i.(uint64)
 }
@@ -281,10 +281,7 @@ func Float32(i interface{}) float32 {
 	case []byte:
 		return math.Float32frombits(binary.LittleEndian.Uint32(value))
 	case string:
-		var result, err = strconv.ParseFloat(value, 32/64)
-		if err != nil {
-			logs.Error(err.Error())
-		}
+		var result, _ = strconv.ParseFloat(value, 32/64)
 		return Float32(result)
 	default:
 		v, _ := strconv.ParseFloat(String(i), 64)
@@ -303,10 +300,7 @@ func Float64(i interface{}) float64 {
 	case float64:
 		return value
 	case string:
-		var result, err = strconv.ParseFloat(value, 32/64)
-		if err != nil {
-			logs.Error(err.Error())
-		}
+		var result, _ = strconv.ParseFloat(value, 32/64)
 		return result
 	case []byte:
 		return math.Float64frombits(binary.LittleEndian.Uint64(value))
