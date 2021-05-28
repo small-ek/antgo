@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/logs"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 )
@@ -22,7 +22,7 @@ func Open(file string) []byte {
 	}
 	defer jsonFile.Close()
 
-	byteValue, err2 := ioutil.ReadAll(jsonFile)
+	byteValue, err2 := io.ReadAll(jsonFile)
 	if err2 != nil {
 		logs.Error(err2.Error())
 	}

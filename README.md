@@ -32,7 +32,7 @@ It is recommended to use go.mod:
 
 # Limit
 ```shell
-golang version >= 1.11
+golang version >= 1.16
 ```
 # Module
 

@@ -32,7 +32,7 @@ go get -u -v github.com/small-ek/antgo
 
 # 限制
 ```shell
-golang版本 >= 1.11
+golang版本 >= 1.16
 ```
 # 模块
 
