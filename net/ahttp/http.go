@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/small-ek/antgo/os/logs"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -127,7 +128,7 @@ func (h *HttpSend) Get(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Post request
@@ -139,7 +140,7 @@ func (h *HttpSend) Post(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Put request
@@ -151,7 +152,7 @@ func (h *HttpSend) Put(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Delete request
@@ -163,7 +164,7 @@ func (h *HttpSend) Delete(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Connect request
@@ -175,7 +176,7 @@ func (h *HttpSend) Connect(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Head request
@@ -187,7 +188,7 @@ func (h *HttpSend) Head(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Options request
@@ -199,7 +200,7 @@ func (h *HttpSend) Options(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Trace request
@@ -211,7 +212,7 @@ func (h *HttpSend) Trace(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //Patch ...
@@ -223,7 +224,7 @@ func (h *HttpSend) Patch(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer h.Close()
-	return io.ReadAll(result)
+	return ioutil.ReadAll(result)
 }
 
 //GetUrlBuild ...

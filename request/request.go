@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/logs"
-	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -33,8 +33,8 @@ func GetBody(c *gin.Context) map[string]interface{} {
 	var request map[string]interface{}
 	var body []byte
 	if c.Request.Body != nil {
-		body, _ = io.ReadAll(c.Request.Body)
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+		body, _ = ioutil.ReadAll(c.Request.Body)
+		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}
 	var err = json.Unmarshal(body, &request)
 	if err != nil {
