@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/logs"
-	"os"
+	"io/ioutil"
 	"strings"
 )
 
@@ -19,7 +19,7 @@ var Array []interface{}
 
 //SetPath Set path
 func SetPath(path string) {
-	bytes, err := os.ReadFile(path)
+	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		logs.Error(err.Error())
 		return
