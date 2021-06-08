@@ -3,6 +3,9 @@ package atime
 import (
 	"errors"
 	"fmt"
+	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/os/logs"
+	"log"
 	"strings"
 	"time"
 )
@@ -44,54 +47,88 @@ var (
 	}
 )
 
-type (
-	Date struct {
-		time.Time
+type Times struct {
+	time.Time
+}
+
+//New 创建对象
+func New(param ...interface{}) *Times {
+	if len(param) > 0 {
+		switch r := param[0].(type) {
+		case time.Time:
+			return WithTime(r)
+		case *time.Time:
+			return WithTime(*r)
+		case string:
+			return StrToTime(r)
+		case []byte:
+			return StrToTime(string(r))
+		case int:
+			return NewFromTimeStamp(int64(r))
+		case int64:
+			return NewFromTimeStamp(r)
+		default:
+			return NewFromTimeStamp(conv.Int64(r))
+		}
 	}
-)
+	return &Times{time.Now()}
+}
+
+//StrToTime String转Time
+func StrToTime(str string) *Times {
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", str, time.Local)
+	if err != nil {
+		log.Println(err)
+	}
+	return &Times{t}
+}
+
+// NewFromTimeStamp creates and returns a Time object with given timestamp,
+// which can be in seconds to nanoseconds.
+// Eg: 1600443866 and 1600443866199266000 are both considered as valid timestamp number.
+func NewFromTimeStamp(timestamp int64) *Times {
+	if timestamp == 0 {
+		return &Times{}
+	}
+	var sec, nano int64
+	if timestamp > 1e9 {
+		for timestamp < 1e18 {
+			timestamp *= 10
+		}
+		sec = timestamp / 1e9
+		nano = timestamp % 1e9
+	} else {
+		sec = timestamp
+	}
+	return WithTime(time.Unix(sec, nano))
+}
 
 //Now
-func Now() Date {
+func Now() *Times {
 	timeNow := time.Now()
 	return WithTime(timeNow)
 }
 
 //WithTime
-func WithTime(t time.Time) Date {
-	return Date{t}
-}
-
-//WithTimestamp
-func WithTimestamp(timestamp int64) Date {
-	t := time.Unix(timestamp, 0)
-	return WithTime(t)
-}
-
-//WithMillisecond ...
-func WithMillisecond(millisecond int64) Date {
-	sec := millisecond / 1e3
-	nsec := millisecond % (millisecond / 1e3)
-	t := time.Unix(sec, nsec)
-	return WithTime(t)
-}
-
-//WithDate ...
-func WithDate(year, month, date, hour, minute, second int) Date {
-	t := time.Date(year, time.Month(month), date, hour, minute, second, 0, time.Local)
-	return WithTime(t)
+func WithTime(t time.Time) *Times {
+	return &Times{t}
 }
 
 //Format ...
-func (date Date) Format(layout string, chinese ...bool) (string, error) {
+func (t *Times) Format(layout string, chinese ...bool) string {
 	var c bool
 	if len(chinese) > 0 {
 		c = chinese[0]
 	}
-	return date.parseLayout(layout, c)
+	d, err := t.parseLayout(layout, c)
+	if err != nil {
+		logs.Error(err.Error())
+	}
+	return d
 }
 
 //parseLayout [yyyy-MM-dd]->{{.year}}-{{.month}}-{{.day}}
-func (date Date) parseLayout(layout string, chinese bool) (string, error) {
+func (date *Times) parseLayout(layout string, chinese bool) (string, error) {
 	if len(strings.TrimSpace(layout)) == 0 {
 		return "", ErrLayout
 	}
