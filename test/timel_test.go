@@ -19,10 +19,10 @@ func TestTime(t *testing.T) {
 	d := atime.Now()
 
 	log.Println(d.String())
-	log.Println(d.Adds(-time.Hour * 2).Format("yyyy-MM-dd HH:mm:ss"))
+	log.Println(d.Add(-time.Hour * 2).Format("yyyy-MM-dd HH:mm:ss"))
 	log.Println(d.Timestamp())
 	log.Println(d.Millisecond())
-	log.Println(d.AddDates(0, 1, 0).Format("yyyy-MM-dd HH:mm:ss"))
+	log.Println(d.AddDate(0, 1, 0).Format("yyyy-MM-dd HH:mm:ss"))
 	format := d.Format("yyyy-MM-dd HH:mm:ss")
 	log.Println(format)
 }
