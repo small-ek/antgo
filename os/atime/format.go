@@ -71,7 +71,7 @@ func New(param ...interface{}) *Times {
 			return NewFromTimeStamp(conv.Int64(r))
 		}
 	}
-	return &Times{Time:time.Now()}
+	return &Times{Time: time.Now()}
 }
 
 //StrToTime String转Time
@@ -80,7 +80,7 @@ func StrToTime(str string) *Times {
 	if err != nil {
 		log.Println(err)
 	}
-	return &Times{Time:t}
+	return &Times{Time: t}
 }
 
 // NewFromTimeStamp creates and returns a Time object with given timestamp,
@@ -111,7 +111,7 @@ func Now() *Times {
 
 //WithTime
 func WithTime(t time.Time) *Times {
-	return &Times{Time:t}
+	return &Times{Time: t}
 }
 
 //Format ...
