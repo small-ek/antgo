@@ -3,12 +3,15 @@ package ahttp
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/logs"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +29,11 @@ type HttpSend struct {
 	Body        map[string]interface{}                       //Request body
 	Dial        func(network, addr string) (net.Conn, error) //Request Timeout
 	Method      string                                       //Request method
-	FormData    url.Values
+	Files       []string                                     //多个文件
+	File        string                                       //单个文件
+	FileKey     string                                       //设置文件Key
+	FileName    string                                       //设置文件名称
+	BinaryFile  string
 	sync.RWMutex
 }
 
@@ -37,12 +44,9 @@ func Client() *HttpSend {
 	}
 }
 
-//SetPostFormData Set Post Form Data
-func (h *HttpSend) SetPostFormData(FormData url.Values) *HttpSend {
-	h.Lock()
-	defer h.Unlock()
-	h.FormData = FormData
-	return h
+//GetResponse 获取结果
+func (h *HttpSend) GetResponse() *http.Response {
+	return h.Response
 }
 
 //SetBody Set body
@@ -140,17 +144,48 @@ func (h *HttpSend) Get(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
+//SetFiles Set Files<设置多个文件上传>
+func (h *HttpSend) SetFiles(files []string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.Files = files
+	return h
+}
+
+//SetFile Set File<设置单个文件上传>
+func (h *HttpSend) SetFile(file string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.File = file
+	return h
+}
+
+//SetFileKey Set File<设置文件Key>
+func (h *HttpSend) SetFileKey(fileKey string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.FileKey = fileKey
+	return h
+}
+
+//SetFileName Set File<设置文件名称>
+func (h *HttpSend) SetFileName(fileName string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.FileName = fileName
+	return h
+}
+
 //PostForm request
-func (h *HttpSend) PostForm(urls string) ([]byte, error) {
-	h.Url = urls
+func (h *HttpSend) PostForm(url string) ([]byte, error) {
+	h.Url = url
 	h.Method = "POST"
-	resp, err := http.PostForm(urls, h.FormData)
+	var result, err = h.SendForm()
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err2 := ioutil.ReadAll(resp.Body)
-	return body, err2
+	defer h.Close()
+	return ioutil.ReadAll(result)
 }
 
 //Post request
@@ -278,9 +313,138 @@ func (h *HttpSend) Send() (io.ReadCloser, error) {
 	}
 
 	h.Client.Transport = Transport
-	if h.Method == "" {
-		h.Method = "GET"
+
+	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
+	if err != nil {
+		return nil, err
 	}
+
+	if len(h.Header) == 0 {
+		h.Header = map[string]string{
+			"Content-Type": h.ContentType,
+		}
+	}
+
+	for k, v := range h.Header {
+		if strings.ToLower(k) == "host" {
+			h.Req.Host = v
+		} else {
+			h.Req.Header.Add(k, v)
+		}
+	}
+
+	h.Response, err = h.Client.Do(h.Req)
+	if err != nil {
+		return nil, err
+	}
+	return h.Response.Body, nil
+}
+
+//SendFile 发送单个文件
+func (h *HttpSend) SendFile(sendData io.Writer) error {
+	//判断单个文件
+	if h.File != "" && h.FileKey != "" && h.FileName != "" {
+		bodyWrite := multipart.NewWriter(sendData)
+		file, err := os.Open(h.File)
+		defer file.Close()
+		if err != nil {
+			return err
+		}
+
+		fileWrite, err := bodyWrite.CreateFormFile(h.FileKey, h.FileName)
+		if _, err = io.Copy(fileWrite, file); err != nil {
+			return err
+		}
+
+		for key, val := range h.Body {
+			if err = bodyWrite.WriteField(key, conv.String(val)); err != nil {
+				return err
+			}
+		}
+		bodyWrite.Close()
+		h.ContentType = bodyWrite.FormDataContentType()
+	}
+	return nil
+}
+
+//SendFile 发送多个文件
+func (h *HttpSend) SendFiles(sendData io.Writer) error {
+	if len(h.Files) > 0 {
+		bodyWrite := multipart.NewWriter(sendData)
+		for _, val := range h.Files {
+			file, err := os.Open(val)
+			defer file.Close()
+			if err != nil {
+				return err
+			}
+			fileWrite, err := bodyWrite.CreateFormFile(h.FileKey, val)
+			if _, err = io.Copy(fileWrite, file); err != nil {
+				return err
+			}
+		}
+		for key, val := range h.Body {
+			if err := bodyWrite.WriteField(key, conv.String(val)); err != nil {
+				return err
+			}
+		}
+		bodyWrite.Close()
+		h.ContentType = bodyWrite.FormDataContentType()
+	}
+	return nil
+}
+
+//SendFile 设置二进制文件
+func (h *HttpSend) SendBinaryFile(sendData io.Writer) error {
+	if h.BinaryFile != "" {
+		bodyWrite := multipart.NewWriter(sendData)
+		for _, val := range h.Files {
+			file, err := os.Open(val)
+			defer file.Close()
+			if err != nil {
+				return err
+			}
+			fileWrite, err := bodyWrite.CreateFormFile(h.FileKey, val)
+			_, err = io.Copy(fileWrite, file)
+			if err != nil {
+				return err
+			}
+		}
+		bodyWrite.Close()
+		h.ContentType = bodyWrite.FormDataContentType()
+	}
+	return nil
+}
+
+//SendForm <扩展一般用于发送表单请求>
+func (h *HttpSend) SendForm() (io.ReadCloser, error) {
+	sendData := &bytes.Buffer{}
+	var err error
+
+	var Transport = &http.Transport{}
+	if h.Proxy != nil {
+		Transport.Proxy = h.Proxy
+	}
+
+	if h.Dial != nil {
+		Transport.Dial = h.Dial
+	}
+
+	h.Client.Transport = Transport
+
+	//发送单个文件
+	if err2 := h.SendFile(sendData); err2 != nil {
+		return nil, err2
+	}
+
+	//发送多个文件
+	if err3 := h.SendFiles(sendData); err3 != nil {
+		return nil, err3
+	}
+	//发送二进制
+	if err4 := h.SendBinaryFile(sendData); err4 != nil {
+		return nil, err4
+	}
+
 	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
 	if err != nil {
 		return nil, err
