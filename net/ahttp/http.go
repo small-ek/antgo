@@ -16,24 +16,33 @@ import (
 
 //HttpSend Request parameter
 type HttpSend struct {
-	Client   http.Client                                  //Client
-	Response *http.Response                               //Response
-	Req      *http.Request                                //Request
-	Proxy    func(*http.Request) (*url.URL, error)        //Request proxy
-	Url      string                                       //Request address
-	SendType string                                       //Request type
-	Header   map[string]string                            //Request header
-	Body     map[string]interface{}                       //Request body
-	Dial     func(network, addr string) (net.Conn, error) //Request Timeout
-	Method   string                                       //Request method
+	Client      http.Client                                  //Client
+	Response    *http.Response                               //Response
+	Req         *http.Request                                //Request
+	Proxy       func(*http.Request) (*url.URL, error)        //Request proxy
+	Url         string                                       //Request address
+	ContentType string                                       //Request type
+	Header      map[string]string                            //Request header
+	Body        map[string]interface{}                       //Request body
+	Dial        func(network, addr string) (net.Conn, error) //Request Timeout
+	Method      string                                       //Request method
+	FormData    url.Values
 	sync.RWMutex
 }
 
 //Client Default request
 func Client() *HttpSend {
 	return &HttpSend{
-		SendType: "json",
+		ContentType: "application/json",
 	}
+}
+
+//SetPostFormData Set Post Form Data
+func (h *HttpSend) SetPostFormData(FormData url.Values) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.FormData = FormData
+	return h
 }
 
 //SetBody Set body
@@ -102,10 +111,10 @@ func (h *HttpSend) SetMethod(method string) *HttpSend {
 }
 
 //SetSendType Set Type
-func (h *HttpSend) SetSendType(sendType string) *HttpSend {
+func (h *HttpSend) SetContentType(ContentType string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
-	h.SendType = sendType
+	h.ContentType = ContentType
 	return h
 }
 
@@ -129,6 +138,19 @@ func (h *HttpSend) Get(url string) ([]byte, error) {
 	}
 	defer h.Close()
 	return ioutil.ReadAll(result)
+}
+
+//PostForm request
+func (h *HttpSend) PostForm(urls string) ([]byte, error) {
+	h.Url = urls
+	h.Method = "POST"
+	resp, err := http.PostForm(urls, h.FormData)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err2 := ioutil.ReadAll(resp.Body)
+	return body, err2
 }
 
 //Post request
@@ -265,14 +287,8 @@ func (h *HttpSend) Send() (io.ReadCloser, error) {
 	}
 
 	if len(h.Header) == 0 {
-		if strings.ToLower(h.SendType) == "json" {
-			h.Header = map[string]string{
-				"Content-Type": "application/json; charset=utf-8",
-			}
-		} else {
-			h.Header = map[string]string{
-				"Content-Type": "application/x-www-form-urlencoded",
-			}
+		h.Header = map[string]string{
+			"Content-Type": h.ContentType,
 		}
 	}
 
