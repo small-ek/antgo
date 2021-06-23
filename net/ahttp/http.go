@@ -3,6 +3,7 @@ package ahttp
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/small-ek/antgo/conv"
 	"io"
 	"io/ioutil"
@@ -26,6 +27,8 @@ type HttpSend struct {
 	Url         string                                       //Request address<请求地址>
 	ContentType string                                       //Request type<网络文件的类型>
 	Header      map[string]string                            //Request header<请求头>
+	Cookies     map[string]string                            //Request Cookies<请求Cookies>
+	Timeout     time.Duration                                //Request timeout<请求超时时间>
 	Body        map[string]interface{}                       //Request body<请求体>
 	Dial        func(network, addr string) (net.Conn, error) //Request Timeout<请求超时>
 	Method      string                                       //Request method<请求类型>
@@ -33,6 +36,7 @@ type HttpSend struct {
 	File        string                                       //Request File <单个文件>
 	FileKey     string                                       //Request FileKey<文件Key>
 	FileName    string                                       //Request FileName<文件名称>
+	debug       bool
 	sync.RWMutex
 }
 
@@ -78,6 +82,7 @@ func (h *HttpSend) SetProxy(proxy string) *HttpSend {
 func (h *HttpSend) SetTimeout(timeout time.Duration) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
+	h.Timeout = timeout * time.Second
 	h.Dial = func(netw, addr string) (net.Conn, error) {
 		c, err := net.DialTimeout(netw, addr, time.Second*timeout) //设置建立连接超时
 		if err != nil {
@@ -98,10 +103,16 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 }
 
 //SetCookie set cookie<设置cookie>
-func (h *HttpSend) SetCookie(c *http.Cookie) *HttpSend {
+func (h *HttpSend) SetCookie(cookies map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
-	h.Req.AddCookie(c)
+	h.Cookies = cookies
+	for k, v := range cookies {
+		h.Req.AddCookie(&http.Cookie{
+			Name:  k,
+			Value: v,
+		})
+	}
 	return h
 }
 
@@ -197,25 +208,6 @@ func (h *HttpSend) PostForm(url string) ([]byte, error) {
 	}
 	defer h.Close()
 	return ioutil.ReadAll(result)
-}
-
-//PostFormFile Request file byte stream<请求文件字节流>
-func (h *HttpSend) PostFormFile(url, files string) ([]byte, error) {
-	h.Url = url
-	h.Method = "POST"
-	file, err := os.Open(files)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	h.Response, err = http.Post(url, "binary/octet-stream", file)
-	if err != nil {
-		return nil, err
-	}
-	defer h.Close()
-
-	return ioutil.ReadAll(h.Response.Body)
 }
 
 //Post request<POST 请求>
@@ -323,51 +315,6 @@ func SetUrlBuild(urls string, data map[string]string) string {
 	}
 	u.RawQuery = q.Encode()
 	return u.String()
-}
-
-//Send <扩展一般用于手动请求>
-func (h *HttpSend) Send() (io.ReadCloser, error) {
-	configData, err := json.Marshal(h.Body)
-	if err != nil {
-		return nil, err
-	}
-	var sendData = bytes.NewBuffer(configData)
-
-	var Transport = &http.Transport{}
-	if h.Proxy != nil {
-		Transport.Proxy = h.Proxy
-	}
-
-	if h.Dial != nil {
-		Transport.Dial = h.Dial
-	}
-
-	h.Client.Transport = Transport
-
-	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(h.Header) == 0 {
-		h.Header = map[string]string{
-			"Content-Type": h.ContentType,
-		}
-	}
-
-	for k, v := range h.Header {
-		if strings.ToLower(k) == "host" {
-			h.Req.Host = v
-		} else {
-			h.Req.Header.Add(k, v)
-		}
-	}
-
-	h.Response, err = h.Client.Do(h.Req)
-	if err != nil {
-		return nil, err
-	}
-	return h.Response.Body, nil
 }
 
 //defaultFileName<默认文件名称>
@@ -484,7 +431,90 @@ func (h *HttpSend) SendForm() (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
+	h.print()
 	return h.Response.Body, nil
+}
+
+//PostFormFile Request file byte stream<请求文件字节流>
+func (h *HttpSend) PostFormFile(url, files string) ([]byte, error) {
+	h.Url = url
+	h.Method = "POST"
+	file, err := os.Open(files)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	h.Response, err = http.Post(url, "binary/octet-stream", file)
+	if err != nil {
+		return nil, err
+	}
+	defer h.Close()
+	h.print()
+	return ioutil.ReadAll(h.Response.Body)
+}
+
+//Send <扩展一般用于手动请求>
+func (h *HttpSend) Send() (io.ReadCloser, error) {
+	configData, err := json.Marshal(h.Body)
+	if err != nil {
+		return nil, err
+	}
+	var sendData = bytes.NewBuffer(configData)
+
+	var Transport = &http.Transport{}
+	if h.Proxy != nil {
+		Transport.Proxy = h.Proxy
+	}
+
+	if h.Dial != nil {
+		Transport.Dial = h.Dial
+	}
+
+	h.Client.Transport = Transport
+
+	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(h.Header) == 0 {
+		h.Header = map[string]string{
+			"Content-Type": h.ContentType,
+		}
+	}
+
+	for k, v := range h.Header {
+		if strings.ToLower(k) == "host" {
+			h.Req.Host = v
+		} else {
+			h.Req.Header.Add(k, v)
+		}
+	}
+
+	h.Response, err = h.Client.Do(h.Req)
+	if err != nil {
+		return nil, err
+	}
+	h.print()
+	return h.Response.Body, nil
+}
+
+//Debug<用于最后打印>
+func (h *HttpSend) Debug() *HttpSend {
+	h.debug = true
+	return h
+}
+
+//print<打印>
+func (h *HttpSend) print() {
+	if h.debug == true {
+		body, _ := ioutil.ReadAll(h.Response.Body)
+		fmt.Printf("[HttpRequest]\n")
+		fmt.Printf("-------------------------------------------------------------------\n")
+		fmt.Printf("Request: %s %s %s\nHeaders: %v\nCookies: %v\nTimeout: %ds\nReqBody: %v\n\n", h.Method, h.Url, h.Body,
+			h.Header, h.Cookies, h.Timeout, string(body))
+	}
 }
 
 //Close <必须默认关闭>

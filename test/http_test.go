@@ -8,8 +8,8 @@ import (
 
 func TestHttp(t *testing.T) {
 	var http = ahttp.Client()
-	var result, err = http.SetFile("test.jpg", "file").PostForm("http://127.0.0.1:102/upload_file")
-	log.Println(http.GetResponse().Request)
+	var result, err = http.Debug().SetFile("test.jpg", "file").SetBody(map[string]interface{}{"name":"123.jpg"}).PostForm("http://127.0.0.1:102/upload_file")
+	log.Println(http)
 	//for i, i2 := range http.GetHeader() {
 	//	log.Println(i)
 	//	log.Println(i2)
