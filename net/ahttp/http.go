@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
-	"github.com/small-ek/antgo/os/logs"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -22,18 +22,17 @@ type HttpSend struct {
 	Client      http.Client                                  //Client
 	Response    *http.Response                               //Response
 	Req         *http.Request                                //Request
-	Proxy       func(*http.Request) (*url.URL, error)        //Request proxy
-	Url         string                                       //Request address
-	ContentType string                                       //Request type
-	Header      map[string]string                            //Request header
-	Body        map[string]interface{}                       //Request body
-	Dial        func(network, addr string) (net.Conn, error) //Request Timeout
-	Method      string                                       //Request method
-	Files       []string                                     //多个文件
-	File        string                                       //单个文件
-	FileKey     string                                       //设置文件Key
-	FileName    string                                       //设置文件名称
-	BinaryFile  string
+	Proxy       func(*http.Request) (*url.URL, error)        //Request proxy<代理地址>
+	Url         string                                       //Request address<请求地址>
+	ContentType string                                       //Request type<网络文件的类型>
+	Header      map[string]string                            //Request header<请求头>
+	Body        map[string]interface{}                       //Request body<请求体>
+	Dial        func(network, addr string) (net.Conn, error) //Request Timeout<请求超时>
+	Method      string                                       //Request method<请求类型>
+	Files       []string                                     //Request Files <多个文件>
+	File        string                                       //Request File <单个文件>
+	FileKey     string                                       //Request FileKey<文件Key>
+	FileName    string                                       //Request FileName<文件名称>
 	sync.RWMutex
 }
 
@@ -44,12 +43,12 @@ func Client() *HttpSend {
 	}
 }
 
-//GetResponse 获取结果
+//GetResponse <获取结果>
 func (h *HttpSend) GetResponse() *http.Response {
 	return h.Response
 }
 
-//SetBody Set body
+//SetBody Set body<设置请求体>
 func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -57,7 +56,7 @@ func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	return h
 }
 
-//SetUrl Set url
+//SetUrl Set url<设置请求地址>
 func (h *HttpSend) SetUrl(url string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -65,7 +64,7 @@ func (h *HttpSend) SetUrl(url string) *HttpSend {
 	return h
 }
 
-//SetProxy Set proxy
+//SetProxy Set proxy<>设置代理
 func (h *HttpSend) SetProxy(proxy string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -75,7 +74,7 @@ func (h *HttpSend) SetProxy(proxy string) *HttpSend {
 	return h
 }
 
-//SetTimeout Set Timeout
+//SetTimeout Set Timeout<设置超时>
 func (h *HttpSend) SetTimeout(timeout time.Duration) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -90,7 +89,7 @@ func (h *HttpSend) SetTimeout(timeout time.Duration) *HttpSend {
 	return h
 }
 
-//SetHeader set header
+//SetHeader set header<设置请求头>
 func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -98,7 +97,7 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	return h
 }
 
-//SetCookie set cookie
+//SetCookie set cookie<设置cookie>
 func (h *HttpSend) SetCookie(c *http.Cookie) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -106,7 +105,7 @@ func (h *HttpSend) SetCookie(c *http.Cookie) *HttpSend {
 	return h
 }
 
-//SetMethod set method
+//SetMethod set method<设置请求类型>
 func (h *HttpSend) SetMethod(method string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -114,7 +113,7 @@ func (h *HttpSend) SetMethod(method string) *HttpSend {
 	return h
 }
 
-//SetSendType Set Type
+//SetSendType Set Type<设置资源的MIME类型>
 func (h *HttpSend) SetContentType(ContentType string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -122,7 +121,7 @@ func (h *HttpSend) SetContentType(ContentType string) *HttpSend {
 	return h
 }
 
-//GetHeader Get Response Header
+//GetHeader Get Response Header<获取请求头>
 func (h *HttpSend) GetHeader() map[string][]string {
 	h.Lock()
 	defer h.Unlock()
@@ -132,7 +131,7 @@ func (h *HttpSend) GetHeader() map[string][]string {
 	return nil
 }
 
-//Get request
+//Get request<GET 请求>
 func (h *HttpSend) Get(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "GET"
@@ -144,7 +143,7 @@ func (h *HttpSend) Get(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//SetFiles Set Files<设置多个文件上传>
+//SetFiles Set Files<设置多个文件路径上传>
 func (h *HttpSend) SetFiles(files []string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -152,15 +151,18 @@ func (h *HttpSend) SetFiles(files []string) *HttpSend {
 	return h
 }
 
-//SetFile Set File<设置单个文件上传>
-func (h *HttpSend) SetFile(file string) *HttpSend {
+//SetFile Set File<设置单个文件上传路径>
+func (h *HttpSend) SetFile(file string, key ...string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
+	if len(key) > 0 {
+		h.FileKey = key[0]
+	}
 	h.File = file
 	return h
 }
 
-//SetFileKey Set File<设置文件Key>
+//SetFileKey Set File<设置文件的Key>
 func (h *HttpSend) SetFileKey(fileKey string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -168,7 +170,7 @@ func (h *HttpSend) SetFileKey(fileKey string) *HttpSend {
 	return h
 }
 
-//SetFileName Set File<设置文件名称>
+//SetFileName Set File<设置文件的名称>
 func (h *HttpSend) SetFileName(fileName string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
@@ -176,7 +178,16 @@ func (h *HttpSend) SetFileName(fileName string) *HttpSend {
 	return h
 }
 
-//PostForm request
+//SetFileKeyAndName Set File<设置文件Key和名称>
+func (h *HttpSend) SetFileKeyAndName(fileKey, fileName string) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.FileKey = fileKey
+	h.FileName = fileName
+	return h
+}
+
+//PostForm request<Post 表单提交>
 func (h *HttpSend) PostForm(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "POST"
@@ -188,7 +199,26 @@ func (h *HttpSend) PostForm(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Post request
+//PostFormFile Request file byte stream<请求文件字节流>
+func (h *HttpSend) PostFormFile(url, files string) ([]byte, error) {
+	h.Url = url
+	h.Method = "POST"
+	file, err := os.Open(files)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	h.Response, err = http.Post(url, "binary/octet-stream", file)
+	if err != nil {
+		return nil, err
+	}
+	defer h.Close()
+
+	return ioutil.ReadAll(h.Response.Body)
+}
+
+//Post request<POST 请求>
 func (h *HttpSend) Post(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "POST"
@@ -200,7 +230,7 @@ func (h *HttpSend) Post(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Put request
+//Put request<PUT 请求>
 func (h *HttpSend) Put(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "PUT"
@@ -212,7 +242,7 @@ func (h *HttpSend) Put(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Delete request
+//Delete request<DELETE 请求>
 func (h *HttpSend) Delete(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "DELETE"
@@ -224,7 +254,7 @@ func (h *HttpSend) Delete(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Connect request
+//Connect request<CONNECT 请求>
 func (h *HttpSend) Connect(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "CONNECT"
@@ -236,7 +266,7 @@ func (h *HttpSend) Connect(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Head request
+//Head request<HEAD 请求>
 func (h *HttpSend) Head(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "HEAD"
@@ -248,7 +278,7 @@ func (h *HttpSend) Head(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Options request
+//Options request<OPTIONS 请求嗅探>
 func (h *HttpSend) Options(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "OPTIONS"
@@ -260,7 +290,7 @@ func (h *HttpSend) Options(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Trace request
+//Trace request<TRACE 请求>
 func (h *HttpSend) Trace(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "TRACE"
@@ -272,7 +302,7 @@ func (h *HttpSend) Trace(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//Patch ...
+//Patch request<PATCH 请求>
 func (h *HttpSend) Patch(url string) ([]byte, error) {
 	h.Url = url
 	h.Method = "PATCH"
@@ -284,8 +314,8 @@ func (h *HttpSend) Patch(url string) ([]byte, error) {
 	return ioutil.ReadAll(result)
 }
 
-//GetUrlBuild ...
-func GetUrlBuild(urls string, data map[string]string) string {
+//SetUrlBuild <根据Map对象设置url地址拼接参数>
+func SetUrlBuild(urls string, data map[string]string) string {
 	u, _ := url.Parse(urls)
 	q := u.Query()
 	for k, v := range data {
@@ -299,7 +329,7 @@ func GetUrlBuild(urls string, data map[string]string) string {
 func (h *HttpSend) Send() (io.ReadCloser, error) {
 	configData, err := json.Marshal(h.Body)
 	if err != nil {
-		logs.Error(err.Error())
+		return nil, err
 	}
 	var sendData = bytes.NewBuffer(configData)
 
@@ -340,22 +370,34 @@ func (h *HttpSend) Send() (io.ReadCloser, error) {
 	return h.Response.Body, nil
 }
 
-//SendFile 发送单个文件
-func (h *HttpSend) SendFile(sendData io.Writer) error {
+//defaultFileName<默认文件名称>
+func (h *HttpSend) defaultFileName() error {
+	if h.FileName == "" {
+		info, err := os.Stat(h.File) //Stat获取文件属性
+		if err != nil {
+			return err
+		}
+		h.FileName = info.Name()
+	}
+	return nil
+}
+
+//sendFile<发送单个文件>
+func (h *HttpSend) sendFile(sendData io.Writer) error {
 	//判断单个文件
-	if h.File != "" && h.FileKey != "" && h.FileName != "" {
+	if h.File != "" && h.FileKey != "" {
 		bodyWrite := multipart.NewWriter(sendData)
 		file, err := os.Open(h.File)
 		defer file.Close()
 		if err != nil {
 			return err
 		}
+		h.defaultFileName()
 
 		fileWrite, err := bodyWrite.CreateFormFile(h.FileKey, h.FileName)
 		if _, err = io.Copy(fileWrite, file); err != nil {
 			return err
 		}
-
 		for key, val := range h.Body {
 			if err = bodyWrite.WriteField(key, conv.String(val)); err != nil {
 				return err
@@ -367,8 +409,8 @@ func (h *HttpSend) SendFile(sendData io.Writer) error {
 	return nil
 }
 
-//SendFile 发送多个文件
-func (h *HttpSend) SendFiles(sendData io.Writer) error {
+//sendFiles<发送多个文件>
+func (h *HttpSend) sendFiles(sendData io.Writer) error {
 	if len(h.Files) > 0 {
 		bodyWrite := multipart.NewWriter(sendData)
 		for _, val := range h.Files {
@@ -393,29 +435,7 @@ func (h *HttpSend) SendFiles(sendData io.Writer) error {
 	return nil
 }
 
-//SendFile 设置二进制文件
-func (h *HttpSend) SendBinaryFile(sendData io.Writer) error {
-	if h.BinaryFile != "" {
-		bodyWrite := multipart.NewWriter(sendData)
-		for _, val := range h.Files {
-			file, err := os.Open(val)
-			defer file.Close()
-			if err != nil {
-				return err
-			}
-			fileWrite, err := bodyWrite.CreateFormFile(h.FileKey, val)
-			_, err = io.Copy(fileWrite, file)
-			if err != nil {
-				return err
-			}
-		}
-		bodyWrite.Close()
-		h.ContentType = bodyWrite.FormDataContentType()
-	}
-	return nil
-}
-
-//SendForm <扩展一般用于发送表单请求>
+//SendForm <一般用于发送表单请求>
 func (h *HttpSend) SendForm() (io.ReadCloser, error) {
 	sendData := &bytes.Buffer{}
 	var err error
@@ -432,24 +452,20 @@ func (h *HttpSend) SendForm() (io.ReadCloser, error) {
 	h.Client.Transport = Transport
 
 	//发送单个文件
-	if err2 := h.SendFile(sendData); err2 != nil {
+	if err2 := h.sendFile(sendData); err2 != nil {
 		return nil, err2
 	}
 
 	//发送多个文件
-	if err3 := h.SendFiles(sendData); err3 != nil {
+	if err3 := h.sendFiles(sendData); err3 != nil {
 		return nil, err3
-	}
-	//发送二进制
-	if err4 := h.SendBinaryFile(sendData); err4 != nil {
-		return nil, err4
 	}
 
 	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println(h.ContentType)
 	if len(h.Header) == 0 {
 		h.Header = map[string]string{
 			"Content-Type": h.ContentType,
