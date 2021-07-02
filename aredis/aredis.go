@@ -9,9 +9,11 @@ import (
 
 //New parameter structure
 type Client struct {
-	Options redis.Options
-	Clients *redis.Client
-	Ctx     context.Context
+	Options       redis.Options
+	Clients       *redis.Client
+	Ctx           context.Context
+	ClusterClient *redis.ClusterClient
+	Mode          bool
 }
 
 //New setting redis
@@ -29,7 +31,53 @@ func New(Addr, Password string, DB int) *Client {
 		logs.Error(err.Error())
 	}
 	return &Client{
+		Mode:    true,
 		Options: options,
+		Clients: client,
+		Ctx:     ctx,
+	}
+}
+
+//NewClusterClient <Redis集群>
+func NewClusterClient(Addrs []string, Password string) *Client {
+	var ctx = context.Background()
+	client := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs:    Addrs,
+		Password: Password,
+		// To route commands by latency or randomly, enable one of the following.
+		//RouteByLatency: true,
+		//RouteRandomly: true,
+	})
+	err := client.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
+		return shard.Ping(ctx).Err()
+	})
+	if err != nil {
+		logs.Error(err.Error())
+	}
+
+	return &Client{
+		Mode:          false,
+		ClusterClient: client,
+		Ctx:           ctx,
+	}
+}
+
+//NewFailoverClient <Redis哨兵>
+func NewFailoverClient(SentinelAddrs []string, MasterName, Password string, Db int) *Client {
+	var ctx = context.Background()
+	client := redis.NewFailoverClient(&redis.FailoverOptions{
+		MasterName:    MasterName,
+		SentinelAddrs: SentinelAddrs,
+		Password:      Password,
+		DB:            Db,
+	})
+	err := client.Ping(ctx).Err()
+	if err != nil {
+		logs.Error(err.Error())
+	}
+
+	return &Client{
+		Mode:    false,
 		Clients: client,
 		Ctx:     ctx,
 	}
@@ -43,12 +91,24 @@ func (c *Client) SetOptions(Options *redis.Options) *Client {
 
 //Close <关闭>
 func (c *Client) Close() {
-	defer c.Clients.Close()
+	if c.Mode {
+		defer c.Clients.Close()
+	} else {
+		defer c.ClusterClient.Close()
+	}
 }
 
 //Ping <心跳>
 func (c *Client) Ping() string {
-	pong, err := c.Clients.Ping(c.Ctx).Result()
+	var pong string
+	var err error
+
+	if c.Mode {
+		pong, err = c.Clients.Ping(c.Ctx).Result()
+	} else {
+		pong, err = c.Clients.Ping(c.Ctx).Result()
+	}
+
 	if err != nil {
 		logs.Error(err.Error())
 	}
@@ -57,7 +117,15 @@ func (c *Client) Ping() string {
 
 //TTL<获取过期时间>
 func (c *Client) TTL(key string) time.Duration {
-	result, err := c.Clients.TTL(c.Ctx, key).Result()
+	var result time.Duration
+	var err error
+
+	if c.Mode {
+		result, err = c.Clients.TTL(c.Ctx, key).Result()
+	} else {
+		result, err = c.ClusterClient.TTL(c.Ctx, key).Result()
+	}
+
 	if err != nil {
 		logs.Error(err.Error())
 	}

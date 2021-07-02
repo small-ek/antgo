@@ -6,7 +6,14 @@ import (
 
 //GetList value<获取列表长度>
 func (c *Client) GetListLength(key string) int64 {
-	lens, err := c.Clients.LLen(c.Ctx, key).Result()
+	var err error
+	var lens int64
+	if c.Mode {
+		lens, err = c.Clients.LLen(c.Ctx, key).Result()
+	} else {
+		lens, err = c.ClusterClient.LLen(c.Ctx, key).Result()
+	}
+
 	if err != nil {
 		logs.Error(err.Error())
 	}
@@ -16,7 +23,14 @@ func (c *Client) GetListLength(key string) int64 {
 //GetList value<获取列表>
 func (c *Client) GetList(key string) []string {
 	lens := c.GetListLength(key)
-	list, err := c.Clients.LRange(c.Ctx, key, 0, lens-1).Result()
+	var list []string
+	var err error
+	if c.Mode {
+		list, err = c.Clients.LRange(c.Ctx, key, 0, lens-1).Result()
+	} else {
+		list, err = c.Clients.LRange(c.Ctx, key, 0, lens-1).Result()
+	}
+
 	if err != nil {
 		logs.Error(err.Error())
 	}
@@ -25,7 +39,14 @@ func (c *Client) GetList(key string) []string {
 
 //GetListIndex value<返回名称为key的list中index位置的元素>
 func (c *Client) GetListIndex(key string, index int64) string {
-	list, err := c.Clients.LIndex(c.Ctx, key, index).Result()
+	var list string
+	var err error
+	if c.Mode {
+		list, err = c.Clients.LIndex(c.Ctx, key, index).Result()
+	} else {
+		list, err = c.Clients.LIndex(c.Ctx, key, index).Result()
+	}
+
 	if err != nil {
 		logs.Error(err.Error())
 	}
@@ -34,8 +55,11 @@ func (c *Client) GetListIndex(key string, index int64) string {
 
 //SetList value<修改列表>
 func (c *Client) SetList(key string, index int64, value interface{}) error {
-	err := c.Clients.LSet(c.Ctx, key, index, value).Err()
-	return err
+	if c.Mode {
+		return c.Clients.LSet(c.Ctx, key, index, value).Err()
+	} else {
+		return c.ClusterClient.LSet(c.Ctx, key, index, value).Err()
+	}
 }
 
 //RemoveList value<删除列表>
@@ -45,24 +69,37 @@ func (c *Client) RemoveList(key string, value interface{}, count ...int64) error
 	if len(count) > 0 {
 		counts = count[0]
 	}
-	err := c.Clients.LRem(c.Ctx, key, counts, value).Err()
-	return err
+
+	if c.Mode {
+		return c.Clients.LRem(c.Ctx, key, counts, value).Err()
+	} else {
+		return c.ClusterClient.LRem(c.Ctx, key, counts, value).Err()
+	}
 }
 
 //RemoveListLeft value<返回并删除名称为key的list中的首元素>
 func (c *Client) RemoveListLeft(key string) error {
-	err := c.Clients.LPop(c.Ctx, key).Err()
-	return err
+	if c.Mode {
+		return c.Clients.LPop(c.Ctx, key).Err()
+	} else {
+		return c.ClusterClient.LPop(c.Ctx, key).Err()
+	}
 }
 
 //RemoveListRight value<返回并删除名称为key的list中的尾元素>
 func (c *Client) RemoveListRight(key string) error {
-	err := c.Clients.LPop(c.Ctx, key).Err()
-	return err
+	if c.Mode {
+		return c.Clients.LPop(c.Ctx, key).Err()
+	} else {
+		return c.ClusterClient.LPop(c.Ctx, key).Err()
+	}
 }
 
 //PushList value<添加>
 func (c *Client) PushList(key string, value interface{}) error {
-	err := c.Clients.RPush(c.Ctx, key, value).Err()
-	return err
+	if c.Mode {
+		return c.Clients.RPush(c.Ctx, key, value).Err()
+	} else {
+		return c.ClusterClient.RPush(c.Ctx, key, value).Err()
+	}
 }

@@ -13,6 +13,7 @@ var ctx = context.Background()
 
 func TestRedis(t *testing.T) {
 	conn := aredis.New("127.0.0.1:6379", "", 0)
+	//conn := aredis.NewClusterClient([]string{"127.0.0.1:6379", "127.0.0.1:6379"}, "")
 	conn.Set("key", "value")
 	log.Println(conn.Get("key"))
 	log.Println(conn.TTL("key"))
