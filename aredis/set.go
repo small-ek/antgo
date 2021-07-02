@@ -37,12 +37,3 @@ func (c *Client) RemoveSet(key string, members ...interface{}) int64 {
 	}
 	return result
 }
-
-//SetDiff value<差集>
-func (c *Client) SetDiff(keys ...string) []string {
-	result, err := c.Clients.SDiff(c.Ctx, keys[0]).Result()
-	if err != nil {
-		logs.Error(err.Error())
-	}
-	return result
-}
