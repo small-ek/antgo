@@ -20,135 +20,160 @@ func SetPath(path string) {
 }
 
 //Result ...
-type Result struct {
+type Config struct {
 	Child interface{}
 }
 
 //Decode config
-func Decode() *Result {
-	return &Result{
+func Decode() *Config {
+	return &Config{
 		Child: Data,
 	}
 }
 
 //Get config
-func (get *Result) Get(name interface{}) *Result {
-	var child = get.Child
+func (c *Config) Get(name interface{}) *Config {
+	var child = c.Child
 	switch child.(type) {
 	case map[string]interface{}:
-		return &Result{
+		return &Config{
 			Child: child.(map[string]interface{})[conv.String(name)],
 		}
 	case map[string]string:
-		return &Result{
+		return &Config{
 			Child: child.(map[string]string)[conv.String(name)],
 		}
 	case map[string]int:
-		return &Result{
+		return &Config{
 			Child: child.(map[string]string)[conv.String(name)],
 		}
 	case []interface{}:
-		return &Result{
+		return &Config{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []string:
-		return &Result{
+		return &Config{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []int:
-		return &Result{
+		return &Config{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	case []int64:
-		return &Result{
+		return &Config{
 			Child: child.([]interface{})[conv.Int(name)],
 		}
 	}
-	return &Result{
+	return &Config{
 		Child: child,
 	}
 }
 
 //Read Parse config according to point split
-func (get *Result) Read(name string) *Result {
+func (c *Config) Read(name string) *Config {
 	var list = strings.Split(name, ".")
 	for i := 0; i < len(list); i++ {
 		var value = list[i]
-		var result = get.Get(value)
-		get.Child = result.Child
+		var result = c.Get(value)
+		c.Child = result.Child
 	}
-	return get
+	return c
 }
 
 //String Data type conversion.
-func (get *Result) String() string {
-	if get.Child == nil {
+func (c *Config) String() string {
+	if c.Child == nil {
 		return ""
 	}
-	return conv.String(get.Child)
+	return conv.String(c.Child)
 }
 
 //Strings Data type conversion.
-func (get *Result) Strings() []string {
-	return conv.Strings(get.Child)
+func (c *Config) Strings() []string {
+	return conv.Strings(c.Child)
 }
 
 //Byte Data type conversion.
-func (get *Result) Byte() byte {
-	return conv.Byte(get.Child)
+func (c *Config) Byte() byte {
+	return conv.Byte(c.Child)
 }
 
 //Bytes Data type conversion.
-func (get *Result) Bytes() []byte {
-	return conv.Bytes(get.Child)
+func (c *Config) Bytes() []byte {
+	return conv.Bytes(c.Child)
 }
 
 //Int Data type conversion.
-func (get *Result) Int() int {
-	if get.Child == nil {
+func (c *Config) Int() int {
+	if c.Child == nil {
 		return 0
 	}
-	return conv.Int(get.Child)
+	return conv.Int(c.Child)
 }
 
 //Bool Data type conversion.
-func (get *Result) Bool() bool {
-	return conv.Bool(get.Child)
+func (c *Config) Bool() bool {
+	return conv.Bool(c.Child)
 }
 
 //Ints Data type conversion.
-func (get *Result) Ints() []int {
-	return conv.Ints(get.Child)
+func (c *Config) Ints() []int {
+	return conv.Ints(c.Child)
 }
 
 //Int64 Data type conversion.
-func (get *Result) Int64() int64 {
-	if get.Child == nil {
+func (c *Config) Int64() int64 {
+	if c.Child == nil {
 		return 0
 	}
-	return conv.Int64(get.Child)
+	return conv.Int64(c.Child)
 }
 
 //Float64 Data type conversion.
-func (get *Result) Float64() float64 {
-	if get.Child == nil {
+func (c *Config) Float64() float64 {
+	if c.Child == nil {
 		return 0
 	}
-	return conv.Float64(get.Child)
+	return conv.Float64(c.Child)
 }
 
 //Map Data type conversion.
-func (get *Result) Map() map[string]interface{} {
-	if get.Child == nil {
+func (c *Config) Map() map[string]interface{} {
+	if c.Child == nil {
 		return nil
 	}
-	return get.Child.(map[string]interface{})
+	return c.Child.(map[string]interface{})
 }
 
 //Array Data type conversion.
-func (get *Result) Array() []interface{} {
-	if get.Child == nil {
+func (c *Config) Array() []interface{} {
+	if c.Child == nil {
 		return nil
 	}
-	return get.Child.([]interface{})
+	return c.Child.([]interface{})
+}
+
+//Uint Data type conversion.
+func (c *Config) Uint() uint {
+	return conv.Uint(c.Child)
+}
+
+//Uint Data type conversion.
+func (c *Config) Uint8() uint8 {
+	return conv.Uint8(c.Child)
+}
+
+//Uint Data type conversion.
+func (c *Config) Uint16() uint16 {
+	return conv.Uint16(c.Child)
+}
+
+//Uint Data type conversion.
+func (c *Config) Uint32() uint32 {
+	return conv.Uint32(c.Child)
+}
+
+//Uint Data type conversion.
+func (c *Config) Uint64() uint64 {
+	return conv.Uint64(c.Child)
 }

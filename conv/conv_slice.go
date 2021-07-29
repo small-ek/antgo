@@ -5,15 +5,13 @@ import (
 	"github.com/small-ek/antgo/os/logs"
 )
 
-//Slice type conversion
-
-//Ints Convert <i> to []int.
-func Ints(i interface{}) []int {
-	if i == nil {
+//Ints converts `any` to []int.<将“any”转换为[]int。>
+func Ints(any interface{}) []int {
+	if any == nil {
 		return nil
 	}
 	var array []int
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []string:
 		array = make([]int, len(value))
 		for k, v := range value {
@@ -104,13 +102,13 @@ func Ints(i interface{}) []int {
 	return array
 }
 
-//Int32s Convert <i> to []int32.
-func Int32s(i interface{}) []int32 {
-	if i == nil {
+//Int32s converts `any` to []int32.<将“any”转换为[]int32。>
+func Int32s(any interface{}) []int32 {
+	if any == nil {
 		return nil
 	}
 	var array []int32
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []string:
 		array = make([]int32, len(value))
 		for k, v := range value {
@@ -201,13 +199,13 @@ func Int32s(i interface{}) []int32 {
 	return array
 }
 
-//Int64s Convert <i> to []int64.
-func Int64s(i interface{}) []int64 {
-	if i == nil {
+//Int64s converts `any` to []int64.<将“any”转换为[]int64。>
+func Int64s(any interface{}) []int64 {
+	if any == nil {
 		return nil
 	}
 	var array []int64
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []string:
 		array = make([]int64, len(value))
 		for k, v := range value {
@@ -299,13 +297,13 @@ func Int64s(i interface{}) []int64 {
 	return array
 }
 
-//Strings Convert <i> to []string.
-func Strings(i interface{}) []string {
-	if i == nil {
+//Strings converts `any` to []string.<将“any”转换为[]string。>
+func Strings(any interface{}) []string {
+	if any == nil {
 		return nil
 	}
 	var array []string
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []int:
 		array = make([]string, len(value))
 		for k, v := range value {
@@ -392,14 +390,14 @@ func Strings(i interface{}) []string {
 	return array
 }
 
-//Uints Convert <i> to []uint.
-func Uints(i interface{}) []uint {
-	if i == nil {
+//Uints converts `any` to []uint.<将“any”转换为[]uint。>
+func Uints(any interface{}) []uint {
+	if any == nil {
 		return nil
 	}
 
 	var array []uint
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []string:
 		array = make([]uint, len(value))
 		for k, v := range value {
@@ -485,13 +483,13 @@ func Uints(i interface{}) []uint {
 	return array
 }
 
-//Uint32s Convert <i> to []uint32.
-func Uint32s(i interface{}) []uint32 {
-	if i == nil {
+//Uint32s converts `any` to []uint32.<将“any”转换为[]uint32。>
+func Uint32s(any interface{}) []uint32 {
+	if any == nil {
 		return nil
 	}
 	var array []uint32
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []string:
 		array = make([]uint32, len(value))
 		for k, v := range value {
@@ -577,13 +575,13 @@ func Uint32s(i interface{}) []uint32 {
 	return array
 }
 
-//Uint64s Convert <i> to []uint64.
-func Uint64s(i interface{}) []uint64 {
-	if i == nil {
+//Uint64s converts `any` to []uint64.<将“any”转换为[]uint64。>
+func Uint64s(any interface{}) []uint64 {
+	if any == nil {
 		return nil
 	}
 	var array []uint64
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case []string:
 		array = make([]uint64, len(value))
 		for k, v := range value {
@@ -659,6 +657,100 @@ func Uint64s(i interface{}) []uint64 {
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			array[k] = Uint64(v)
+		}
+	case string:
+		err := json.Unmarshal([]byte(value), &array)
+		if err != nil {
+			logs.Error(err.Error())
+		}
+	}
+	return array
+}
+
+//Interfaces converts `any` to []interface{}.<将“any”转换为[]interface{}。>
+func Interfaces(any interface{}) []interface{} {
+	if any == nil {
+		return nil
+	}
+	var array []interface{}
+	switch value := any.(type) {
+	case []int:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []int8:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []int16:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []int32:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []int64:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []uint:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []uint8:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []uint16:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []uint32:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []uint64:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []bool:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []float32:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []float64:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case []interface{}:
+		array = value
+
+	case []string:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case [][]byte:
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)

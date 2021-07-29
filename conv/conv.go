@@ -7,43 +7,40 @@ import (
 	"github.com/small-ek/antgo/os/logs"
 	"math"
 	"strconv"
-	"strings"
 	"time"
 )
 
-//Basic type conversion
-
-//Rune Convert <i> to Rune.
-func Rune(i interface{}) rune {
-	if v, ok := i.(rune); ok {
+//Rune converts `any` to rune.<将“any”转换为rune。>
+func Rune(any interface{}) rune {
+	if v, ok := any.(rune); ok {
 		return v
 	}
-	return Int32(i)
+	return Int32(any)
 }
 
-//Runes Convert <i> to []rune.
-func Runes(i interface{}) []rune {
-	if v, ok := i.([]rune); ok {
+//Runes converts `any` to []rune.<将“any”转换为[]rune。>
+func Runes(any interface{}) []rune {
+	if v, ok := any.([]rune); ok {
 		return v
 	}
-	return []rune(String(i))
+	return []rune(String(any))
 }
 
-//Byte Convert <i> to byte.
-func Byte(i interface{}) byte {
-	if v, ok := i.(byte); ok {
+//Byte converts `any` to byte.<将“any”转换为byte。>
+func Byte(any interface{}) byte {
+	if v, ok := any.(byte); ok {
 		return v
 	}
-	return Uint8(i)
+	return Uint8(any)
 }
 
-//Bytes Convert <i> to []byte.
-func Bytes(i interface{}) []byte {
-	if i == nil {
+//Bytes converts `any` to []byte.<将“any”转换为[]byte。>
+func Bytes(any interface{}) []byte {
+	if any == nil {
 		return nil
 	}
 
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case string:
 		return []byte(value)
 	case []byte:
@@ -55,9 +52,9 @@ func Bytes(i interface{}) []byte {
 	case int64:
 		return intToBytes(value)
 	case float32:
-		return Float32ToBytes(value)
+		return float32ToBytes(value)
 	case float64:
-		return Float64ToBytes(value)
+		return float64ToBytes(value)
 	default:
 		result, err := json.Marshal(value)
 		if err != nil {
@@ -67,12 +64,12 @@ func Bytes(i interface{}) []byte {
 	}
 }
 
-//String Convert <i> to String.
-func String(i interface{}) string {
-	if i == nil {
+//String converts `any` to string.<将“any”转换为string。>
+func String(any interface{}) string {
+	if any == nil {
 		return ""
 	}
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case int8, int16, int32, int:
 		return strconv.Itoa(value.(int))
 	case int64:
@@ -106,213 +103,12 @@ func String(i interface{}) string {
 		}
 		return string(result)
 	}
-	return i.(string)
+	return any.(string)
 }
 
-//Bool converts <i> to Bool.
-func Bool(i interface{}) bool {
-	if i == nil {
-		return false
-	}
-	switch value := i.(type) {
-	case bool:
-		return value
-	case []byte:
-		if strings.ToLower(string(value)) == "false" {
-			return false
-		}
-		return true
-	case string:
-		if strings.ToLower(value) == "false" {
-			return false
-		}
-		return true
-	}
-
-	return false
-}
-
-//Int converts <i> to int.
-func Int(i interface{}) int {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int); ok {
-		return v
-	}
-	return int(Int64(i))
-}
-
-//Int8 converts <i> to int8.
-func Int8(i interface{}) int8 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int8); ok {
-		return v
-	}
-	return int8(Int64(i))
-}
-
-//Int16 converts <i> to int16.
-func Int16(i interface{}) int16 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int16); ok {
-		return v
-	}
-	return int16(Int64(i))
-}
-
-//Int32 converts <i> to int32.
-func Int32(i interface{}) int32 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int32); ok {
-		return v
-	}
-	return int32(Int64(i))
-}
-
-//Int64 converts <i> to int64.
-func Int64(i interface{}) int64 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case int, int8, int16, int32, uint, uint8, uint16, uint32, uint64, float32, float64:
-		return int64(i.(float64))
-	case int64:
-		return value
-	case bool:
-		if value {
-			return 1
-		}
-		return 0
-	case []byte:
-		return int64(binary.BigEndian.Uint64(value))
-	case string:
-		str, _ := strconv.ParseInt(value, 10, 64)
-		return str
-	}
-	return i.(int64)
-}
-
-//Uint converts <i> to uint.
-func Uint(i interface{}) uint {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint); ok {
-		return v
-	}
-	return uint(Uint64(i))
-}
-
-//Uint8 converts <i> to uint8.
-func Uint8(i interface{}) uint8 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint8); ok {
-		return v
-	}
-	return uint8(Uint64(i))
-}
-
-//Uint16 converts <i> to uint16.
-func Uint16(i interface{}) uint16 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint16); ok {
-		return v
-	}
-	return uint16(Uint64(i))
-}
-
-//Uint32 converts <i> to uint32.
-func Uint32(i interface{}) uint32 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint32); ok {
-		return v
-	}
-	return uint32(Uint64(i))
-}
-
-//Uint64 converts <i> to uint64.
-func Uint64(i interface{}) uint64 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, float32, float64:
-		return value.(uint64)
-	case uint64:
-		return value
-	case bool:
-		if value {
-			return 1
-		}
-		return 0
-	case []byte:
-		return binary.LittleEndian.Uint64(value)
-	case string:
-		u64, _ := strconv.ParseUint(value, 10, 32)
-		return u64
-	}
-	return i.(uint64)
-}
-
-//Float32 converts <i> to float32.
-func Float32(i interface{}) float32 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case float32:
-		return value
-	case float64:
-		return float32(value)
-	case []byte:
-		return math.Float32frombits(binary.LittleEndian.Uint32(value))
-	case string:
-		var result, _ = strconv.ParseFloat(value, 32/64)
-		return Float32(result)
-	default:
-		v, _ := strconv.ParseFloat(String(i), 64)
-		return float32(v)
-	}
-}
-
-//Float64 converts <i> to float64.
-func Float64(i interface{}) float64 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case float32:
-		return float64(value)
-	case float64:
-		return value
-	case string:
-		var result, _ = strconv.ParseFloat(value, 32/64)
-		return result
-	case []byte:
-		return math.Float64frombits(binary.LittleEndian.Uint64(value))
-	default:
-		v, _ := strconv.ParseFloat(String(i), 64)
-		return v
-	}
-}
-
-//intToBytes converts <i> to []byte.
-func intToBytes(i interface{}) []byte {
-	x := Int64(i)
+//intToBytes converts `any` to []byte.<将“any”转换为[]byte。>
+func intToBytes(any interface{}) []byte {
+	x := Int64(any)
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	var err = binary.Write(bytesBuffer, binary.BigEndian, x)
 	if err != nil {
@@ -321,16 +117,16 @@ func intToBytes(i interface{}) []byte {
 	return bytesBuffer.Bytes()
 }
 
-//Float32ToBytes converts <i> to []byte.
-func Float32ToBytes(float float32) []byte {
+//float32ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
+func float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
 	result := make([]byte, 4)
 	binary.LittleEndian.PutUint32(result, bits)
 	return result
 }
 
-//Float64ToBytes converts <i> to []byte.
-func Float64ToBytes(float float64) []byte {
+//float64ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
+func float64ToBytes(float float64) []byte {
 	bits := math.Float64bits(float)
 	result := make([]byte, 8)
 	binary.LittleEndian.PutUint64(result, bits)
