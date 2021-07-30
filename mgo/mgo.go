@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"log"
 	"time"
 )
 
@@ -47,9 +46,7 @@ func Connect(databaseName ...string) *Mgo {
 	if timeout == 0 {
 		timeout = 120
 	}
-	log.Println(db)
-	log.Println(poollimit)
-	log.Println(timeout)
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	opts := options.Client()
 	opts.ApplyURI(uri)
@@ -96,13 +93,20 @@ func (m *Mgo) Table(tableName string) *Mgo {
 
 //Create Create data<创建数据>
 func (m *Mgo) Create(data interface{}) (*mongo.InsertOneResult, error) {
-	defer m.Close()
+
 	return m.Collection.InsertOne(m.Ctx, data)
+}
+
+//SaveAll save all data<创建多条数据>
+func (m *Mgo) SaveAll(data []interface{}) (*mongo.InsertManyResult, error) {
+
+	opts := options.InsertMany().SetOrdered(false)
+	return m.Collection.InsertMany(m.Ctx, data, opts)
 }
 
 //Update Update data<修改数据>
 func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
-	defer m.Close()
+
 	return m.Collection.UpdateMany(
 		m.Ctx,
 		filter,
@@ -114,7 +118,6 @@ func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResul
 
 //UpdateById Modify data according to id<根据id修改>
 func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, error) {
-	defer m.Close()
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -131,7 +134,6 @@ func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, er
 
 //Delete delete data<删除>
 func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
-	defer m.Close()
 
 	return m.Collection.DeleteOne(
 		m.Ctx,
@@ -141,7 +143,6 @@ func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
 
 //DeleteMany Delete multiple data<删除多个数据>
 func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
-	defer m.Close()
 
 	return m.Collection.DeleteMany(
 		m.Ctx,
@@ -151,7 +152,6 @@ func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
 
 //Count Get the total quantity<获取总数量>
 func (m *Mgo) Count() (int64, error) {
-	defer m.Close()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
@@ -160,7 +160,6 @@ func (m *Mgo) Count() (int64, error) {
 
 //FindOne Single query<单个查询>
 func (m *Mgo) FindOne() (bson.M, error) {
-	defer m.Close()
 	var result bson.M
 	if m.Filter == nil {
 		m.Filter = bson.D{}
@@ -175,19 +174,27 @@ func (m *Mgo) FindOne() (bson.M, error) {
 }
 
 //Find Multiple data search<多条数据查询>
-func (m *Mgo) Find() ([]bson.M, error) {
-	defer m.Close()
+func (m *Mgo) Find() (*mongo.Cursor, error) {
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
 
 	if m.Collection != nil {
-		cursor, err := m.Collection.Find(m.Ctx, m.Filter, &options.FindOptions{Limit: m.Pages.Limit, Skip: m.Pages.Skip, Sort: m.Pages.Sort})
-		var result []bson.M
-		if err = cursor.All(m.Ctx, &result); err != nil {
-			log.Fatal(err)
-		}
-		return result, err
+		return m.Collection.Find(m.Ctx, m.Filter, &options.FindOptions{Limit: m.Pages.Limit, Skip: m.Pages.Skip, Sort: m.Pages.Sort})
+	}
+	return nil, errors.New("Database connection failed")
+
+}
+
+//Distinct Query unique data<查询不重复的数据>
+func (m *Mgo) Distinct(name string) ([]interface{}, error) {
+	if m.Filter == nil {
+		m.Filter = bson.D{}
+	}
+
+	if m.Collection != nil {
+		return m.Collection.Distinct(m.Ctx, name, m.Filter, &options.DistinctOptions{})
+
 	}
 	return nil, errors.New("Database connection failed")
 
@@ -262,15 +269,10 @@ func (m *Mgo) Close() {
 //matchStage := bson.D{{"$match", bson.D{{"podcast", id}}}}
 //groupStage := bson.D{{"$group", bson.D{{"_id", "$podcast"}, {"total", bson.D{{"$sum", "$duration"}}}}}}
 //mongo.Pipeline{matchStage, groupStage}
-func (m *Mgo) Aggregate() ([]bson.M, error) {
-	defer m.Close()
+func (m *Mgo) Aggregate() (*mongo.Cursor, error) {
+
 	if m.Collection != nil {
-		cursor, err := m.Collection.Aggregate(m.Ctx, m.Filter)
-		var result []bson.M
-		if err = cursor.All(m.Ctx, &result); err != nil {
-			log.Fatal(err)
-		}
-		return result, err
+		return m.Collection.Aggregate(m.Ctx, m.Filter)
 	}
 	return nil, errors.New("Database connection failed")
 }
