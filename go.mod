@@ -14,6 +14,7 @@ require (
 	github.com/jordan-wright/email v0.0.0-20200917010138-e1c00e156980
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/robfig/cron/v3 v3.0.1
+	go.mongodb.org/mongo-driver v1.7.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
