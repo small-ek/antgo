@@ -15,10 +15,10 @@ import (
 var Write *zap.Logger
 
 //Create 默认调用
-var Create New
+var Create Log
 
 //New Log parameter structure
-type New struct {
+type Log struct {
 	Path        string //Save Path
 	Level       string //Set log level,info debug warn
 	MaxBackups  int    //Keep 30 backups, 300 by default
@@ -29,62 +29,62 @@ type New struct {
 }
 
 //Default setting log
-func Default(path string) *New {
-	return &New{
+func Default(path string) *Log {
+	return &Log{
 		Path:        path,
-		MaxSize:     10,
-		MaxBackups:  300,
+		MaxSize:     3,
+		MaxBackups:  500,
 		MaxAge:      30,
-		Compress:    false,
+		Compress:    true,
 		ServiceName: "antgo",
 	}
 }
 
 //SetServiceName setting log
-func (get *New) SetServiceName(ServiceName string) *New {
-	get.ServiceName = ServiceName
-	return get
+func (log *Log) SetServiceName(ServiceName string) *Log {
+	log.ServiceName = ServiceName
+	return log
 }
 
 //SetMaxAge setting log
-func (get *New) SetMaxAge(MaxAge int) *New {
-	get.MaxAge = MaxAge
-	return get
+func (log *Log) SetMaxAge(MaxAge int) *Log {
+	log.MaxAge = MaxAge
+	return log
 }
 
 //SetMaxBackups setting log
-func (get *New) SetMaxBackups(MaxBackups int) *New {
-	get.MaxBackups = MaxBackups
-	return get
+func (log *Log) SetMaxBackups(MaxBackups int) *Log {
+	log.MaxBackups = MaxBackups
+	return log
 }
 
 //SetMaxSize Set log maximum
-func (get *New) SetMaxSize(MaxSize int) *New {
-	get.MaxSize = MaxSize
-	return get
+func (log *Log) SetMaxSize(MaxSize int) *Log {
+	log.MaxSize = MaxSize
+	return log
 }
 
 //SetPath setting log path
-func (get *New) SetPath(path string) *New {
-	get.Path = path
-	return get
+func (log *Log) SetPath(path string) *Log {
+	log.Path = path
+	return log
 }
 
 //Register Set log
-func (get *New) Register() *zap.Logger {
+func (log *Log) Register() *zap.Logger {
 	// Log split
 	hook := lumberjack.Logger{
-		Filename:   get.Path,
-		MaxSize:    get.MaxSize,
-		MaxBackups: get.MaxBackups,
-		MaxAge:     get.MaxAge,
-		Compress:   get.Compress,
+		Filename:   log.Path,
+		MaxSize:    log.MaxSize,
+		MaxBackups: log.MaxBackups,
+		MaxAge:     log.MaxAge,
+		Compress:   log.Compress,
 	}
 	WriteSyncer := zapcore.AddSync(&hook)
 	// Set log level
 	// debug->info->warn->error
 	var level zapcore.Level
-	switch get.Level {
+	switch log.Level {
 	case "debug":
 		level = zap.DebugLevel
 	case "info":
@@ -127,7 +127,7 @@ func (get *New) Register() *zap.Logger {
 	// Open document and line number
 	development := zap.Development()
 	// Set the initialization field, such as: add a server name
-	filed := zap.Fields(zap.String("serviceName", get.ServiceName))
+	filed := zap.Fields(zap.String("serviceName", log.ServiceName))
 	// Construction log
 	Write = zap.New(core, caller, development, filed)
 	defer Write.Sync()
