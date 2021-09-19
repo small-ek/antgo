@@ -36,6 +36,7 @@ type HttpSend struct {
 	File        string                                       //Request File <单个文件>
 	FileKey     string                                       //Request FileKey<文件Key>
 	FileName    string                                       //Request FileName<文件名称>
+	BodyReader  io.Reader                                    //Request BodyReader<读取器>
 	debug       bool
 	sync.RWMutex
 }
@@ -56,7 +57,20 @@ func (h *HttpSend) GetResponse() *http.Response {
 func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
+	configData, err := json.Marshal(body)
+	if err != nil {
+		log.Println(err)
+	}
+	h.BodyReader = bytes.NewBuffer(configData)
 	h.Body = body
+	return h
+}
+
+//SetBodyReader Set body<设置读取器>
+func (h *HttpSend) SetBodyReader(BodyReader io.Reader) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	h.BodyReader = BodyReader
 	return h
 }
 
@@ -456,12 +470,7 @@ func (h *HttpSend) PostFormFile(url, files string) ([]byte, error) {
 
 //Send <扩展一般用于手动请求>
 func (h *HttpSend) Send() (io.ReadCloser, error) {
-	configData, err := json.Marshal(h.Body)
-	if err != nil {
-		return nil, err
-	}
-	var sendData = bytes.NewBuffer(configData)
-
+	var err error
 	var Transport = &http.Transport{}
 	if h.Proxy != nil {
 		Transport.Proxy = h.Proxy
@@ -473,7 +482,7 @@ func (h *HttpSend) Send() (io.ReadCloser, error) {
 
 	h.Client.Transport = Transport
 
-	h.Req, err = http.NewRequest(h.Method, h.Url, sendData)
+	h.Req, err = http.NewRequest(h.Method, h.Url, h.BodyReader)
 	if err != nil {
 		return nil, err
 	}
