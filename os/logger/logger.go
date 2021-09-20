@@ -26,6 +26,7 @@ type Log struct {
 	MaxAge      int    //7 days reserved, 30 days by default
 	Compress    bool   //Whether to compress, no compression by default
 	ServiceName string //Log service name, default Ginp
+	Write       *zap.Logger
 }
 
 //Default setting log
@@ -129,9 +130,14 @@ func (log *Log) Register() *zap.Logger {
 	// Set the initialization field, such as: add a server name
 	filed := zap.Fields(zap.String("serviceName", log.ServiceName))
 	// Construction log
-	Write = zap.New(core, caller, development, filed)
-	defer Write.Sync()
-	return Write
+	log.Write = zap.New(core, caller, development, filed)
+	defer log.Write.Sync()
+	return log.Write
+}
+
+//Record 记录
+func (log *Log) Record(msg string, data []byte) {
+	log.Write.Info(msg, zap.ByteString("record", data))
 }
 
 //ToJsonData ...
