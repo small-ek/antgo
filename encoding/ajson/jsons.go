@@ -159,6 +159,11 @@ func (j *Json) Array() []interface{} {
 	return j.Child.([]interface{})
 }
 
+//Bytes Data type conversion.
+func (j *Json) Bytes() []byte {
+	return conv.Bytes(j.Child)
+}
+
 //Strings Data type conversion.
 func (j *Json) Strings() []string {
 	return conv.Strings(j.Child)
@@ -197,4 +202,9 @@ func (j *Json) Uint64s() []uint64 {
 //Interfaces Data type conversion.
 func (j *Json) Interfaces() []interface{} {
 	return conv.Interfaces(j.Child)
+}
+
+//Interface Data type conversion.
+func (j *Json) Interface() interface{} {
+	return j.Child
 }
