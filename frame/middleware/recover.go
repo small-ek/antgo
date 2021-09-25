@@ -1,9 +1,10 @@
-package logger
+package middleware
 
 import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"log"
@@ -44,7 +45,7 @@ func Recovery() gin.HandlerFunc {
 				// 请求IP
 				ip := c.ClientIP()
 
-				Write.Error("错误报错",
+				logger.Write.Error("错误报错",
 					zap.Any("ip", ip),
 					zap.Any("path", path),
 					zap.Any("request", requestBody),
