@@ -1,6 +1,7 @@
-package jsons
+package ajson
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/logs"
@@ -30,17 +31,17 @@ func Open(file string) []byte {
 }
 
 //Decode Parse array.<解析json字符串>
-func Decode(data string) *Json {
+func Decode(data []byte) *Json {
 	var result interface{}
-	data = strings.Trim(strings.Trim(data, "\n"), " ")
-
-	if data != "" && string(data[0]) == "[" {
+	data = bytes.Trim(bytes.Trim(data, "\n"), " ")
+	str := string(data)
+	if str != "" && string(str[0]) == "[" {
 		result = []interface{}{}
 	} else {
 		result = make(map[string]interface{})
 	}
 
-	err := json.Unmarshal([]byte(data), &result)
+	err := json.Unmarshal(data, &result)
 	if err != nil {
 		logs.Error(err.Error())
 	}
@@ -138,6 +139,16 @@ func (j *Json) Map() map[string]interface{} {
 	return j.Child.(map[string]interface{})
 }
 
+//MapInt Data type conversion.
+func (j *Json) MapInt() map[int]interface{} {
+	return j.Child.(map[int]interface{})
+}
+
+//MapInt64 Data type conversion.
+func (j *Json) MapInt64() map[int64]interface{} {
+	return j.Child.(map[int64]interface{})
+}
+
 //MapString Data type conversion.
 func (j *Json) MapString() map[string]string {
 	return j.Child.(map[string]string)
@@ -148,6 +159,11 @@ func (j *Json) Array() []interface{} {
 	return j.Child.([]interface{})
 }
 
+//Bytes Data type conversion.
+func (j *Json) Bytes() []byte {
+	return conv.Bytes(j.Child)
+}
+
 //Strings Data type conversion.
 func (j *Json) Strings() []string {
 	return conv.Strings(j.Child)
@@ -156,4 +172,39 @@ func (j *Json) Strings() []string {
 //Ints Data type conversion.
 func (j *Json) Ints() []int {
 	return conv.Ints(j.Child)
+}
+
+//Int32s Data type conversion.
+func (j *Json) Int32s() []int32 {
+	return conv.Int32s(j.Child)
+}
+
+//Int64s Data type conversion.
+func (j *Json) Int64s() []int64 {
+	return conv.Int64s(j.Child)
+}
+
+//Uints Data type conversion.
+func (j *Json) Uints() []uint {
+	return conv.Uints(j.Child)
+}
+
+//Uint32s Data type conversion.
+func (j *Json) Uint32s() []uint32 {
+	return conv.Uint32s(j.Child)
+}
+
+//Uint64s Data type conversion.
+func (j *Json) Uint64s() []uint64 {
+	return conv.Uint64s(j.Child)
+}
+
+//Interfaces Data type conversion.
+func (j *Json) Interfaces() []interface{} {
+	return conv.Interfaces(j.Child)
+}
+
+//Interface Data type conversion.
+func (j *Json) Interface() interface{} {
+	return j.Child
 }

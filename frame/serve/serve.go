@@ -15,16 +15,20 @@ var Group errgroup.Group
 //Engine ...
 var Engine *gin.Engine
 
-//New ...
-type New struct {
+//Server ...
+type Serve struct {
 	Server *http.Server
 }
 
-//Default service parameters
-func Default(router *gin.Engine, address string) *New {
-	return &New{
+//New service parameters
+func New(router *gin.Engine, address ...string) *Serve {
+	addr := ":8080"
+	if len(address) > 0 {
+		addr = address[0]
+	}
+	return &Serve{
 		&http.Server{
-			Addr:              address,
+			Addr:              addr,
 			ReadTimeout:       240 * time.Second, //设置秒的读超时
 			WriteTimeout:      240 * time.Second, //设置秒的写超时
 			ReadHeaderTimeout: 60 * time.Second,  //读取头超时
@@ -35,15 +39,21 @@ func Default(router *gin.Engine, address string) *New {
 	}
 }
 
+//SetMaxHeaderBytes
+func (s *Serve) SetMaxHeaderBytes(MaxHeaderBytes int) *Serve {
+	s.Server.MaxHeaderBytes = MaxHeaderBytes
+	return s
+}
+
 //Run the service
-func (get *New) Run() *New {
+func (s *Serve) Run() *Serve {
 	gin.ForceConsoleColor()
 	Group.Go(func() error {
-		return get.Server.ListenAndServe()
+		return s.Server.ListenAndServe()
 	})
 	fmt.Println("  App running at:")
-	fmt.Println("  -Local: http://" + get.Server.Addr)
-	return get
+	fmt.Println("  -Local: http://" + s.Server.Addr)
+	return s
 }
 
 //Wait Service waiting, multi-service situation waiting at the end

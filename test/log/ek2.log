@@ -1,8 +1,5 @@
-{"level":"info","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/os/logger/logger.go:177","msg":"123","serviceName":"api","detail":["{\"test\":\"1221\"}"]}
-{"level":"info","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/test/logger_test.go:16","msg":"22333","serviceName":"api"}
-{"level":"error","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","24","github.com/small-ek/antgo/test.test23"]}
-{"level":"error","time":"2021-04-20 01:38:38","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"错误测试2","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","26","github.com/small-ek/antgo/test.test23"]}
-{"level":"info","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/os/logger/logger.go:177","msg":"123","serviceName":"api","detail":["{\"test\":\"1221\"}"]}
-{"level":"info","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/test/logger_test.go:16","msg":"22333","serviceName":"api"}
-{"level":"error","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","24","github.com/small-ek/antgo/test.test23"]}
-{"level":"error","time":"2021-04-20 02:03:28","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"错误测试2","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","26","github.com/small-ek/antgo/test.test23"]}
+{"level":"info","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/os/logger/logger.go:177","msg":"123","serviceName":"api","detail":["{\"test\":\"1221\"}"]}
+{"level":"info","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/test/logger_test.go:23","msg":"22333","serviceName":"api"}
+{"level":"info","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/test/logger_test.go:28","msg":"123","serviceName":"api","leve":"{\"Name\":\"123\",\"Name2\":12}"}
+{"level":"error","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","36","github.com/small-ek/antgo/test.test23"]}
+{"level":"error","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"错误测试2","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","38","github.com/small-ek/antgo/test.test23"]}

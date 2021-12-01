@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/encoding/zip"
+	"github.com/small-ek/antgo/encoding/azip"
 	"log"
 	"testing"
 )
@@ -11,11 +11,11 @@ func TestZip(t *testing.T) {
 	files := []string{"test.txt", "test2.txt"}
 	output := "done.zip"
 
-	if err := zip.Create(output, files); err != nil {
+	if err := azip.Create(output, files); err != nil {
 		panic(err)
 	}
 
-	files2, err2 := zip.Unzip(output, "done")
+	files2, err2 := azip.Unzip(output, "done")
 	if err2 != nil {
 		log.Println(err2)
 	}

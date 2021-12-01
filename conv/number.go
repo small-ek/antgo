@@ -5,7 +5,6 @@ import (
 	"strconv"
 )
 
-
 //Int converts "any" to int.<将“any”转换为int。>
 func Int(any interface{}) int {
 	if any == nil {

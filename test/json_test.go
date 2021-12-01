@@ -1,13 +1,13 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/encoding/jsons"
+	"github.com/small-ek/antgo/encoding/ajson"
 	"log"
 	"testing"
 )
 
 func TestJson(t *testing.T) {
-	log.Println(string(jsons.Open("i18n.json")))
+	log.Println(string(ajson.Open("i18n.json")))
 	for i := 0; i < 1; i++ {
 		jsonStr := `[{"users" : {
 	    "count" : 2,
@@ -17,11 +17,11 @@ func TestJson(t *testing.T) {
 	    ]
 		}
 	}]`
-		var result = jsons.Decode(jsonStr).Get(0).Get("users").Get("list").Array()
+		var result = ajson.Decode([]byte(jsonStr)).Get(0).Get("users").Get("list").Array()
 		log.Println(result)
-		log.Println(jsons.Encode(map[string]string{"name": "21"}))
+		log.Println(ajson.Encode(map[string]string{"name": "21"}))
 
-		var result2 = jsons.Decode(jsonStr).Read("0.users.list").Array()
+		var result2 = ajson.Decode([]byte(jsonStr)).Read("0.users.list").Array()
 		log.Println(result2)
 	}
 }
