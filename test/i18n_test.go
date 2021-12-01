@@ -14,7 +14,7 @@ func TestI18n(t *testing.T) {
 
 	i18n.SetPath("i18n.json")
 	for i := 0; i < 1000; i++ {
-		i18n.SetLanguage("zh")
+		i18n.SetLanguage("en")
 		var result = i18n.Get("hello")
 		log.Println(result)
 		log.Println(reflect.TypeOf(result))
