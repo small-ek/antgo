@@ -5,6 +5,7 @@ package frame
 // the routes and the corresponding handlers. Content writes the
 // response to the corresponding context of framework.
 type WebFrameWork interface {
+	Use(app interface{}) error
 }
 
 // BaseAdapter is a base adapter contains some helper functions.

@@ -1,31 +1,22 @@
 package engine
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	errors2 "errors"
-	"fmt"
-	"github.com/small-ek/antgo/os/config"
-	"github.com/small-ek/antgo/os/logger"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/auth"
-	template2 "html/template"
-	"net/http"
-	"runtime/debug"
-	"strings"
+	"github.com/small-ek/antgo/frame"
 	"sync"
-
 )
 
 // Engine is the core component of antgo.
 type Engine struct {
+	Adapter      frame.WebFrameWork
 	announceLock sync.Once
 }
+var engine *Engine
+var defaultAdapter frame.WebFrameWork
 
 // Default return the default engine instance.
 func Default() *Engine {
 	engine = &Engine{
-
+		Adapter:    defaultAdapter,
 	}
 	return engine
 }
@@ -33,23 +24,16 @@ func Default() *Engine {
 // Use enable the adapter.
 func (eng *Engine) Use(router interface{}) error {
 	if eng.Adapter == nil {
-		emptyAdapterPanic()
+		panic("adapter is nil")
 	}
 
-	eng.Services.Add(auth.InitCSRFTokenSrv(eng.DefaultConnection()))
-	eng.initSiteSetting()
-	eng.initJumpNavButtons()
-	eng.initPlugins()
-
-	printInitMsg(language.Get("initialize success"))
-
-	return eng.Adapter.Use(router, eng.PluginList)
+	return eng.Adapter.Use(router)
 }
 
 // Register set default adapter of engine.
-func Register(ada adapter.WebFrameWork) {
+func Register(ada frame.WebFrameWork) {
 	if ada == nil {
-		emptyAdapterPanic()
+		panic("adapter is nil")
 	}
 	defaultAdapter = ada
 }
