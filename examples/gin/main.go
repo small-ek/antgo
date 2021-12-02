@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/antgo/frame/engine"
 )
 
 func main() {
@@ -11,5 +12,6 @@ func main() {
 			"message": "pong",
 		})
 	})
-	app.Run(":9900") // 监听并在 0.0.0.0:8080 上启动服务
+	engine.Default().Use(app)
+	app.Run(":9000") // 监听并在 0.0.0.0:8080 上启动服务
 }

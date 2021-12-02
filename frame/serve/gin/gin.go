@@ -1,15 +1,15 @@
-package gin
+package engine
 
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/small-ek/antgo/frame"
 	"github.com/small-ek/antgo/frame/engine"
+	"github.com/small-ek/antgo/frame/serve"
 )
 
 // Gin structure value is a Gin GoAdmin adapter.
 type Gin struct {
-	frame.BaseAdapter
+	serve.BaseAdapter
 	ctx *gin.Context
 	app *gin.Engine
 }
@@ -19,7 +19,7 @@ func init() {
 }
 
 // Use implements the method Adapter.Use.
-func (gins *Gin) Use(app interface{}) error {
+func (gins *Gin) SetApp(app interface{}) error {
 	var (
 		eng *gin.Engine
 		ok  bool
