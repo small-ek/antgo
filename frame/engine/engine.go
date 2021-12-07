@@ -17,6 +17,7 @@ var defaultAdapter serve.WebFrameWork
 
 // Default return the default engine instance.
 func Default() *Engine {
+	log.Println(defaultAdapter)
 	engine = &Engine{
 		Adapter: defaultAdapter,
 	}
@@ -26,6 +27,7 @@ func Default() *Engine {
 // Use enable the adapter.
 func (eng *Engine) Use(router interface{}) error {
 	log.Println(eng)
+	log.Println(eng.Adapter == nil)
 	if eng.Adapter == nil {
 		panic("adapter is nil")
 	}
