@@ -12,27 +12,25 @@ type Engine struct {
 	announceLock sync.Once
 }
 
-var engine *Engine
+//defaultAdapter is the default adapter of engine.
 var defaultAdapter serve.WebFrameWork
 
 // Default return the default engine instance.
 func Default() *Engine {
 	log.Println(defaultAdapter)
-	engine = &Engine{
+	log.Println(defaultAdapter == nil)
+	return &Engine{
 		Adapter: defaultAdapter,
 	}
-	return engine
 }
 
 // Use enable the adapter.
 func (eng *Engine) Use(router interface{}) error {
-	log.Println(eng)
-	log.Println(eng.Adapter == nil)
 	if eng.Adapter == nil {
 		panic("adapter is nil")
 	}
 
-	return eng.Adapter.SetApp(router)
+	return eng.Adapter.Use(router)
 }
 
 // Register set default adapter of engine.

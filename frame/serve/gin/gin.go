@@ -17,16 +17,18 @@ type Gin struct {
 func init() {
 	engine.Register(new(Gin))
 }
+
 //Name implements the method Adapter.Name.
 func (gins *Gin) Name() string {
 	return "gin"
 }
+
 // Use implements the method Adapter.Use.
 func (gins *Gin) Use(app interface{}) error {
 	return gins.GetUse(app, gins)
 }
 
-// Use implements the method Adapter.Use.
+// SetApp implements the method Adapter.Use.
 func (gins *Gin) SetApp(app interface{}) error {
 	var (
 		eng *gin.Engine
