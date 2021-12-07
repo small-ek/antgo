@@ -14,8 +14,8 @@ type WebFrameWork interface {
 type BaseAdapter struct {
 }
 
-// GetUse is a helper function adds the plugins to the framework.
-func (base *BaseAdapter) GetUse(app interface{}, wf WebFrameWork) error {
+// SetUse is a helper function adds the plugins to the framework.
+func (base *BaseAdapter) SetUse(app interface{}, wf WebFrameWork) error {
 	if err := wf.SetApp(app); err != nil {
 		return err
 	}

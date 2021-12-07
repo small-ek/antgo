@@ -2,7 +2,6 @@ package engine
 
 import (
 	"github.com/small-ek/antgo/frame/serve"
-	"log"
 	"sync"
 )
 
@@ -17,8 +16,6 @@ var defaultAdapter serve.WebFrameWork
 
 // Default return the default engine instance.
 func Default() *Engine {
-	log.Println(defaultAdapter)
-	log.Println(defaultAdapter == nil)
 	return &Engine{
 		Adapter: defaultAdapter,
 	}

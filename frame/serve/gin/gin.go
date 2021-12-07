@@ -25,7 +25,7 @@ func (gins *Gin) Name() string {
 
 // Use implements the method Adapter.Use.
 func (gins *Gin) Use(app interface{}) error {
-	return gins.GetUse(app, gins)
+	return gins.SetUse(app, gins)
 }
 
 // SetApp implements the method Adapter.Use.
