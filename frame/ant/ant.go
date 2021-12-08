@@ -67,8 +67,13 @@ func (eng *Engine) Run(srv *http.Server) *Engine {
 
 //defaultServer
 func defaultServer(app http.Handler) *http.Server {
+	addr := GetConfig("system.address").String()
+	if addr == "" {
+		addr = ":8080"
+	}
+
 	return &http.Server{
-		Addr:              GetConfig("system.address").String(),
+		Addr:              addr,
 		Handler:           app,
 		ReadTimeout:       240 * time.Second, //设置秒的读超时
 		WriteTimeout:      240 * time.Second, //设置秒的写超时
@@ -82,8 +87,8 @@ func defaultServer(app http.Handler) *http.Server {
 func (eng *Engine) Serve(app http.Handler) *Engine {
 	eng.Use(app)
 	eng.Srv = defaultServer(app)
+
 	go func() {
-		// 服务连接
 		if err := eng.Srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}
@@ -119,9 +124,4 @@ func (eng *Engine) GetServer() *http.Server {
 func (eng *Engine) SetConfig(filePath string) *Engine {
 	config.SetPath(filePath)
 	return eng
-}
-
-// GetConfig Get configuration content
-func GetConfig(name string) *config.Config {
-	return config.Decode().Get(name)
 }

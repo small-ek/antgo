@@ -16,7 +16,6 @@ var Data map[string]interface{}
 func SetPath(filePath string) {
 	fileNameWithSuffix := path.Base(filePath)
 	fileType := path.Ext(fileNameWithSuffix)
-
 	switch fileType {
 	case ".toml":
 		if _, err := toml.DecodeFile(filePath, &Data); err != nil {
