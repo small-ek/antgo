@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/small-ek/antgo/frame/engine"
+	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
 	"io/ioutil"
-	"log"
-	"os"
-	"os/signal"
+	"net/http"
+	"time"
 )
 
 func main() {
@@ -15,20 +14,18 @@ func main() {
 	gin.DefaultWriter = ioutil.Discard
 
 	app := gin.Default()
-	app.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
+	app.GET("/", func(c *gin.Context) {
+		c.String(200, "Hello, World!")
 	})
-	eng := engine.Default()
-	if err := eng.Use(app); err != nil {
-		panic(err)
-	}
-	
-	app.Run(":9033")
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	log.Print("closing database connection")
+	eng := ant.Default().SetConfig("config.toml").Use(app).Run(&http.Server{
+		Addr:              ":8080",
+		Handler:           app,
+		ReadTimeout:       240 * time.Second, //设置秒的读超时
+		WriteTimeout:      240 * time.Second, //设置秒的写超时
+		ReadHeaderTimeout: 60 * time.Second,  //读取头超时
+		IdleTimeout:       120 * time.Second, //空闲超时
+		MaxHeaderBytes:    2097152,           //请求头最大字节
+	})
+	eng.Close()
 }

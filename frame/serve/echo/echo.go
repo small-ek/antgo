@@ -2,36 +2,36 @@ package gin
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/serve"
 )
 
 // Gin structure value is a Gin GoAdmin adapter.
-type Gin struct {
+type Echo struct {
 	serve.BaseAdapter
-	ctx *gin.Context
-	app *gin.Engine
+	ctx echo.Context
+	app *echo.Echo
 }
 
 func init() {
-	ant.Register(new(Gin))
+	ant.Register(new(Echo))
 }
 
 //Name implements the method Adapter.Name.
-func (gins *Gin) Name() string {
-	return "gin"
+func (e *Echo) Name() string {
+	return "echo"
 }
 
 // SetApp implements the method Adapter.Use.
-func (gins *Gin) SetApp(app interface{}) error {
+func (e *Echo) SetApp(app interface{}) error {
 	var (
-		eng *gin.Engine
+		eng *echo.Echo
 		ok  bool
 	)
-	if eng, ok = app.(*gin.Engine); !ok {
+	if eng, ok = app.(*echo.Echo); !ok {
 		return errors.New("gin adapter SetApp: wrong parameter")
 	}
-	gins.app = eng
+	e.app = eng
 	return nil
 }

@@ -6,7 +6,6 @@ package serve
 // response to the corresponding context of framework.
 type WebFrameWork interface {
 	Name() string
-	Use(app interface{}) error
 	SetApp(app interface{}) error
 }
 

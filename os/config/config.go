@@ -3,8 +3,9 @@ package config
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/small-ek/antgo/conv"
-	"github.com/small-ek/antgo/os/logs"
+	"gopkg.in/yaml.v2"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -12,11 +13,26 @@ import (
 var Data map[string]interface{}
 
 //SetPath Set path.
-func SetPath(path string) {
-	if _, err := toml.DecodeFile(path, &Data); err != nil {
-		logs.Error(err.Error())
-		os.Exit(1)
+func SetPath(filePath string) {
+	fileNameWithSuffix := path.Base(filePath)
+	fileType := path.Ext(fileNameWithSuffix)
+
+	switch fileType {
+	case ".toml":
+		if _, err := toml.DecodeFile(filePath, &Data); err != nil {
+			panic(err.Error())
+		}
+		break
+	case ".yml", ".yaml":
+		file, _ := os.Open(filePath) //test.yaml由下一个例子生成
+		defer file.Close()
+		ydecode := yaml.NewDecoder(file)
+		if err := ydecode.Decode(&Data); err != nil {
+			panic(err.Error())
+		}
+		break
 	}
+
 }
 
 //Result ...
@@ -31,13 +47,17 @@ func Decode() *Config {
 	}
 }
 
-//Get config
-func (c *Config) Get(name interface{}) *Config {
+//Next config
+func (c *Config) Next(name interface{}) *Config {
 	var child = c.Child
 	switch child.(type) {
 	case map[string]interface{}:
 		return &Config{
 			Child: child.(map[string]interface{})[conv.String(name)],
+		}
+	case map[interface{}]interface{}:
+		return &Config{
+			Child: child.(map[interface{}]interface{})[conv.String(name)],
 		}
 	case map[string]string:
 		return &Config{
@@ -69,12 +89,12 @@ func (c *Config) Get(name interface{}) *Config {
 	}
 }
 
-//Read Parse config according to point split
-func (c *Config) Read(name string) *Config {
+//Get Parse config according to point split
+func (c *Config) Get(name string) *Config {
 	var list = strings.Split(name, ".")
 	for i := 0; i < len(list); i++ {
 		var value = list[i]
-		var result = c.Get(value)
+		var result = c.Next(value)
 		c.Child = result.Child
 	}
 	return c
