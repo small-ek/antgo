@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/small-ek/antgo/frame/serve"
 	"github.com/small-ek/antgo/os/config"
+	"github.com/small-ek/antgo/os/logger"
 	"log"
 	"net/http"
 	"os"
@@ -123,5 +124,11 @@ func (eng *Engine) GetServer() *http.Server {
 // SetConfig Modify the configuration path
 func (eng *Engine) SetConfig(filePath string) *Engine {
 	config.SetPath(filePath)
+	return eng
+}
+
+// SetLog Modify log path
+func (eng *Engine) SetLog(filePath string) *Engine {
+	logger.Default(filePath).Register()
 	return eng
 }

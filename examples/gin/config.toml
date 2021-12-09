@@ -1,7 +1,7 @@
 #系统配置
 [system]
 #启动地址
-address = ":8080"
+address = ":9002"
 #权限配置路径
 rbac_path = "./config/rbac.conf"
 #是否开启跨域

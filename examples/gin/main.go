@@ -15,6 +15,8 @@ func main() {
 	app.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello, World!")
 	})
-	eng := ant.Default().SetConfig("config.toml").Serve(app)
+	eng := ant.Default().SetConfig("config.toml").SetLog("./log/ek.log").Serve(app)
+	ant.Log().Info("1212")
+
 	eng.Close()
 }
