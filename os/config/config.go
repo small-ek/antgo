@@ -104,21 +104,30 @@ func (c *Config) String() string {
 	if c.Child == nil {
 		return ""
 	}
+	defer c.End()
 	return conv.String(c.Child)
+}
+
+//End Data type conversion.
+func (c *Config) End() {
+	c.Child = Data
 }
 
 //Strings Data type conversion.
 func (c *Config) Strings() []string {
+	defer c.End()
 	return conv.Strings(c.Child)
 }
 
 //Byte Data type conversion.
 func (c *Config) Byte() byte {
+	defer c.End()
 	return conv.Byte(c.Child)
 }
 
 //Bytes Data type conversion.
 func (c *Config) Bytes() []byte {
+	defer c.End()
 	return conv.Bytes(c.Child)
 }
 
@@ -127,16 +136,19 @@ func (c *Config) Int() int {
 	if c.Child == nil {
 		return 0
 	}
+	defer c.End()
 	return conv.Int(c.Child)
 }
 
 //Bool Data type conversion.
 func (c *Config) Bool() bool {
+	defer c.End()
 	return conv.Bool(c.Child)
 }
 
 //Ints Data type conversion.
 func (c *Config) Ints() []int {
+	defer c.End()
 	return conv.Ints(c.Child)
 }
 
@@ -145,6 +157,7 @@ func (c *Config) Int64() int64 {
 	if c.Child == nil {
 		return 0
 	}
+	defer c.End()
 	return conv.Int64(c.Child)
 }
 
@@ -153,6 +166,7 @@ func (c *Config) Float64() float64 {
 	if c.Child == nil {
 		return 0
 	}
+	defer c.End()
 	return conv.Float64(c.Child)
 }
 
@@ -161,6 +175,7 @@ func (c *Config) Map() map[string]interface{} {
 	if c.Child == nil {
 		return nil
 	}
+	defer c.End()
 	return c.Child.(map[string]interface{})
 }
 
@@ -169,30 +184,36 @@ func (c *Config) Array() []interface{} {
 	if c.Child == nil {
 		return nil
 	}
+	defer c.End()
 	return c.Child.([]interface{})
 }
 
 //Uint Data type conversion.
 func (c *Config) Uint() uint {
+	defer c.End()
 	return conv.Uint(c.Child)
 }
 
 //Uint Data type conversion.
 func (c *Config) Uint8() uint8 {
+	defer c.End()
 	return conv.Uint8(c.Child)
 }
 
 //Uint Data type conversion.
 func (c *Config) Uint16() uint16 {
+	defer c.End()
 	return conv.Uint16(c.Child)
 }
 
 //Uint Data type conversion.
 func (c *Config) Uint32() uint32 {
+	defer c.End()
 	return conv.Uint32(c.Child)
 }
 
 //Uint Data type conversion.
 func (c *Config) Uint64() uint64 {
+	defer c.End()
 	return conv.Uint64(c.Child)
 }

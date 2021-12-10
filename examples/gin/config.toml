@@ -14,12 +14,26 @@ path = "rbac.conf"
 
 #接口请求日志
 [log]
+#路径
+path = "./log/ant.log"
+#格式 json console
+format = "json"
+#日志服务名称
+service_name = "antgo"
+#日志输出等级 all、info、warn、error、debug、dpanic、panic、fatal
+level = "all"
+#是否输出控制台
+console = false
 #是否开启日志
-close = false
-#文件最长保存时间(小时)
-maximum = 168
-#分割时间(小时)
-split = 24
+switch = true
+#文件最长保存时间(天)
+max_age = 30
+#分割大小(MB)
+max_size = 1
+#保留30个备份(个)
+max_backups = 300
+#是否需要压缩
+compress = false
 
 #主库设置
 [database]

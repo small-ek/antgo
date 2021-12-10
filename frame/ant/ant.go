@@ -124,6 +124,8 @@ func (eng *Engine) GetServer() *http.Server {
 // SetConfig Modify the configuration path
 func (eng *Engine) SetConfig(filePath string) *Engine {
 	config.SetPath(filePath)
+	//加载默认配置
+	setDefaultConfigLog()
 	return eng
 }
 

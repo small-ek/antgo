@@ -2,9 +2,29 @@ package ant
 
 import (
 	"github.com/small-ek/antgo/os/config"
+	"github.com/small-ek/antgo/os/logger"
 )
 
 // GetConfig Get configuration content
 func GetConfig(name string) *config.Config {
 	return config.Decode().Get(name)
+}
+
+//setDefaultConfigLog Set log according to the configuration file
+func setDefaultConfigLog() {
+	cfg := config.Decode()
+	logPath := cfg.Get("log.path").String()
+
+	if cfg.Get("log.switch").Bool() == true && logPath != "" {
+		logger.Default(logPath).
+			SetLevel(cfg.Get("log.level").String()).
+			SetServiceName(cfg.Get("log.service_name").String()).
+			SetMaxSize(cfg.Get("log.max_size").Int()).
+			SetMaxAge(cfg.Get("log.max_age").Int()).
+			SetMaxBackups(cfg.Get("log.max_backups").Int()).
+			SetFormat(cfg.Get("log.format").String()).
+			SetConsole(cfg.Get("log.console").Bool()).
+			SetCompress(cfg.Get("log.compress").Bool()).
+			Register()
+	}
 }
