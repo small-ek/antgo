@@ -32,10 +32,10 @@ type Pages struct {
 
 //GetConfig 获取配置
 func GetConfig() (string, string, uint64, int) {
-	uri := config.Decode().Read("mgo.uri").String()
-	database := config.Decode().Read("mgo.database").String()
-	poollimit := config.Decode().Read("mgo.poollimit").Uint64()
-	timeout := config.Decode().Read("mgo.timeout").Int()
+	uri := config.Decode().Get("mgo.uri").String()
+	database := config.Decode().Get("mgo.database").String()
+	poollimit := config.Decode().Get("mgo.poollimit").Uint64()
+	timeout := config.Decode().Get("mgo.timeout").Int()
 	return uri, database, poollimit, timeout
 }
 

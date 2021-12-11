@@ -14,68 +14,68 @@ func New() *Array {
 }
 
 //Append Set Array
-func (get *Array) Append(value interface{}) {
-	get.lock.Lock()
-	defer get.lock.Unlock()
-	get.Slice = append(get.Slice, value)
+func (a *Array) Append(value interface{}) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	a.Slice = append(a.Slice, value)
 }
 
 //Len Count Array
-func (get *Array) Len() int {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
-	return len(get.Slice)
+func (a *Array) Len() int {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
+	return len(a.Slice)
 }
 
 //List Array
-func (get *Array) List() []interface{} {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
-	return get.Slice
+func (a *Array) List() []interface{} {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
+	return a.Slice
 }
 
 //InsertAfter Array
-func (get *Array) InsertAfter(index int, value interface{}) []interface{} {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+func (a *Array) InsertAfter(index int, value interface{}) []interface{} {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 
 	var reset = make([]interface{}, 0)
-	prefix := append(reset, get.Slice[index:]...)
-	get.Slice = append(get.Slice[0:index], value)
-	get.Slice = append(get.Slice, prefix...)
-	return get.Slice
+	prefix := append(reset, a.Slice[index:]...)
+	a.Slice = append(a.Slice[0:index], value)
+	a.Slice = append(a.Slice, prefix...)
+	return a.Slice
 }
 
 //Delete Array
-func (get *Array) Delete(index int) []interface{} {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+func (a *Array) Delete(index int) []interface{} {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 
-	get.Slice = append(get.Slice[:index], get.Slice[index+1:]...)
-	return get.Slice
+	a.Slice = append(a.Slice[:index], a.Slice[index+1:]...)
+	return a.Slice
 }
 
 //Set Array
-func (get *Array) Set(index int, value interface{}) {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+func (a *Array) Set(index int, value interface{}) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 
-	get.Slice[index] = value
+	a.Slice[index] = value
 }
 
 //Get Array
-func (get *Array) Get(index int) interface{} {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
-	return get.Slice[index]
+func (a *Array) Get(index int) interface{} {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
+	return a.Slice[index]
 }
 
 //Search Array
-func (get *Array) Search(value interface{}) int {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
-	for i := 0; i < len(get.Slice); i++ {
-		if get.Slice[i] == value {
+func (a *Array) Search(value interface{}) int {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
+	for i := 0; i < len(a.Slice); i++ {
+		if a.Slice[i] == value {
 			return i
 		}
 	}
@@ -83,26 +83,26 @@ func (get *Array) Search(value interface{}) int {
 }
 
 //Clear Array
-func (get *Array) Clear() {
-	get.lock.Lock()
-	defer get.lock.Unlock()
-	get.Slice = make([]interface{}, 0)
+func (a *Array) Clear() {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	a.Slice = make([]interface{}, 0)
 }
 
 //LockFunc locks writing by callback function <f>
-func (get *Array) LockFunc(f func(array []interface{})) *Array {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+func (a *Array) LockFunc(f func(array []interface{})) *Array {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 
-	f(get.Slice)
-	return get
+	f(a.Slice)
+	return a
 }
 
 //ReadLockFunc locks writing by callback function <f>
-func (get *Array) ReadLockFunc(f func(array []interface{})) *Array {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
+func (a *Array) ReadLockFunc(f func(array []interface{})) *Array {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
 
-	f(get.Slice)
-	return get
+	f(a.Slice)
+	return a
 }

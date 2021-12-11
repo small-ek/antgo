@@ -10,22 +10,22 @@ import (
 )
 
 //New ...
-type New struct {
+type Rsa struct {
 	PrivateKey []byte
 	PublicKey  []byte
 }
 
 //Default Default key
-func Default(publicKey, privateKey []byte) *New {
-	return &New{
+func Default(publicKey, privateKey []byte) *Rsa {
+	return &Rsa{
 		PublicKey:  publicKey,
 		PrivateKey: privateKey,
 	}
 }
 
 //Encrypt RSA encryption
-func (get *New) Encrypt(origData string) (string, error) {
-	block, _ := pem.Decode(get.PublicKey)
+func (r *Rsa) Encrypt(origData string) (string, error) {
+	block, _ := pem.Decode(r.PublicKey)
 	if block == nil {
 		return "", errors.New("public key error")
 	}
@@ -40,9 +40,9 @@ func (get *New) Encrypt(origData string) (string, error) {
 }
 
 //Decrypt RSA decryption
-func (get *New) Decrypt(ciphertext string) (string, error) {
+func (r *Rsa) Decrypt(ciphertext string) (string, error) {
 	decodeBytes, _ := base64.StdEncoding.DecodeString(ciphertext)
-	block, _ := pem.Decode(get.PrivateKey)
+	block, _ := pem.Decode(r.PrivateKey)
 	if block == nil {
 		return "", errors.New("decryption failed")
 	}

@@ -32,7 +32,7 @@ func Default() *Engine {
 	}
 }
 
-// Register the default adapter.
+// Register the default adapter.<服务注册>
 func Register(ada serve.WebFrameWork) {
 	if ada == nil {
 		panic("adapter is nil")
@@ -40,7 +40,7 @@ func Register(ada serve.WebFrameWork) {
 	defaultAdapter = ada
 }
 
-// Use enable the adapter.
+// Use enable the adapter.<引用组件>
 func (eng *Engine) Use(router interface{}) *Engine {
 	if eng.Adapter == nil {
 		panic("adapter is nil")
@@ -51,7 +51,7 @@ func (eng *Engine) Use(router interface{}) *Engine {
 	return eng
 }
 
-// Run http service
+// Run http service<不加载配置服务>
 func (eng *Engine) Run(srv *http.Server) *Engine {
 	eng.Srv = srv
 	go func() {
@@ -84,7 +84,7 @@ func defaultServer(app http.Handler) *http.Server {
 	}
 }
 
-// Serve http service
+// Serve http service<默认服务加载>
 func (eng *Engine) Serve(app http.Handler) *Engine {
 	eng.Use(app)
 	eng.Srv = defaultServer(app)
@@ -100,7 +100,7 @@ func (eng *Engine) Serve(app http.Handler) *Engine {
 	return eng
 }
 
-// Close signal
+// Close signal<关闭服务操作>
 func (eng *Engine) Close() *Engine {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
@@ -116,20 +116,20 @@ func (eng *Engine) Close() *Engine {
 	return eng
 }
 
-// GetServer Get http service
+// GetServer Get http service<获取http服务>
 func (eng *Engine) GetServer() *http.Server {
 	return eng.Srv
 }
 
-// SetConfig Modify the configuration path
+// SetConfig Modify the configuration path<修改配置路径>
 func (eng *Engine) SetConfig(filePath string) *Engine {
 	config.SetPath(filePath)
 	//加载默认配置
-	setDefaultConfigLog()
+	initConfigLog()
 	return eng
 }
 
-// SetLog Modify log path
+// SetLog Modify log path.<修改日志路径>
 func (eng *Engine) SetLog(filePath string) *Engine {
 	logger.Default(filePath).Register()
 	return eng

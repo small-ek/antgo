@@ -17,9 +17,8 @@ type Task struct {
 	runTime  time.Time //初次运行时间
 	cycleNum int       //需要第几圈
 	curIndex int       //当前运行到第几格
-	//执行的函数
-	exec   TaskFunc
-	params []interface{}
+	exec     TaskFunc  //执行的函数
+	params   []interface{}
 }
 
 //DelayMessage ...

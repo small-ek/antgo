@@ -16,48 +16,48 @@ func New() *Map {
 }
 
 //Set ...
-func (get *Map) Set(key string, value interface{}) {
-	get.lock.Lock()
-	defer get.lock.Unlock()
-	get.Map[key] = value
+func (m *Map) Set(key string, value interface{}) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	m.Map[key] = value
 }
 
 //Get ...
-func (get *Map) Get(key string) interface{} {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
-	_, err := get.Map[key]
+func (m *Map) Get(key string) interface{} {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	_, err := m.Map[key]
 	if err {
 		return nil
 	}
-	return get.Map[key]
+	return m.Map[key]
 }
 
 //GetOrSet ...
-func (get *Map) GetOrSet(key string, value interface{}) interface{} {
-	get.lock.Lock()
-	defer get.lock.Unlock()
-	_, err := get.Map[key]
+func (m *Map) GetOrSet(key string, value interface{}) interface{} {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	_, err := m.Map[key]
 	if err {
-		get.Map[key] = value
+		m.Map[key] = value
 		return value
 	}
-	return get.Map[key]
+	return m.Map[key]
 }
 
 //Count ...
-func (get *Map) Count() int {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
-	return len(get.Map)
+func (m *Map) Count() int {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return len(m.Map)
 }
 
 //Delete ...
-func (get *Map) Delete(key string) bool {
-	get.lock.Lock()
-	defer get.lock.Unlock()
-	delete(get.Map, key)
-	_, err := get.Map[key]
+func (m *Map) Delete(key string) bool {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	delete(m.Map, key)
+	_, err := m.Map[key]
 	if err {
 		return false
 	}
@@ -65,19 +65,19 @@ func (get *Map) Delete(key string) bool {
 }
 
 //LockFunc locks writing by callback function <f>
-func (get *Map) LockFunc(f func(Map map[string]interface{})) *Map {
-	get.lock.Lock()
-	defer get.lock.Unlock()
+func (m *Map) LockFunc(f func(Map map[string]interface{})) *Map {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 
-	f(get.Map)
-	return get
+	f(m.Map)
+	return m
 }
 
 //ReadLockFunc locks writing by callback function <f>
-func (get *Map) ReadLockFunc(f func(Map map[string]interface{})) *Map {
-	get.lock.RLock()
-	defer get.lock.RUnlock()
+func (m *Map) ReadLockFunc(f func(Map map[string]interface{})) *Map {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 
-	f(get.Map)
-	return get
+	f(m.Map)
+	return m
 }

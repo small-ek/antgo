@@ -5,13 +5,13 @@ import (
 	"github.com/small-ek/antgo/os/logger"
 )
 
-// GetConfig Get configuration content
+// GetConfig Get configuration content<获取配置>
 func GetConfig(name string) *config.Config {
 	return config.Decode().Get(name)
 }
 
-//setDefaultConfigLog Set log according to the configuration file
-func setDefaultConfigLog() {
+//initConfigLog Set log according to the configuration file<初始化配置日志>
+func initConfigLog() {
 	cfg := config.Decode()
 	logPath := cfg.Get("log.path").String()
 
