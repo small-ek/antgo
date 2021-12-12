@@ -45,6 +45,7 @@ username = "root"
 password = "root"
 config = "charset=utf8mb4&parseTime=True&loc=Local"
 log = true
+
 #阿里云配置
 [oss]
 key_id = ""
@@ -57,6 +58,7 @@ bucket = ""
 address = "localhost:6379"
 password = ""
 db = 0
+
 #邮箱警报发送
 [emaill]
 switch = true
@@ -64,6 +66,7 @@ to = ['56494565@qq.com']
 from = '56494565@qq.com'
 host = 'smtp.qq.com:25'
 secret = 'fdtshicbbvybbiic'
+
 #Json web token
 [jwt]
 private_key = """-----BEGIN PRIVATE KEY-----
