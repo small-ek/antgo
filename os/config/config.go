@@ -179,6 +179,15 @@ func (c *Config) Map() map[string]interface{} {
 	return c.Child.(map[string]interface{})
 }
 
+//Maps Data type conversion.
+func (c *Config) Maps() []map[string]interface{} {
+	if c.Child == nil {
+		return nil
+	}
+	defer c.End()
+	return c.Child.([]map[string]interface{})
+}
+
 //Array Data type conversion.
 func (c *Config) Array() []interface{} {
 	if c.Child == nil {

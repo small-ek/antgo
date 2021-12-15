@@ -3,6 +3,7 @@ package ant
 import (
 	"context"
 	"fmt"
+	"github.com/small-ek/antgo/frame/db"
 	"github.com/small-ek/antgo/frame/serve"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/os/logger"
@@ -126,6 +127,7 @@ func (eng *Engine) SetConfig(filePath string) *Engine {
 	config.SetPath(filePath)
 	//加载默认配置
 	initConfigLog()
+	db.InitDb()
 	return eng
 }
 

@@ -40,6 +40,111 @@ func Default(path string) *Logs {
 	}
 }
 
+//Register Set log
+func (logs *Logs) Register() *zap.Logger {
+	// Log split
+	hook := lumberjack.Logger{
+		Filename:   logs.Path,
+		MaxSize:    logs.MaxSize,
+		MaxBackups: logs.MaxBackups,
+		MaxAge:     logs.MaxAge,
+		Compress:   logs.Compress,
+	}
+
+	// Set log level
+	// debug->info->warn->error
+	//日志输出等级
+	var level zapcore.Level
+	switch logs.Level {
+	case "debug":
+		level = zap.DebugLevel
+	case "info":
+		level = zap.InfoLevel
+	case "warn":
+		level = zap.WarnLevel
+	case "error":
+		level = zap.ErrorLevel
+	case "dpanic":
+		level = zap.DPanicLevel
+	case "panic":
+		level = zap.PanicLevel
+	case "fatal":
+		level = zap.FatalLevel
+	default:
+		level = zap.InfoLevel
+	}
+
+	EncodeTime := func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
+	}
+	LevelEncoder := zapcore.LowercaseLevelEncoder
+	EncodeCaller := zapcore.FullCallerEncoder
+	if logs.Format == "console" {
+		EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString("[" + t.Format("2006-01-02 15:04:05.000") + "]")
+		}
+		LevelEncoder = func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString("[" + level.CapitalString() + "]")
+		}
+		EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString("[" + caller.String() + "]")
+		}
+	}
+
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:       "time",
+		LevelKey:      "level",
+		NameKey:       "logger",
+		CallerKey:     "file",
+		MessageKey:    "msg",
+		StacktraceKey: "stacktrace",
+		LineEnding:    zapcore.DefaultLineEnding,
+		EncodeLevel:   LevelEncoder, // Lowercase encoder
+		EncodeTime:    EncodeTime,   // ISO8601 UTC 时间格式
+		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendInt64(int64(d) / 1000000)
+		}, //
+		EncodeCaller: EncodeCaller, // Full path encoder
+		EncodeName:   zapcore.FullNameEncoder,
+	}
+	// Set log level
+	atomicLevel := zap.NewAtomicLevel()
+	atomicLevel.SetLevel(level)
+
+	var format zapcore.Encoder
+
+	//json格式
+	if logs.Format == "json" {
+		format = zapcore.NewJSONEncoder(encoderConfig)
+	} else {
+		format = zapcore.NewConsoleEncoder(encoderConfig)
+	}
+
+	var console zapcore.WriteSyncer
+	//输出控制台
+	if logs.Console {
+		console = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook))
+	} else {
+		console = zapcore.AddSync(&hook)
+	}
+
+	core := zapcore.NewCore(
+		format,
+		console,
+		level,
+	)
+	// Open development mode, stack trace
+	caller := zap.AddCaller()
+	// Open document and line number
+	development := zap.Development()
+	// Set the initialization field, such as: add a server name
+	filed := zap.Fields(zap.String("service name", logs.ServiceName))
+	// Construction log
+	Write = zap.New(core, caller, development, filed)
+	defer Write.Sync()
+	return Write
+}
+
 //SetServiceName setting log
 func (logs *Logs) SetServiceName(ServiceName string) *Logs {
 	logs.ServiceName = ServiceName
@@ -92,109 +197,6 @@ func (logs *Logs) SetFormat(format string) *Logs {
 func (logs *Logs) SetCompress(compress bool) *Logs {
 	logs.Compress = compress
 	return logs
-}
-
-//Register Set log
-func (logs *Logs) Register() *zap.Logger {
-	// Log split
-	hook := lumberjack.Logger{
-		Filename:   logs.Path,
-		MaxSize:    logs.MaxSize,
-		MaxBackups: logs.MaxBackups,
-		MaxAge:     logs.MaxAge,
-		Compress:   logs.Compress,
-	}
-
-	// Set log level
-	// debug->info->warn->error
-	var level zapcore.Level
-	switch logs.Level {
-	case "debug":
-		level = zap.DebugLevel
-	case "info":
-		level = zap.InfoLevel
-	case "warn":
-		level = zap.WarnLevel
-	case "error":
-		level = zap.ErrorLevel
-	case "dpanic":
-		level = zap.DPanicLevel
-	case "panic":
-		level = zap.PanicLevel
-	case "fatal":
-		level = zap.FatalLevel
-	default:
-		level = zap.InfoLevel
-	}
-
-	EncodeTime := func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
-	}
-	LevelEncoder := zapcore.LowercaseLevelEncoder
-	EncodeCaller := zapcore.FullCallerEncoder
-	if logs.Format == "console" {
-		EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendString("[" + t.Format("2006-01-02 15:04:05.000") + "]")
-		}
-		LevelEncoder = func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendString("[" + level.CapitalString() + "]")
-		}
-		//EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-		//	enc.AppendString("[" + l.traceId + "]")
-		//	enc.AppendString("[" + caller.TrimmedPath() + "]")
-		//}
-	}
-
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:       "time",
-		LevelKey:      "level",
-		NameKey:       "logger",
-		CallerKey:     "file",
-		MessageKey:    "msg",
-		StacktraceKey: "stacktrace",
-		LineEnding:    zapcore.DefaultLineEnding,
-		EncodeLevel:   LevelEncoder, // Lowercase encoder
-		EncodeTime:    EncodeTime,   // ISO8601 UTC 时间格式
-		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendInt64(int64(d) / 1000000)
-		},                          //
-		EncodeCaller: EncodeCaller, // Full path encoder
-		EncodeName:   zapcore.FullNameEncoder,
-	}
-	// Set log level
-	atomicLevel := zap.NewAtomicLevel()
-	atomicLevel.SetLevel(level)
-
-	var format zapcore.Encoder
-
-	if logs.Format == "json" {
-		format = zapcore.NewJSONEncoder(encoderConfig)
-	} else {
-		format = zapcore.NewConsoleEncoder(encoderConfig)
-	}
-
-	var console zapcore.WriteSyncer
-	if logs.Console {
-		console = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook))
-	} else {
-		console = zapcore.AddSync(&hook)
-	}
-
-	core := zapcore.NewCore(
-		format,
-		console,
-		level,
-	)
-	// Open development mode, stack trace
-	caller := zap.AddCaller()
-	// Open document and line number
-	development := zap.Development()
-	// Set the initialization field, such as: add a server name
-	filed := zap.Fields(zap.String("serviceName", logs.ServiceName))
-	// Construction log
-	Write = zap.New(core, caller, development, filed)
-	defer Write.Sync()
-	return Write
 }
 
 //ToJsonData ...
