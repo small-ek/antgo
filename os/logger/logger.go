@@ -127,6 +127,24 @@ func (logs *Logs) Register() *zap.Logger {
 		level = zap.InfoLevel
 	}
 
+	EncodeTime := func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
+	}
+	LevelEncoder := zapcore.LowercaseLevelEncoder
+	EncodeCaller := zapcore.FullCallerEncoder
+	if logs.Format == "console" {
+		EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString("[" + t.Format("2006-01-02 15:04:05.000") + "]")
+		}
+		LevelEncoder = func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString("[" + level.CapitalString() + "]")
+		}
+		//EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+		//	enc.AppendString("[" + l.traceId + "]")
+		//	enc.AppendString("[" + caller.TrimmedPath() + "]")
+		//}
+	}
+
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:       "time",
 		LevelKey:      "level",
@@ -135,14 +153,12 @@ func (logs *Logs) Register() *zap.Logger {
 		MessageKey:    "msg",
 		StacktraceKey: "stacktrace",
 		LineEnding:    zapcore.DefaultLineEnding,
-		EncodeLevel:   zapcore.LowercaseLevelEncoder, // Lowercase encoder
-		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendString(t.Format("2006-01-02 15:04:05"))
-		}, // ISO8601 UTC 时间格式
+		EncodeLevel:   LevelEncoder, // Lowercase encoder
+		EncodeTime:    EncodeTime,   // ISO8601 UTC 时间格式
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
-		}, //
-		EncodeCaller: zapcore.FullCallerEncoder, // Full path encoder
+		},                          //
+		EncodeCaller: EncodeCaller, // Full path encoder
 		EncodeName:   zapcore.FullNameEncoder,
 	}
 	// Set log level

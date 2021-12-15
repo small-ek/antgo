@@ -23,7 +23,7 @@ service_name = "antgo"
 #日志输出等级 all、info、warn、error、debug、dpanic、panic、fatal
 level = "all"
 #是否输出控制台
-console = false
+console = true
 #是否开启日志
 switch = true
 #文件最长保存时间(天)

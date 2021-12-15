@@ -24,7 +24,7 @@ func main() {
 	config := *flag.String("config", "config.toml", "Configuration file path")
 	eng := ant.Default().SetConfig(config).Serve(app)
 	//tt := Test{Name: "22121"}
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		ant.Log().Info("222121212=============================" + conv.String(i))
 	}
 
