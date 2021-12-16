@@ -21,5 +21,8 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	gorm.io/gorm v1.20.8
+	gorm.io/driver/mysql v1.2.1
+	gorm.io/driver/postgres v1.2.3
+	gorm.io/gorm v1.22.4
+	gorm.io/plugin/dbresolver v1.1.0
 )
