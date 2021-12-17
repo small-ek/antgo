@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/config"
 	loggers "github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"
@@ -8,76 +9,76 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
-	"log"
 )
 
 var Master *gorm.DB
 var datetimePrecision = 2
 
 type Db struct {
-	Name     string
-	Type     string
-	hostname string
-	port     string
-	username string
-	password string
-	database string
-	params   string
-	log      bool
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Hostname string `json:"hostname"`
+	Port     string `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Database string `json:"database"`
+	Params   string `json:"params"`
+	Log      bool   `json:"log"`
 }
 
 func InitDb() {
 	cfg := config.Decode()
 	connections := cfg.Get("connections").Maps()
-	log.Println(connections)
+	default_connections := cfg.Get("system.default_connections").String()
+
 	for i := 0; i < len(connections); i++ {
-		row := connections[i]
-		log.Println(row)
-		switch row["type"] {
+		value := connections[i]
+		row := Db{}
+		conv.Struct(&row, value)
+
+		switch row.Type {
 		case "mysql":
-			var dns = row["username"].(string) + ":" + row["password"].(string) + "@tcp(" + row["hostname"].(string) + ":" + row["port"].(string) + ")/" + row["database"].(string) + "?" + row["params"].(string)
-			if 0 == i {
-				db, err := gorm.Open(Mysql(dns))
-				if err != nil {
-					loggers.Write.Panic(err.Error())
-				}
-				Master = db
+			var dns = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+
+			if row.Name == default_connections {
+				row.Open(Mysql(dns), getConfig(row.Log))
+			} else {
+
 			}
 
 			break
 		case "pgsql":
-			var dns = row["username"].(string) + ":" + row["password"].(string) + "@tcp(" + row["hostname"].(string) + ":" + row["port"].(string) + ")/" + row["database"].(string) + "?" + row["params"].(string)
-			if 0 == i {
-				db, err := gorm.Open(Postgres(dns))
-				if err != nil {
-					loggers.Write.Panic(err.Error())
-				}
+			var dns = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
 
-				Master = db
+			if row.Name == default_connections {
+				row.Open(Postgres(dns), getConfig(row.Log))
+			} else {
+
 			}
+
 			break
 		}
 	}
+
 }
 
 //getConfig
-func getConfig(log bool) *gorm.Config {
-	logger := New(zap.L())
-	logger.SetAsDefault()
-	if log {
+func getConfig(isLog bool) *gorm.Config {
+	if isLog {
+		loggers := New(zap.L())
+		loggers.SetAsDefault()
 		return &gorm.Config{
-			Logger: logger,
+			Logger:                                   loggers.LogMode(4),
+			DisableForeignKeyConstraintWhenMigrating: true,
 		}
 	} else {
-		return &gorm.Config{
-			Logger: logger,
-		}
+		return &gorm.Config{}
 	}
 }
 
 //Open connection
-func (d *Db) Open(Dialector gorm.Dialector) {
-	var db, err = gorm.Open(Dialector)
+func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) {
+	var db, err = gorm.Open(Dialector, opts)
 	if err != nil {
 		loggers.Write.Panic(err.Error())
 	}
@@ -107,7 +108,13 @@ func Mysql(dns string) gorm.Dialector {
 
 //Postgres connection
 func Postgres(dns string) gorm.Dialector {
-	return postgres.Open(dns)
+	return postgres.New(postgres.Config{
+		DriverName:           "",
+		DSN:                  dns,
+		PreferSimpleProtocol: false,
+		WithoutReturning:     false,
+		Conn:                 nil,
+	})
 }
 
 //Distributed

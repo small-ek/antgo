@@ -2,6 +2,7 @@ package ant
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"github.com/small-ek/antgo/frame/db"
 	"github.com/small-ek/antgo/frame/serve"
@@ -28,6 +29,8 @@ var defaultAdapter serve.WebFrameWork
 
 // Default return the default engine instance.
 func Default() *Engine {
+	log.SetFlags(log.Llongfile | log.LstdFlags)
+	flag.Parse()
 	return &Engine{
 		Adapter: defaultAdapter,
 	}
