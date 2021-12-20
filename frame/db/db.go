@@ -12,6 +12,7 @@ import (
 )
 
 var Master *gorm.DB
+var *gorm.DBResolver
 var datetimePrecision = 2
 
 type Db struct {
@@ -43,7 +44,11 @@ func InitDb() {
 			if row.Name == default_connections {
 				row.Open(Mysql(dns), getConfig(row.Log))
 			} else {
-
+				dbresolver.Register(dbresolver.Config{
+					Replicas: []gorm.Dialector{mysql.Open(dns)},
+					// sources/replicas 负载均衡策略
+					Policy: dbresolver.RandomPolicy{},
+				}, row.Name)
 			}
 
 			break
@@ -53,7 +58,11 @@ func InitDb() {
 			if row.Name == default_connections {
 				row.Open(Postgres(dns), getConfig(row.Log))
 			} else {
-
+				row.Use(dbresolver.Register(dbresolver.Config{
+					Replicas: []gorm.Dialector{mysql.Open(dns)},
+					// sources/replicas 负载均衡策略
+					Policy: dbresolver.RandomPolicy{},
+				}, row.Name))
 			}
 
 			break
