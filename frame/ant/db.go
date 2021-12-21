@@ -9,3 +9,8 @@ import (
 func Db() *gorm.DB {
 	return db.Master
 }
+
+// CloseDb Close database connection
+func CloseDb() {
+	db.Close()
+}

@@ -12,7 +12,7 @@ import (
 )
 
 var Master *gorm.DB
-var *gorm.DBResolver
+var Resolver *dbresolver.DBResolver
 var datetimePrecision = 2
 
 type Db struct {
@@ -31,42 +31,46 @@ func InitDb() {
 	cfg := config.Decode()
 	connections := cfg.Get("connections").Maps()
 	default_connections := cfg.Get("system.default_connections").String()
+	if default_connections != "" {
 
-	for i := 0; i < len(connections); i++ {
-		value := connections[i]
-		row := Db{}
-		conv.Struct(&row, value)
+		for i := 0; i < len(connections); i++ {
+			value := connections[i]
+			row := Db{}
+			conv.Struct(&row, value)
 
-		switch row.Type {
-		case "mysql":
-			var dns = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+			switch row.Type {
+			case "mysql":
+				dns := row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
 
-			if row.Name == default_connections {
-				row.Open(Mysql(dns), getConfig(row.Log))
-			} else {
-				dbresolver.Register(dbresolver.Config{
-					Replicas: []gorm.Dialector{mysql.Open(dns)},
-					// sources/replicas 负载均衡策略
-					Policy: dbresolver.RandomPolicy{},
-				}, row.Name)
+				if row.Name == default_connections {
+					row.Open(Mysql(dns), getConfig(row.Log))
+				} else {
+					Resolver = dbresolver.Register(dbresolver.Config{
+						Replicas: []gorm.Dialector{Mysql(dns)},
+						// sources/replicas 负载均衡策略
+						Policy: dbresolver.RandomPolicy{},
+					}, row.Name)
+				}
+				break
+			case "postgres":
+				dns := "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password
+				if row.Name == default_connections {
+					row.Open(Postgres(dns), getConfig(row.Log))
+				} else {
+					Resolver = dbresolver.Register(dbresolver.Config{
+						Replicas: []gorm.Dialector{Postgres(dns)},
+						// sources/replicas 负载均衡策略
+						Policy: dbresolver.RandomPolicy{},
+					}, row.Name)
+				}
+				break
 			}
-
-			break
-		case "pgsql":
-			var dns = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
-
-			if row.Name == default_connections {
-				row.Open(Postgres(dns), getConfig(row.Log))
-			} else {
-				row.Use(dbresolver.Register(dbresolver.Config{
-					Replicas: []gorm.Dialector{mysql.Open(dns)},
-					// sources/replicas 负载均衡策略
-					Policy: dbresolver.RandomPolicy{},
-				}, row.Name))
-			}
-
-			break
 		}
+
+	}
+
+	if len(connections) > 1 {
+		Master.Use(Resolver)
 	}
 
 }
@@ -120,7 +124,7 @@ func Postgres(dns string) gorm.Dialector {
 	return postgres.New(postgres.Config{
 		DriverName:           "",
 		DSN:                  dns,
-		PreferSimpleProtocol: false,
+		PreferSimpleProtocol: true,
 		WithoutReturning:     false,
 		Conn:                 nil,
 	})
@@ -135,7 +139,7 @@ func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbreso
 func Close() {
 	var db, err = Master.DB()
 	if err != nil {
-		loggers.Write.Panic(err.Error())
+		loggers.Write.Error(err.Error())
 	}
 	db.Close()
 }
