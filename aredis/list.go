@@ -48,7 +48,7 @@ func (c *Client) GetListIndex(key string, index int64) string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err.Error())
 	}
 	return list
 }

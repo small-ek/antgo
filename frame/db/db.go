@@ -7,8 +7,11 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
+	"log"
 )
 
 var Master *gorm.DB
@@ -25,6 +28,7 @@ type Db struct {
 	Database string `json:"database"`
 	Params   string `json:"params"`
 	Log      bool   `json:"log"`
+	Dns      string `json:"dns"`
 }
 
 func InitDb() {
@@ -59,6 +63,31 @@ func InitDb() {
 				} else {
 					Resolver = dbresolver.Register(dbresolver.Config{
 						Replicas: []gorm.Dialector{Postgres(dns)},
+						// sources/replicas 负载均衡策略
+						Policy: dbresolver.RandomPolicy{},
+					}, row.Name)
+				}
+				break
+			case "mssql":
+				dns := "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database
+				if row.Name == default_connections {
+					row.Open(Sqlserver(dns), getConfig(row.Log))
+				} else {
+					Resolver = dbresolver.Register(dbresolver.Config{
+						Replicas: []gorm.Dialector{Sqlserver(dns)},
+						// sources/replicas 负载均衡策略
+						Policy: dbresolver.RandomPolicy{},
+					}, row.Name)
+				}
+				break
+			case "sqlite":
+				dns := row.Dns
+				if row.Name == default_connections {
+					log.Println(dns)
+					row.Open(Sqlite(dns), getConfig(row.Log))
+				} else {
+					Resolver = dbresolver.Register(dbresolver.Config{
+						Replicas: []gorm.Dialector{Sqlite(dns)},
 						// sources/replicas 负载均衡策略
 						Policy: dbresolver.RandomPolicy{},
 					}, row.Name)
@@ -128,6 +157,16 @@ func Postgres(dns string) gorm.Dialector {
 		WithoutReturning:     false,
 		Conn:                 nil,
 	})
+}
+
+//Sqlserver connection
+func Sqlserver(dns string) gorm.Dialector {
+	return sqlserver.Open(dns)
+}
+
+//Sqlite connection
+func Sqlite(dns string) gorm.Dialector {
+	return sqlite.Open(dns)
 }
 
 //Distributed

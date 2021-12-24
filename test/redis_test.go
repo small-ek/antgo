@@ -18,10 +18,10 @@ func TestRedis(t *testing.T) {
 	log.Println(conn.Get("key"))
 	log.Println(conn.TTL("key"))
 	//client.PushList("list_test", "message1")
-	//client.PushList("list_test", "message2")
-	conn.SetList("list_test", 1, "message3")
+	conn.PushList("list_test", "message2")
+	conn.SetList("list_test", 2, "message3")
 	//client.RemoveList("list_test", "message1", 1)
-	log.Println(conn.GetListIndex("list_test", 1))
+	//log.Println(conn.GetListIndex("list_test", 1))
 	log.Println(conn.GetList("list_test"))
 
 	conn.AddSet("set_test", "111", "222", "77")

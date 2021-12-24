@@ -15,7 +15,7 @@ type Echo struct {
 }
 
 func init() {
-	ant.Register(new(Echo))
+	ant.Register(&Echo{})
 }
 
 //Name implements the method Adapter.Name.
