@@ -12,11 +12,8 @@ func TestI18n(t *testing.T) {
 	log.SetFlags(log.Llongfile | log.LstdFlags)
 	flag.Parse()
 
-	i18n.SetPath("i18n.json")
-	for i := 0; i < 1000; i++ {
-		i18n.SetLanguage("en")
-		var result = i18n.Get("hello")
-		log.Println(result)
-		log.Println(reflect.TypeOf(result))
-	}
+	lang :=i18n.New("./language/i18n", "zh-CN.toml")
+	var result = lang.Get("hello")
+	log.Println(result)
+	log.Println(reflect.TypeOf(result))
 }

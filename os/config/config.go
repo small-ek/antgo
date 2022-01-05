@@ -1,9 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/BurntSushi/toml"
 	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/os/logs"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -30,6 +33,17 @@ func SetPath(filePath string) {
 			panic(err.Error())
 		}
 		break
+	case "json":
+		bytes, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			logs.Error(err.Error())
+			return
+		}
+		err2 := json.Unmarshal(bytes, &Data)
+		if err2 != nil {
+			panic(err.Error())
+			return
+		}
 	}
 
 }

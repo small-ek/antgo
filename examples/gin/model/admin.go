@@ -21,7 +21,7 @@ type Admin struct {
 
 //TableName
 func (Admin) TableName() string {
-	return "s_admin"
+	return "admin"
 }
 
 //BeforeCreate 在创建之前
