@@ -1,4 +1,4 @@
 [zh]
-    hello="你好s"
+hello = "你好s"
 [en]
-    hello="Hellos"
+hello = "Hellos"

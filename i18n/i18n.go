@@ -8,38 +8,34 @@ import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
-	"path"
 )
 
 type I18n struct {
 	Path     string
 	Language string
-	Data     map[string]interface{}
-	Source   map[string]interface{}
+	Data     map[string]string
+	Source   map[string]string
 }
 
-//Datas ...
-
-//Maps ...
-var Maps map[string]interface{}
-
-//Array ...
-var Array []interface{}
-
 //SetPath Set path
-func New(filePath, Language string) *I18n {
-	data := make(map[string]interface{})
-	filePath = fmt.Sprintf("%s/%s", filePath, Language)
-	fileNameWithSuffix := path.Base(filePath)
-	fileType := path.Ext(fileNameWithSuffix)
-	switch fileType {
-	case ".toml":
+func New(prefixPath, language string, defaultType ...string) *I18n {
+	data := make(map[string]string)
+
+	types := "toml"
+	if len(defaultType) > 0 {
+		types = defaultType[0]
+	}
+
+	filePath := fmt.Sprintf("%s/%s.%s", prefixPath, language, types)
+
+	switch types {
+	case "toml":
 		if _, err := toml.DecodeFile(filePath, &data); err != nil {
 			panic(err.Error())
 		}
 		break
-	case ".yml", ".yaml":
-		file, _ := os.Open(filePath) //test.yaml由下一个例子生成
+	case "yml", "yaml":
+		file, _ := os.Open(filePath)
 		defer file.Close()
 		ydecode := yaml.NewDecoder(file)
 		if err := ydecode.Decode(&data); err != nil {
@@ -57,10 +53,10 @@ func New(filePath, Language string) *I18n {
 		}
 	}
 	return &I18n{
-		Path:     filePath,
-		Language: Language,
+		Path:     prefixPath,
+		Language: language,
 		Source:   data,
-		Data:     make(map[string]interface{}),
+		Data:     make(map[string]string),
 	}
 }
 
@@ -74,17 +70,17 @@ func (i *I18n) SetLanguage(language string) {
 	i.Language = language
 }
 
-//Get language
+//T Get language
 func (i *I18n) T(key string, args ...interface{}) string {
 	format := key
 
 	if _, ok := i.Data[key]; ok {
 		format = conv.String(i.Data[key])
 	} else {
-		for _, row := range i.Source {
-			if row[0] == key {
-				i.Data[key] = row[1]
-				format = row[1]
+		for value, row := range i.Source {
+			i.Data[key] = row
+			if value == key {
+				format = conv.String(row)
 				break
 			}
 		}
@@ -93,6 +89,24 @@ func (i *I18n) T(key string, args ...interface{}) string {
 	return format
 }
 
+//TOption Choose language translation
+func (i *I18n) TOption(key string, language string, args ...interface{}) string {
+	lang := New(i.Path, language)
+
+	format := key
+	for value, row := range lang.Source {
+		lang.Data[key] = row
+		if value == key {
+			format = conv.String(row)
+			break
+		}
+	}
+
+	format = lang.preArgs(format, args...)
+	return format
+}
+
+//preArgs ...
 func (i *I18n) preArgs(format string, args ...interface{}) string {
 	if len(args) > 0 {
 		format = fmt.Sprintf(format, args...)

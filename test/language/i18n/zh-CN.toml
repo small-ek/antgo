@@ -1,2 +1,2 @@
-hello = "你好"
+hello = "%s你好%s"
 world = "世界"

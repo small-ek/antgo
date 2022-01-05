@@ -23,7 +23,7 @@ func Open(file string) []byte {
 	}
 	defer jsonFile.Close()
 
-	byteValue, err2 := ioutil.ReadAll(jsonFile)
+	byteValue, err2 := ioutil.ReadFile(file)
 	if err2 != nil {
 		logs.Error(err2.Error())
 	}
