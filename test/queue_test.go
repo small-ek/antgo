@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/queue"
+	"github.com/small-ek/antgo/container/queue"
 	"log"
 	"testing"
 	"time"
