@@ -2,8 +2,8 @@ package validator
 
 import (
 	"errors"
-	"github.com/small-ek/antgo/conv"
 	"github.com/small-ek/antgo/os/logs"
+	"github.com/small-ek/antgo/utils/conv"
 	"log"
 	"reflect"
 	"regexp"

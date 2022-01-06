@@ -3,7 +3,7 @@ package ajson
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/os/logs"
 	"io/ioutil"
 	"strings"

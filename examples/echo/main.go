@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/labstack/echo/v4"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/examples/gin/model"
 	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/echo"

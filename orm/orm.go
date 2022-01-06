@@ -2,7 +2,7 @@ package orm
 
 import (
 	"encoding/json"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"gorm.io/gorm"
 	"strings"
 )

@@ -2,7 +2,7 @@ package test
 
 import (
 	"flag"
-	"github.com/small-ek/antgo/validator"
+	"github.com/small-ek/antgo/utils/validator"
 	"log"
 	"testing"
 )

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"

@@ -1,7 +1,7 @@
 package adb
 
 import (
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/os/config"
 	loggers "github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"

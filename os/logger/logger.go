@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 	"github.com/natefinch/lumberjack"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"

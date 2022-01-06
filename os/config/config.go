@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/os/logs"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"

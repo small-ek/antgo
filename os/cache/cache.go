@@ -2,7 +2,7 @@ package cache
 
 import (
 	"github.com/coocood/freecache"
-	"github.com/small-ek/antgo/conv"
+	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/crypto/hash"
 )
 
