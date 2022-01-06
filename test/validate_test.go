@@ -20,9 +20,10 @@ type Tests struct {
 func TestValidate(t *testing.T) {
 	log.SetFlags(log.Llongfile | log.LstdFlags)
 	flag.Parse()
+
 	var Request = map[string]interface{}{"old_password": "123456", "password": "12345.1212"}
-	var err = validator.Default([]string{"old_password", "password"}, Rule).Check(Request)
-	log.Print(err)
+	var err = validator.New([]string{"old_password", "password"}, Rule).Check(Request)
+	log.Println(err)
 
 	var err2 = validator.CheckStruct(Tests{Name: 11111, Name2: "2222"})
 	log.Println(err2)

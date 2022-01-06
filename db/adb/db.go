@@ -1,4 +1,4 @@
-package db
+package adb
 
 import (
 	"github.com/small-ek/antgo/conv"

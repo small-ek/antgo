@@ -13,39 +13,39 @@ import (
 )
 
 //New Validator default structure
-type New struct {
+type Validator struct {
 	Rule  map[string][]string //Validation rules {"require|required", "max:25|maximum length","min:5|minimum length","number|number","email|mailbox",">:8|greater than 8"," <:8|Less than 8","=:8|equal to 8"}
 	Scene []string            //Detected field
 }
 
-//Default
-func Default(Scene []string, Rule map[string][]string) *New {
-	return &New{
+//New
+func New(Scene []string, Rule map[string][]string) *Validator {
+	return &Validator{
 		Rule:  Rule,
 		Scene: Scene,
 	}
 }
 
 //SetRule
-func (get *New) SetRule(Rule map[string][]string) *New {
-	get.Rule = Rule
-	return get
+func (v *Validator) SetRule(Rule map[string][]string) *Validator {
+	v.Rule = Rule
+	return v
 }
 
 //SetScene
-func (get *New) SetScene(Scene []string) *New {
-	get.Scene = Scene
-	return get
+func (v *Validator) SetScene(Scene []string) *Validator {
+	v.Scene = Scene
+	return v
 }
 
 //CheckRule Form validator rules
-func (get *New) Check(Request interface{}) error {
-	var Scene = get.Scene
+func (v *Validator) Check(Request interface{}) error {
+	var Scene = v.Scene
 	var request map[string]interface{}
 	conv.Struct(&request, Request)
 	//循环要验证的数据
 	for a := 0; a < len(Scene); a++ {
-		var rowRule = get.Rule[Scene[a]]
+		var rowRule = v.Rule[Scene[a]]
 		//循环需要验证的规则
 		for b := 0; b < len(rowRule); b++ {
 			if err := CheckItem(request[Scene[a]], rowRule[b]); err != nil {

@@ -1,16 +1,16 @@
 package ant
 
 import (
-	"github.com/small-ek/antgo/frame/db"
+	"github.com/small-ek/antgo/db/adb"
 	"gorm.io/gorm"
 )
 
 // Db Get database connection
 func Db() *gorm.DB {
-	return db.Master
+	return adb.Master
 }
 
 // CloseDb Close database connection
 func CloseDb() {
-	db.Close()
+	adb.Close()
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//New parameter structure
+//Client parameter structure
 type Client struct {
 	Options       redis.Options
 	Clients       *redis.Client

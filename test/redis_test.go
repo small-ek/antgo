@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/small-ek/antgo/aredis"
+	"github.com/small-ek/antgo/db/aredis"
 	"log"
 	"testing"
 )

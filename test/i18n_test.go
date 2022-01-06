@@ -17,4 +17,7 @@ func TestI18n(t *testing.T) {
 
 	str2 := lang.TOption("hello", "en")
 	log.Println(str2)
+
+	str3 := lang.T("hello", "12", "23")
+	log.Println(str3)
 }

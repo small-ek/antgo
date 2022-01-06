@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/small-ek/antgo/frame/db"
+	"github.com/small-ek/antgo/db/adb"
 	"github.com/small-ek/antgo/frame/serve"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/os/logger"
@@ -117,7 +117,7 @@ func (eng *Engine) Close() *Engine {
 	cfg := config.Decode()
 	connections := cfg.Get("connections").Maps()
 	if len(connections) > 0 {
-		defer db.Close()
+		defer adb.Close()
 	}
 
 	if err := eng.Srv.Shutdown(ctx); err != nil {
@@ -137,7 +137,7 @@ func (eng *Engine) SetConfig(filePath string) *Engine {
 	config.SetPath(filePath)
 	//加载默认配置
 	initConfigLog()
-	db.InitDb()
+	adb.InitDb()
 	return eng
 }
 

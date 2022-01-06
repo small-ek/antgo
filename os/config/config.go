@@ -240,3 +240,13 @@ func (c *Config) Uint64() uint64 {
 	defer c.End()
 	return conv.Uint64(c.Child)
 }
+
+//Interfaces Data type conversion.
+func (c *Config) Interfaces() []interface{} {
+	return conv.Interfaces(c.Child)
+}
+
+//Interface Data type conversion.
+func (c *Config) Interface() interface{} {
+	return c.Child
+}

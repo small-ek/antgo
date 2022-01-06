@@ -1,4 +1,4 @@
-package rsa
+package arsa
 
 import (
 	"crypto/rand"
@@ -15,8 +15,8 @@ type Rsa struct {
 	PublicKey  []byte
 }
 
-//Default Default key
-func Default(publicKey, privateKey []byte) *Rsa {
+//New Default key
+func New(publicKey, privateKey []byte) *Rsa {
 	return &Rsa{
 		PublicKey:  publicKey,
 		PrivateKey: privateKey,

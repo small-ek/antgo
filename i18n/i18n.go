@@ -10,14 +10,16 @@ import (
 	"os"
 )
 
+//I18n
 type I18n struct {
 	Path     string
 	Language string
+	Type     string
 	Data     map[string]string
 	Source   map[string]string
 }
 
-//SetPath Set path
+//New initialization
 func New(prefixPath, language string, defaultType ...string) *I18n {
 	data := make(map[string]string)
 
@@ -56,11 +58,12 @@ func New(prefixPath, language string, defaultType ...string) *I18n {
 		Path:     prefixPath,
 		Language: language,
 		Source:   data,
-		Data:     make(map[string]string),
+		Type:     types,
+		Data:     data,
 	}
 }
 
-//SetPath language setting
+//SetPath Language pack path
 func (i *I18n) SetPath(path string) {
 	i.Path = path
 }
@@ -70,43 +73,31 @@ func (i *I18n) SetLanguage(language string) {
 	i.Language = language
 }
 
-//T Get language
-func (i *I18n) T(key string, args ...interface{}) string {
+//T language translation
+func (i18n *I18n) T(key string, args ...interface{}) string {
 	format := key
 
-	if _, ok := i.Data[key]; ok {
-		format = conv.String(i.Data[key])
-	} else {
-		for value, row := range i.Source {
-			i.Data[key] = row
-			if value == key {
-				format = conv.String(row)
-				break
-			}
-		}
+	if _, ok := i18n.Data[key]; ok {
+		format = conv.String(i18n.Data[key])
 	}
-	format = i.preArgs(format, args...)
+	format = i18n.preArgs(format, args...)
 	return format
 }
 
 //TOption Choose language translation
-func (i *I18n) TOption(key string, language string, args ...interface{}) string {
-	lang := New(i.Path, language)
+func (i18n *I18n) TOption(key string, language string, args ...interface{}) string {
+	lang := New(i18n.Path, language)
 
 	format := key
-	for value, row := range lang.Source {
-		lang.Data[key] = row
-		if value == key {
-			format = conv.String(row)
-			break
-		}
+	if _, ok := lang.Data[key]; ok {
+		format = conv.String(lang.Data[key])
 	}
 
 	format = lang.preArgs(format, args...)
 	return format
 }
 
-//preArgs ...
+//preArgs Formatted text
 func (i *I18n) preArgs(format string, args ...interface{}) string {
 	if len(args) > 0 {
 		format = fmt.Sprintf(format, args...)

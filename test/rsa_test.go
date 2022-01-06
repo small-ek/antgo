@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/crypto/rsa"
+	"github.com/small-ek/antgo/crypto/arsa"
 	"log"
 	"testing"
 )
@@ -34,7 +34,7 @@ DtknkgANt7OREpBYowIDAQAB
 
 func TestRSA(t *testing.T) {
 	/*var rsa=rsa.Default()*/
-	var result = rsa.Default(publicKey, privateKey)
+	var result = arsa.New(publicKey, privateKey)
 	for i := 0; i < 2; i++ {
 		var str1, _ = result.Encrypt("admin")
 		log.Println(str1)
