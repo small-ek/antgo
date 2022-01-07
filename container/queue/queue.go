@@ -32,8 +32,8 @@ type DelayMessage struct {
 	startTime time.Time
 }
 
-//NewDelayMessage ...
-func NewDelayMessage() *DelayMessage {
+//New ...
+func New() *DelayMessage {
 	dm := &DelayMessage{
 		cycleNum:  0,
 		curIndex:  0,

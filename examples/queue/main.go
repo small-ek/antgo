@@ -1,13 +1,12 @@
-package test
+package main
 
 import (
 	"github.com/small-ek/antgo/container/queue"
 	"log"
-	"testing"
 	"time"
 )
 
-func TestQueueu(t *testing.T) {
+func main()  {
 	go func() {
 		var dm = queue.New()
 		//添加任务
