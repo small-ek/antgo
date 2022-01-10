@@ -13,8 +13,8 @@ type Crontab struct {
 	mutex sync.Mutex
 }
 
-// Default new crontab
-func Default() *Crontab {
+// New new crontab
+func New() *Crontab {
 	//设定支持秒级
 	secondParser := cron.NewParser(cron.Second | cron.Minute |
 		cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)

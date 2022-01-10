@@ -2,7 +2,6 @@ package validator
 
 import (
 	"errors"
-	"github.com/small-ek/antgo/os/logs"
 	"github.com/small-ek/antgo/utils/conv"
 	"log"
 	"reflect"
@@ -177,12 +176,12 @@ func moreThan(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(value)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
 	if err2 != nil {
-		logs.Error(err2.Error())
+		panic(err2)
 	}
 
 	if newValue > newValue2 {
@@ -196,12 +195,12 @@ func equal(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(value)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
 	if err2 != nil {
-		logs.Error(err.Error())
+		panic(err2)
 	}
 
 	if newValue == newValue2 {
@@ -215,12 +214,12 @@ func lessThan(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(ruleStr)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	newValue2, err2 := strconv.Atoi(ruleStr)
 	if err2 != nil {
-		logs.Error(err2.Error())
+		panic(err2)
 	}
 
 	if newValue < newValue2 {
@@ -253,7 +252,7 @@ func length(value, ruleStr string) bool {
 func isMax(value, ruleStr string) bool {
 	newMax, err := strconv.Atoi(ruleStr)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	if len(value) > newMax {
 		return false
@@ -266,7 +265,7 @@ func isMin(value, ruleStr string) bool {
 	newMin, err := strconv.Atoi(ruleStr)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	if len(value) < newMin {
@@ -300,17 +299,17 @@ func between(value, ruleStr string) bool {
 	values, err := strconv.Atoi(value)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	mins, err2 := strconv.Atoi(str[0])
 	if err2 != nil {
-		logs.Error(err2.Error())
+		panic(err2)
 	}
 
 	maxs, err3 := strconv.Atoi(str[1])
 	if err2 != nil {
-		logs.Error(err3.Error())
+		panic(err3)
 	}
 
 	if values > mins && values < maxs {
@@ -328,17 +327,17 @@ func notBetween(value, ruleStr string) bool {
 	values, err := strconv.Atoi(value)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	mins, err2 := strconv.Atoi(str[0])
 	if err2 != nil {
-		logs.Error(err2.Error())
+		panic(err2)
 	}
 
 	maxs, err3 := strconv.Atoi(str[1])
 	if err2 != nil {
-		logs.Error(err3.Error())
+		panic(err3)
 	}
 
 	if values < mins && values > maxs {

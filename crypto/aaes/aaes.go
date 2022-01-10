@@ -5,7 +5,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"github.com/small-ek/antgo/os/logs"
 	"io"
 )
 
@@ -15,7 +14,7 @@ func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	blockSize := block.BlockSize()                              // 获取秘钥块的长度
 	origData = pkcs5Padding(origData, blockSize)                // 补全码
@@ -29,7 +28,7 @@ func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 func DecryptCBC(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key) // 分组秘钥
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	blockSize := block.BlockSize()                              // 获取秘钥块的长度
 	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize]) // 加密模式
@@ -48,7 +47,7 @@ func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 	encrypted = make([]byte, aes.BlockSize+len(origData))
 	iv := encrypted[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(encrypted[aes.BlockSize:], origData)
@@ -59,7 +58,7 @@ func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 func DecryptCFB(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	if len(encrypted) < aes.BlockSize {
 		panic("ciphertext too short")

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/small-ek/antgo/utils/conv"
-	"github.com/small-ek/antgo/os/logs"
 	"log"
 	"strings"
 	"time"
@@ -122,7 +121,7 @@ func (t *Times) Format(layout string, chinese ...bool) string {
 	}
 	d, err := t.parseLayout(layout, c)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return d
 }

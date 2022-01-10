@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/utils/conv"
-	"github.com/small-ek/antgo/os/logs"
 	"io/ioutil"
 )
 
@@ -40,7 +39,7 @@ func GetBody(c *gin.Context) map[string]interface{} {
 	}
 	var err = json.Unmarshal(body, &request)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return request
 }

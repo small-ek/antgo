@@ -2,7 +2,6 @@ package conv
 
 import (
 	"encoding/json"
-	"github.com/small-ek/antgo/os/logs"
 )
 
 //Map converts `any` to map[string]interface{}.<将“any”转换为map[string]interface{}。>
@@ -10,12 +9,12 @@ func Map(any interface{}) map[string]interface{} {
 	var data = make(map[string]interface{})
 	result, err := json.Marshal(any)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	err = json.Unmarshal(result, &data)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return data
 }
@@ -26,13 +25,13 @@ func MapString(any interface{}) map[string]string {
 	result, err := json.Marshal(any)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	err = json.Unmarshal(result, &data)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return data
 }
@@ -43,13 +42,13 @@ func MapInt(any interface{}) map[int]interface{} {
 	result, err := json.Marshal(any)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	err = json.Unmarshal(result, &data)
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return data
 }

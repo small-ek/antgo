@@ -2,7 +2,6 @@ package csv
 
 import (
 	"encoding/csv"
-	"github.com/small-ek/antgo/os/logs"
 	"io"
 	"log"
 	"os"
@@ -25,7 +24,7 @@ func New(path string) *Csv {
 func (c *Csv) Create() *Csv {
 	f, err := os.Create(c.Path) //创建文件
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	f.WriteString("\xEF\xBB\xBF") // 写入UTF-8 BOM
@@ -71,12 +70,12 @@ func (c *Csv) ReadMini() *Csv {
 	fs, err1 := os.Open(c.Path)
 	defer fs.Close()
 	if err1 != nil {
-		logs.Error(err1.Error())
+		panic(err1)
 	}
 	r1 := csv.NewReader(fs)
 	content, err2 := r1.ReadAll()
 	if err2 != nil {
-		logs.Error(err2.Error())
+		panic(err2)
 	}
 	for _, row := range content {
 		c.Data = append(c.Data, row)

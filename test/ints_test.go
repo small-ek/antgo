@@ -7,6 +7,8 @@ import (
 )
 
 func TestInts(t *testing.T) {
-	var result = conv.Ints([]string{"1", "2", "3"})
-	log.Println(result)
+	var str = conv.Ints([]string{"1", "2", "3"})
+	log.Println(str)
+	var str2 = conv.Ints("[1,2,3]")
+	log.Println(str2)
 }

@@ -15,7 +15,7 @@ func (t *testTask) Run() {
 
 }
 func TestCron(t *testing.T) {
-	crontab := cron.Default()
+	crontab := cron.New()
 	// 实现接口的方式添加定时任务
 	task := &testTask{}
 	log.Println(111)

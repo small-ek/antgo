@@ -1,7 +1,6 @@
 package aredis
 
 import (
-	"github.com/small-ek/antgo/os/logs"
 	"time"
 )
 
@@ -59,7 +58,7 @@ func (c *Client) SetNX(key string, value interface{}, expiration ...int64) bool 
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }

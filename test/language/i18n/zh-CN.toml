@@ -1,2 +1,4 @@
 hello = "%s你好%s"
 world = "世界"
+[common]
+name = "Tom Preston-Werner %s"

@@ -3,7 +3,6 @@ package aredis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
-	"github.com/small-ek/antgo/os/logs"
 	"time"
 )
 
@@ -28,7 +27,7 @@ func New(Addr, Password string, DB int) *Client {
 	_, err := client.Ping(ctx).Result()
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return &Client{
 		Mode:    true,
@@ -52,7 +51,7 @@ func NewClusterClient(Addrs []string, Password string) *Client {
 		return shard.Ping(ctx).Err()
 	})
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	return &Client{
@@ -73,7 +72,7 @@ func NewFailoverClient(SentinelAddrs []string, MasterName, Password string, Db i
 	})
 	err := client.Ping(ctx).Err()
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 
 	return &Client{
@@ -110,7 +109,7 @@ func (c *Client) Ping() string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return pong
 }
@@ -127,7 +126,7 @@ func (c *Client) TTL(key string) time.Duration {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }

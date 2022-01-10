@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/small-ek/antgo/utils/conv"
-	"github.com/small-ek/antgo/os/logs"
 	"io/ioutil"
 	"strings"
 )
@@ -36,7 +35,7 @@ func Decode(data []byte) *Json {
 
 	err := json.Unmarshal(data, &result)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return &Json{
 		Child: result,
@@ -47,7 +46,7 @@ func Decode(data []byte) *Json {
 func Encode(data interface{}) string {
 	result, err := json.Marshal(data)
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return string(result)
 }

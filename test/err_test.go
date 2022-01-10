@@ -2,15 +2,14 @@ package test
 
 import (
 	"github.com/small-ek/antgo/os/logs"
-	"log"
 	"testing"
 )
 
 func TestErr(t *testing.T) {
-	for i := 0; i < 20; i++ {
-		test1()
-		log.Println("21111")
-	}
+	//for i := 0; i < 20; i++ {
+	//	test1()
+	//	log.Println("21111")
+	//}
 }
 
 func test1() {

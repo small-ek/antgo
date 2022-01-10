@@ -1,9 +1,5 @@
 package aredis
 
-import (
-	"github.com/small-ek/antgo/os/logs"
-)
-
 //GetList value<获取列表长度>
 func (c *Client) GetListLength(key string) int64 {
 	var err error
@@ -15,7 +11,7 @@ func (c *Client) GetListLength(key string) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return lens
 }
@@ -32,7 +28,7 @@ func (c *Client) GetList(key string) []string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return list
 }

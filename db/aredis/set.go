@@ -1,7 +1,5 @@
 package aredis
 
-import "github.com/small-ek/antgo/os/logs"
-
 //AddSet value<修改集合>
 func (c *Client) AddSet(key string, members ...interface{}) int64 {
 	var count int64
@@ -13,7 +11,7 @@ func (c *Client) AddSet(key string, members ...interface{}) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return count
 }
@@ -29,7 +27,7 @@ func (c *Client) GetSetLength(key string) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return count
 }
@@ -45,7 +43,7 @@ func (c *Client) GetSet(key string) []string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }
@@ -61,7 +59,7 @@ func (c *Client) RemoveSet(key string, members ...interface{}) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }

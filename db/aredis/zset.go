@@ -2,7 +2,6 @@ package aredis
 
 import (
 	"github.com/go-redis/redis/v8"
-	"github.com/small-ek/antgo/os/logs"
 )
 
 //AddSet value<修改集合>
@@ -16,7 +15,7 @@ func (c *Client) AddZset(key string, value []*redis.Z) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return count
 }
@@ -33,7 +32,7 @@ func (c *Client) GetZsetLength(key string) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return count
 }
@@ -48,7 +47,7 @@ func (c *Client) GetZsetMember(key string, score string) float64 {
 		result, err = c.ClusterClient.ZScore(c.Ctx, key, score).Result()
 	}
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }
@@ -64,7 +63,7 @@ func (c *Client) GetZsetScore(key string, member string) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }
@@ -80,7 +79,7 @@ func (c *Client) GetZsetRange(key string, start, stop int64) []string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }
@@ -96,7 +95,7 @@ func (c *Client) GetZsetRevRange(key string, start, stop int64) []string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }
@@ -112,7 +111,7 @@ func (c *Client) GetZsetRangeByScore(key string, opt *redis.ZRangeBy) []string {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }
@@ -128,7 +127,7 @@ func (c *Client) RemoveZset(key string, members ...interface{}) int64 {
 	}
 
 	if err != nil {
-		logs.Error(err.Error())
+		panic(err)
 	}
 	return result
 }

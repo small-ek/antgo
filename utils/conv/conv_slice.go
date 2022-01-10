@@ -2,7 +2,6 @@ package conv
 
 import (
 	"encoding/json"
-	"github.com/small-ek/antgo/os/logs"
 )
 
 //Ints converts `any` to []int.<将“any”转换为[]int。>
@@ -14,89 +13,89 @@ func Ints(any interface{}) []int {
 	switch value := any.(type) {
 	case []string:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = Int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int(value[i])
 		}
 	case []int:
 		array = value
 	case []int8:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []int16:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []int32:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []int64:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []uint:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []uint8:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []uint16:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []uint32:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []uint64:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int(value[i])
 		}
 	case []bool:
 		array = make([]int, len(value))
-		for k, v := range value {
-			if v {
-				array[k] = 1
+		for i := 0; i < len(value); i++ {
+			if value[i] {
+				array[i] = 1
 			} else {
-				array[k] = 0
+				array[i] = 0
 			}
 		}
 	case []float32:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = Int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int(value[i])
 		}
 	case []float64:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = Int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int(value[i])
 		}
 	case []interface{}:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = Int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int(value[i])
 		}
 	case [][]byte:
 		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = Int(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int(value[i])
 		}
 	case string:
-		err := json.Unmarshal([]byte(value), &array)
+		err := json.Unmarshal(Bytes(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array
@@ -111,63 +110,64 @@ func Int32s(any interface{}) []int32 {
 	switch value := any.(type) {
 	case []string:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = Int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int32(value[i])
 		}
 	case []int:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []int8:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []int16:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []int32:
 		array = value
 	case []int64:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []uint:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []uint8:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []uint16:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []uint32:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []uint64:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int32(value[i])
 		}
 	case []bool:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			if v {
-				array[k] = 1
+		for i := 0; i < len(value); i++ {
+			array[i] = Int32(value[i])
+			if value[i] {
+				array[i] = 1
 			} else {
-				array[k] = 0
+				array[i] = 0
 			}
 		}
 	case []float32:
@@ -177,23 +177,23 @@ func Int32s(any interface{}) []int32 {
 		}
 	case []float64:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = Int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int32(value[i])
 		}
 	case []interface{}:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = Int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int32(value[i])
 		}
 	case [][]byte:
 		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = Int32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int32(value[i])
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array
@@ -208,89 +208,89 @@ func Int64s(any interface{}) []int64 {
 	switch value := any.(type) {
 	case []string:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = Int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int64(value[i])
 		}
 	case []int:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []int8:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []int16:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []int32:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []int64:
 		array = value
 	case []uint:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []uint8:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []uint16:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []uint32:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []uint64:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = int64(value[i])
 		}
 	case []bool:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			if v {
-				array[k] = 1
+		for i := 0; i < len(value); i++ {
+			if value[i] {
+				array[i] = 1
 			} else {
-				array[k] = 0
+				array[i] = 0
 			}
 		}
 	case []float32:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = Int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int64(value[i])
 		}
 	case []float64:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = Int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int64(value[i])
 		}
 	case []interface{}:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = Int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int64(value[i])
 		}
 	case [][]byte:
 		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = Int64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Int64(value[i])
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 
@@ -306,85 +306,85 @@ func Strings(any interface{}) []string {
 	switch value := any.(type) {
 	case []int:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []int8:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []int16:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []int32:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []int64:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []uint:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []uint8:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []uint16:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []uint32:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []uint64:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []bool:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []float32:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []float64:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []interface{}:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case []string:
 		array = value
 	case [][]byte:
 		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = String(value[i])
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array
@@ -395,89 +395,88 @@ func Uints(any interface{}) []uint {
 	if any == nil {
 		return nil
 	}
-
 	var array []uint
 	switch value := any.(type) {
 	case []string:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = Uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint(value[i])
 		}
 	case []int8:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []int16:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []int32:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []int64:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []uint:
 		array = value
 	case []uint8:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []uint16:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []uint32:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []uint64:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint(value[i])
 		}
 	case []bool:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			if v {
-				array[k] = 1
+		for i := 0; i < len(value); i++ {
+			if value[i] {
+				array[i] = 1
 			} else {
-				array[k] = 0
+				array[i] = 0
 			}
 		}
 	case []float32:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = Uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint(value[i])
 		}
 	case []float64:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = Uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint(value[i])
 		}
 	case []interface{}:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = Uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint(value[i])
 		}
 	case [][]byte:
 		array = make([]uint, len(value))
-		for k, v := range value {
-			array[k] = Uint(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint(value[i])
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array
@@ -492,84 +491,84 @@ func Uint32s(any interface{}) []uint32 {
 	switch value := any.(type) {
 	case []string:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = Uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint32(value[i])
 		}
 	case []int8:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []int16:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []int32:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []int64:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []uint:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []uint8:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []uint16:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []uint32:
 		array = value
 	case []uint64:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint32(value[i])
 		}
 	case []bool:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			if v {
-				array[k] = 1
+		for i := 0; i < len(value); i++ {
+			if value[i] {
+				array[i] = 1
 			} else {
-				array[k] = 0
+				array[i] = 0
 			}
 		}
 	case []float32:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = Uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint32(value[i])
 		}
 	case []float64:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = Uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint32(value[i])
 		}
 	case []interface{}:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = Uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint32(value[i])
 		}
 	case [][]byte:
 		array = make([]uint32, len(value))
-		for k, v := range value {
-			array[k] = Uint32(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint32(value[i])
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array
@@ -584,84 +583,84 @@ func Uint64s(any interface{}) []uint64 {
 	switch value := any.(type) {
 	case []string:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = Uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint64(value[i])
 		}
 	case []int8:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []int16:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []int32:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []int64:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []uint:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []uint8:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []uint16:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []uint32:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = uint64(value[i])
 		}
 	case []uint64:
 		array = value
 	case []bool:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			if v {
-				array[k] = 1
+		for i := 0; i < len(value); i++ {
+			if value[i] {
+				array[i] = 1
 			} else {
-				array[k] = 0
+				array[i] = 0
 			}
 		}
 	case []float32:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = Uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint64(value[i])
 		}
 	case []float64:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = Uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint64(value[i])
 		}
 	case []interface{}:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = Uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint64(value[i])
 		}
 	case [][]byte:
 		array = make([]uint64, len(value))
-		for k, v := range value {
-			array[k] = Uint64(v)
+		for i := 0; i < len(value); i++ {
+			array[i] = Uint64(value[i])
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array
@@ -676,86 +675,85 @@ func Interfaces(any interface{}) []interface{} {
 	switch value := any.(type) {
 	case []int:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []int8:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []int16:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []int32:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []int64:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []uint:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []uint8:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []uint16:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []uint32:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []uint64:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []bool:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []float32:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []float64:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case []interface{}:
 		array = value
-
 	case []string:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case [][]byte:
 		array = make([]interface{}, len(value))
-		for k, v := range value {
-			array[k] = v
+		for i := 0; i < len(value); i++ {
+			array[i] = value[i]
 		}
 	case string:
 		err := json.Unmarshal([]byte(value), &array)
 		if err != nil {
-			logs.Error(err.Error())
+			panic(err)
 		}
 	}
 	return array

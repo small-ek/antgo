@@ -1,2 +1,4 @@
 hello = "Hello"
 world = "World"
+[common]
+name = "Tom Preston-Werner"

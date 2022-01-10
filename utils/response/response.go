@@ -50,7 +50,7 @@ func Success(msg string, data ...interface{}) *Write {
 
 //Fail Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...error) *Write {
-	if len(err) > 0 && config.Decode().Get("system").Get("debug").Bool() == true {
+	if len(err) > 0 && config.Decode().Get("system.debug").Bool() == true {
 		logger.Write.Error("Return error", zap.Any("error", err[0].Error()))
 		return &Write{Code: ERROR, Msg: msg, Error: err[0].Error(), Data: ""}
 	}
