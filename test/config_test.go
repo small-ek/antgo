@@ -7,7 +7,7 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	config.SetPath("config.toml")
+	config.SetPath("config.yaml")
 	/*log.Println(config.Get["Master"])*/
 	var result = config.Decode().Get("en").Get("hello").String()
 	log.Println(result)
