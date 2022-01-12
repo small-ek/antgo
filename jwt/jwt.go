@@ -10,12 +10,12 @@ import (
 type Jwt struct {
 	PrivateKey []byte //Private key
 	PublicKey  []byte //Public key
-	Exp        int64  //Expiration timestamp
+	Exp        int64  //Expiration timestamp Default 15 days
 }
 
 //New function
 func New(PublicKey, PrivateKey []byte, exp ...int64) *Jwt {
-	var Exp = time.Now().Add(time.Hour * 360).Unix()
+	var Exp = time.Now().Add(time.Hour * 168).Unix()
 	if len(exp) > 0 {
 		Exp = exp[0]
 	}
@@ -28,18 +28,14 @@ func New(PublicKey, PrivateKey []byte, exp ...int64) *Jwt {
 }
 
 //Encrypt json web token encryption<json web token 加密>
-func (j *Jwt) Encrypt(manifest map[string]interface{}) (string, error) {
+func (j *Jwt) Encrypt(row map[string]interface{}) (string, error) {
 	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(j.PrivateKey)
 	if j.Exp == 0 {
 		j.Exp = time.Now().Add(time.Hour * 168).Unix()
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"iat":      time.Now().Unix(),
-		"nbf":      time.Now().Unix(),
-		"exp":      j.Exp,
-		"manifest": manifest,
-	})
-	return token.SignedString(Key)
+	MapClaims := jwt.MapClaims{}
+	MapClaims = row
+	return jwt.NewWithClaims(jwt.SigningMethodRS256, MapClaims).SignedString(Key)
 }
 
 //Decode json web token decryption<json web token解密>
@@ -55,10 +51,10 @@ func (j *Jwt) Decode(tokenStr string) (manifest map[string]interface{}, err erro
 	})
 
 	if err != nil {
-		return
+		return nil, err
 	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		result = claims["manifest"].(map[string]interface{})
+		result = claims
 		return result, nil
 	}
 	return result, errors.New("token invalid")

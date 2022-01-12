@@ -1,10 +1,9 @@
 package test
 
 import (
-	"errors"
 	"flag"
-	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/os/logger"
+	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"log"
 	"testing"
@@ -26,15 +25,4 @@ func TestLogger(t *testing.T) {
 		Name2: 12,
 	})
 	logger.Write.Info("123", zap.ByteString("leve", data))
-
-	test()
-}
-func test() {
-	test23()
-}
-func test23() {
-	var err = errors.New("")
-	logger.Error(err)
-	var err2 = errors.New("错误测试2")
-	logger.Error(err2)
 }

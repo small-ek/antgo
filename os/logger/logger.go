@@ -3,12 +3,9 @@ package logger
 import (
 	"fmt"
 	"github.com/natefinch/lumberjack"
-	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 	"os"
-	"runtime"
 	"time"
 )
 
@@ -247,14 +244,4 @@ func AsyncInfo(msg string, args ...interface{}) {
 	go func() {
 		FormateLog(args).Sugar().Infof(msg)
 	}()
-}
-
-//Error Error print log<捕获异常>
-func Error(err error) {
-	if err != nil {
-		pc, file, line, _ := runtime.Caller(1)
-		f := runtime.FuncForPC(pc)
-		log.Println(file + ":" + conv.String(line) + "<" + err.Error() + ">")
-		FormateLog([]interface{}{file, line, f.Name()}).Sugar().Error(err.Error())
-	}
 }

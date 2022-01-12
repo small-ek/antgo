@@ -3,3 +3,16 @@
 {"level":"info","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/test/logger_test.go:28","msg":"123","serviceName":"api","leve":"{\"Name\":\"123\",\"Name2\":12}"}
 {"level":"error","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","36","github.com/small-ek/antgo/test.test23"]}
 {"level":"error","time":"2021-09-20 15:59:31","file":"F:/www/src/antgo/os/logger/logger.go:193","msg":"错误测试2","serviceName":"api","detail":["F:/www/src/antgo/test/logger_test.go","38","github.com/small-ek/antgo/test.test23"]}
+2022-01-12 13:59:23.987	info	E:/www/antgo/os/logger/logger.go:242	123	{"service name": "api", "detail": ["{\"test\":\"1221\"}"]}
+2022-01-12 13:59:23.987	info	E:/www/antgo/test/logger_test.go:23	22333	{"service name": "api"}
+2022-01-12 13:59:23.987	info	E:/www/antgo/test/logger_test.go:28	123	{"service name": "api", "leve": "{\"Name\":\"123\",\"Name2\":12}"}
+2022-01-12 13:59:23.987	error	E:/www/antgo/os/logger/logger.go:258		{"service name": "api", "detail": ["E:/www/antgo/test/logger_test.go", "37", "github.com/small-ek/antgo/test.test23"]}
+2022-01-12 13:59:23.987	error	E:/www/antgo/os/logger/logger.go:258	错误测试2	{"service name": "api", "detail": ["E:/www/antgo/test/logger_test.go", "39", "github.com/small-ek/antgo/test.test23"]}
+2022-01-12 14:04:30.216	info	E:/www/antgo/os/logger/logger.go:242	123	{"service name": "api", "detail": ["{\"test\":\"1221\"}"]}
+2022-01-12 14:04:30.230	info	E:/www/antgo/test/logger_test.go:23	22333	{"service name": "api"}
+2022-01-12 14:04:30.230	info	E:/www/antgo/test/logger_test.go:28	123	{"service name": "api", "leve": "{\"Name\":\"123\",\"Name2\":12}"}
+2022-01-12 14:04:30.230	error	E:/www/antgo/os/logger/logger.go:258		{"service name": "api", "detail": ["E:/www/antgo/test/logger_test.go", "37", "github.com/small-ek/antgo/test.test23"]}
+2022-01-12 14:04:30.230	error	E:/www/antgo/os/logger/logger.go:258	错误测试2	{"service name": "api", "detail": ["E:/www/antgo/test/logger_test.go", "39", "github.com/small-ek/antgo/test.test23"]}
+2022-01-12 14:06:17.800	info	E:/www/antgo/os/logger/logger.go:239	123	{"service name": "api", "detail": ["{\"test\":\"1221\"}"]}
+2022-01-12 14:06:17.814	info	E:/www/antgo/test/logger_test.go:22	22333	{"service name": "api"}
+2022-01-12 14:06:17.814	info	E:/www/antgo/test/logger_test.go:27	123	{"service name": "api", "leve": "{\"Name\":\"123\",\"Name2\":12}"}

@@ -2,8 +2,6 @@ package queue
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"time"
 )
 
@@ -67,9 +65,6 @@ func (dm *DelayMessage) Stop() {
 
 //taskLoop
 func (dm *DelayMessage) taskLoop() {
-	defer func() {
-		log.Println("任务遍历结束！")
-	}()
 	for {
 		select {
 		case <-dm.taskClose:
@@ -93,21 +88,16 @@ func (dm *DelayMessage) taskLoop() {
 
 //timeLoop
 func (dm *DelayMessage) timeLoop() {
-	defer func() {
-		log.Println("时间遍历结束！")
-	}()
 	tick := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-dm.timeClose:
 			return
 		case <-tick.C:
-			fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
 			dm.curIndex = (dm.curIndex + 1) % cicleSectionNum
 			if dm.curIndex == 0 {
 				dm.cycleNum += 1
 			}
-			fmt.Println("当前循环时间", dm.cycleNum, dm.curIndex)
 		}
 	}
 
@@ -116,7 +106,7 @@ func (dm *DelayMessage) timeLoop() {
 //AddTask ...
 func (dm *DelayMessage) AddTask(t time.Time, key string, exec TaskFunc, params []interface{}) error {
 	if dm.startTime.After(t) {
-		return errors.New("时间错误")
+		return errors.New("Queue time error")
 	}
 	//当前时间与指定时间相差秒数
 	subSecond := t.Unix() - dm.startTime.Unix()
@@ -126,8 +116,8 @@ func (dm *DelayMessage) AddTask(t time.Time, key string, exec TaskFunc, params [
 	ix := subSecond % cicleSectionNum
 	//把任务加入tasks中
 	tasks := dm.slots[ix]
-	if _, ok := tasks[key]; ok {
-		return errors.New("该slots中已存在key为" + key + "的任务")
+	if _, err := tasks[key]; err {
+		return errors.New("Queue key name already exists")
 	}
 	tasks[key] = &Task{
 		runTime:  t,

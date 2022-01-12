@@ -27,7 +27,10 @@ func (c *Csv) Create() *Csv {
 		panic(err)
 	}
 
-	f.WriteString("\xEF\xBB\xBF") // 写入UTF-8 BOM
+	_, err2 := f.WriteString("\xEF\xBB\xBF")
+	if err2 != nil {
+		panic(err2)
+	} // 写入UTF-8 BOM
 	c.File = f
 	return c
 }
@@ -36,7 +39,11 @@ func (c *Csv) Create() *Csv {
 func (c *Csv) Insert(data [][]string) {
 	c.Data = data
 	w := csv.NewWriter(c.File) //创建一个新的写入文件流
-	w.WriteAll(data)           //写入数据
+	err := w.WriteAll(data)
+	if err != nil {
+		panic(err)
+	}
+	//写入数据
 	w.Flush()
 	defer c.File.Close()
 }

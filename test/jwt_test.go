@@ -38,10 +38,12 @@ PEqRQFBDR49ayaxSqwIDAQAB
 	var data = map[string]interface{}{
 		"test": "test",
 	}
-	var jwt = jwt.New(PublicKey, PrivateKey, 1603723435)
-	var result2, err = jwt.Encrypt(data)
-	log.Println(result2)
+	var j = jwt.New(PublicKey, PrivateKey, 1642648770)
+	var token, err = j.Encrypt(data)
+	log.Println(token)
 	log.Println(err)
-	var getData, _ = jwt.Decode(result2)
+
+	var getData, err2 = j.Decode(token)
 	log.Println(getData)
+	log.Println(err2)
 }

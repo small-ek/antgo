@@ -103,7 +103,10 @@ func (e *Email) Send() {
 	//附件
 	if len(e.FilePath) > 0 {
 		for i := 0; i < len(e.FilePath); i++ {
-			emails.AttachFile(e.FilePath[i])
+			_, err := emails.AttachFile(e.FilePath[i])
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 	//设置服务器相关的配置

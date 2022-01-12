@@ -25,11 +25,19 @@ func SetPath(filePath string) {
 		}
 		break
 	case ".yml", ".yaml":
-		file, _ := os.Open(filePath) //test.yaml由下一个例子生成
-		defer file.Close()
+		file, err1 := os.Open(filePath)
+		if err1 != nil {
+			panic(err1)
+		}
+		defer func(file *os.File) {
+			err2 := file.Close()
+			if err2 != nil {
+				panic(err2)
+			}
+		}(file)
 		ydecode := yaml.NewDecoder(file)
 		if err := ydecode.Decode(&Data); err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 		break
 	case "json":
@@ -40,7 +48,7 @@ func SetPath(filePath string) {
 		}
 		err2 := json.Unmarshal(bytes, &Data)
 		if err2 != nil {
-			panic(err.Error())
+			panic(err)
 			return
 		}
 	}

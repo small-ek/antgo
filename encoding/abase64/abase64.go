@@ -11,7 +11,10 @@ func Encode(str []byte) string {
 }
 
 //Decode base64 decoding
-func Decode(str string) (string, error) {
+func Decode(str string) string {
 	decodeBytes, err := base64.StdEncoding.DecodeString(str)
-	return string(decodeBytes), err
+	if err != nil {
+		panic(err)
+	}
+	return string(decodeBytes)
 }

@@ -102,7 +102,10 @@ func (h *HttpSend) SetTimeout(timeout time.Duration) *HttpSend {
 		if err != nil {
 			return nil, err
 		}
-		c.SetDeadline(time.Now().Add(timeout * time.Second)) //设置发送接收数据超时
+		err2 := c.SetDeadline(time.Now().Add(timeout * time.Second))
+		if err2 != nil {
+			return nil, err2
+		} //设置发送接收数据超时
 		return c, nil
 	}
 	return h
@@ -364,7 +367,10 @@ func (h *HttpSend) sendFile(sendData io.Writer) error {
 				return err
 			}
 		}
-		bodyWrite.Close()
+		err2 := bodyWrite.Close()
+		if err2 != nil {
+			return err2
+		}
 		h.ContentType = bodyWrite.FormDataContentType()
 	}
 	return nil

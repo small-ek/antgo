@@ -30,49 +30,47 @@ func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 //WhereIn WhereIn search when there is value
 func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		switch value := value.(type) {
-		case []int:
-			if len(value) == 0 {
-				return db
-			}
-		case []int16:
-			if len(value) == 0 {
-				return db
-			}
-		case []int32:
-			if len(value) == 0 {
-				return db
-			}
-		case []int64:
-			if len(value) == 0 {
-				return db
-			}
-		case []uint16:
-			if len(value) == 0 {
-				return db
-			}
-		case []uint32:
-			if len(value) == 0 {
-				return db
-			}
-		case []uint64:
-			if len(value) == 0 {
-				return db
-			}
-		case []string:
-			if len(value) == 0 {
-				return db
-			}
-		case []interface{}:
-			if len(value) == 0 {
-				return db
-			}
+		if getArrayLen(value) == 0 {
+			return db
 		}
 		if key != "" && value != nil && value != "" {
 			return db.Where(""+key+" IN (?)", value)
 		}
 		return db
 	}
+}
+
+//getArrayLen
+func getArrayLen(value interface{}) int {
+	switch value := value.(type) {
+	case []int:
+		return len(value)
+	case []int8:
+		return len(value)
+	case []int16:
+		return len(value)
+	case []int32:
+		return len(value)
+	case []int64:
+		return len(value)
+	case []uint8:
+		return len(value)
+	case []uint16:
+		return len(value)
+	case []uint32:
+		return len(value)
+	case []uint64:
+		return len(value)
+	case []float32:
+		return len(value)
+	case []float64:
+		return len(value)
+	case []string:
+		return len(value)
+	case []interface{}:
+		return len(value)
+	}
+	return 0
 }
 
 // Where Where to search when there is value
@@ -149,7 +147,10 @@ func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 		db = db.Where(key+" "+condition+" (?)", value)
 	case "between", "BETWEEN":
 		var betweenStr []string
-		json.Unmarshal(conv.Bytes(value), &betweenStr)
+		err := json.Unmarshal(conv.Bytes(value), &betweenStr)
+		if err != nil {
+			panic(err)
+		}
 		if len(betweenStr) > 1 {
 			db = db.Where(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
 		}
@@ -170,10 +171,13 @@ func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":
 		db = db.Or(key+" "+condition+" ?", conv.String(value)+"%")
 	case "in", "IN", "In", "not in", "NOT IN", "Not in", "notin", "NOTIN", "NotIn", "Notin":
-		db = db.Or(key+" "+condition+" (?)", value.([]interface{}))
+		db = db.Or(key+" "+condition+" (?)", value)
 	case "between", "BETWEEN", "Between":
 		var betweenStr []string
-		json.Unmarshal(conv.Bytes(value), &betweenStr)
+		err := json.Unmarshal(conv.Bytes(value), &betweenStr)
+		if err != nil {
+			return nil
+		}
 		if len(betweenStr) > 1 {
 			db = db.Or(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
 		}

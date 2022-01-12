@@ -1,9 +1,9 @@
 package adb
 
 import (
-	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/os/config"
 	loggers "github.com/small-ek/antgo/os/logger"
+	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -99,7 +99,10 @@ func InitDb() {
 	}
 
 	if len(connections) > 1 {
-		Master.Use(Resolver)
+		err := Master.Use(Resolver)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 }
@@ -107,10 +110,10 @@ func InitDb() {
 //getConfig
 func getConfig(isLog bool) *gorm.Config {
 	if isLog {
-		loggers := New(zap.L())
-		loggers.SetAsDefault()
+		zapLog := New(zap.L())
+		zapLog.SetAsDefault()
 		return &gorm.Config{
-			Logger:                                   loggers.LogMode(4),
+			Logger:                                   zapLog.LogMode(4),
 			DisableForeignKeyConstraintWhenMigrating: true,
 		}
 	} else {
@@ -180,5 +183,10 @@ func Close() {
 	if err != nil {
 		loggers.Write.Error(err.Error())
 	}
-	db.Close()
+
+	if db != nil {
+		if err2 := db.Close(); err2 != nil {
+			return
+		}
+	}
 }

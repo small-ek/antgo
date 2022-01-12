@@ -1,7 +1,6 @@
 package response
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"
@@ -55,76 +54,4 @@ func Fail(msg string, err ...error) *Write {
 		return &Write{Code: ERROR, Msg: msg, Error: err[0].Error(), Data: ""}
 	}
 	return &Write{Code: ERROR, Msg: msg}
-}
-
-//Json ...
-func Json(result interface{}, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.SecureJSON(codes, result)
-}
-
-//PureJSON ...
-func PureJSON(result interface{}, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.PureJSON(codes, result)
-}
-
-//Jsonp ...
-func Jsonp(result interface{}, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.JSONP(codes, result)
-}
-
-//XML ...
-func XML(result interface{}, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.XML(codes, result)
-}
-
-//YAML ...
-func YAML(result interface{}, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.YAML(codes, result)
-}
-
-//HTML ...
-func HTML(result interface{}, name string, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.HTML(codes, name, result)
-}
-
-//String ...
-func String(result interface{}, format string, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.String(codes, format, result)
-}
-
-//ProtoBuf ...
-func ProtoBuf(result interface{}, c *gin.Context, code ...int) {
-	var codes = 200
-	if len(code) > 0 {
-		codes = code[0]
-	}
-	c.ProtoBuf(codes, result)
 }
