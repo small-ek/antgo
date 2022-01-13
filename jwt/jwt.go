@@ -39,7 +39,7 @@ func (j *Jwt) Encrypt(row map[string]interface{}) (string, error) {
 }
 
 //Decode json web token decryption<json web token解密>
-func (j *Jwt) Decode(tokenStr string) (manifest map[string]interface{}, err error) {
+func (j *Jwt) Decode(tokenStr string) (map[string]interface{}, error) {
 	result := map[string]interface{}{}
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(j.PublicKey)
 
