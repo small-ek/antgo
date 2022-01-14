@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/jwt"
+	"github.com/small-ek/antgo/utils/jwt"
 	"log"
 	"testing"
 )
