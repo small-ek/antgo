@@ -2,8 +2,10 @@ package mgo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/small-ek/antgo/os/config"
+	"github.com/small-ek/antgo/utils/conv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,10 +34,11 @@ type Pages struct {
 
 //GetConfig 获取配置
 func GetConfig() (string, string, uint64, int) {
-	uri := config.Decode().Get("mgo.uri").String()
-	database := config.Decode().Get("mgo.database").String()
-	poollimit := config.Decode().Get("mgo.poollimit").Uint64()
-	timeout := config.Decode().Get("mgo.timeout").Int()
+	cfg := config.Decode()
+	uri := cfg.Get("mgo.uri").String()
+	database := cfg.Get("mgo.database").String()
+	poollimit := cfg.Get("mgo.poollimit").Uint64()
+	timeout := cfg.Get("mgo.timeout").Int()
 	return uri, database, poollimit, timeout
 }
 
@@ -93,20 +96,20 @@ func (m *Mgo) Table(tableName string) *Mgo {
 
 //Create Create data<创建数据>
 func (m *Mgo) Create(data interface{}) (*mongo.InsertOneResult, error) {
-
+	defer m.Close()
 	return m.Collection.InsertOne(m.Ctx, data)
 }
 
 //SaveAll save all data<创建多条数据>
 func (m *Mgo) SaveAll(data []interface{}) (*mongo.InsertManyResult, error) {
-
+	defer m.Close()
 	opts := options.InsertMany().SetOrdered(false)
 	return m.Collection.InsertMany(m.Ctx, data, opts)
 }
 
 //Update Update data<修改数据>
 func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
-
+	defer m.Close()
 	return m.Collection.UpdateMany(
 		m.Ctx,
 		filter,
@@ -118,6 +121,7 @@ func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResul
 
 //UpdateById Modify data according to id<根据id修改>
 func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, error) {
+	defer m.Close()
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -134,7 +138,7 @@ func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, er
 
 //Delete delete data<删除>
 func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
-
+	defer m.Close()
 	return m.Collection.DeleteOne(
 		m.Ctx,
 		update,
@@ -143,7 +147,7 @@ func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
 
 //DeleteMany Delete multiple data<删除多个数据>
 func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
-
+	defer m.Close()
 	return m.Collection.DeleteMany(
 		m.Ctx,
 		update,
@@ -152,6 +156,7 @@ func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
 
 //Count Get the total quantity<获取总数量>
 func (m *Mgo) Count() (int64, error) {
+	defer m.Close()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
@@ -160,6 +165,7 @@ func (m *Mgo) Count() (int64, error) {
 
 //FindOne Single query<单个查询>
 func (m *Mgo) FindOne() (bson.M, error) {
+	defer m.Close()
 	var result bson.M
 	if m.Filter == nil {
 		m.Filter = bson.D{}
@@ -175,6 +181,7 @@ func (m *Mgo) FindOne() (bson.M, error) {
 
 //Find Multiple data search<多条数据查询>
 func (m *Mgo) Find() (*mongo.Cursor, error) {
+	defer m.Close()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
@@ -188,6 +195,7 @@ func (m *Mgo) Find() (*mongo.Cursor, error) {
 
 //Distinct Query unique data<查询不重复的数据>
 func (m *Mgo) Distinct(name string) ([]interface{}, error) {
+	defer m.Close()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
@@ -234,14 +242,24 @@ func (m *Mgo) Sort(sort map[string]interface{}) *Mgo {
 func (m *Mgo) Where(filter interface{}) *Mgo {
 	where := bson.D{}
 	switch filters := filter.(type) {
+	case [][]interface{}:
+		for i := 0; i < len(filters); i++ {
+			value := filters[i]
+			if len(value) == 2 {
+				where = append(where, bson.E{conv.String(value[0]), value[1]})
+			}
+			if len(value) == 3 {
+				where = append(where, bson.E{conv.String(value[0]), bson.D{{conv.String(value[1]), value[2]}}})
+			}
+		}
 	case [][]string:
 		for i := 0; i < len(filters); i++ {
 			value := filters[i]
 			if len(value) == 2 {
-				where = append(where, bson.E{value[0], value[1]})
+				where = append(where, bson.E{conv.String(value[0]), value[1]})
 			}
 			if len(value) == 3 {
-				where = append(where, bson.E{value[0], bson.D{{value[1], value[2]}}})
+				where = append(where, bson.E{conv.String(value[0]), bson.D{{conv.String(value[1]), value[2]}}})
 			}
 		}
 	}
@@ -249,7 +267,7 @@ func (m *Mgo) Where(filter interface{}) *Mgo {
 	if len(where) > 0 {
 		m.Filter = &where
 	} else {
-		m.Filter = &filter
+		m.Filter = &bson.D{}
 	}
 	return m
 }
@@ -270,7 +288,7 @@ func (m *Mgo) Close() {
 //groupStage := bson.D{{"$group", bson.D{{"_id", "$podcast"}, {"total", bson.D{{"$sum", "$duration"}}}}}}
 //mongo.Pipeline{matchStage, groupStage}
 func (m *Mgo) Aggregate() (*mongo.Cursor, error) {
-
+	defer m.Close()
 	if m.Collection != nil {
 		return m.Collection.Aggregate(m.Ctx, m.Filter)
 	}
@@ -292,5 +310,44 @@ func (m *Mgo) GetClient() *mongo.Client {
 //sessionContext.AbortTransaction(sessionContext) //终止事务
 //sessionContext.CommitTransaction(sessionContext) //提交事务
 func (m *Mgo) StartTrans(fn func(mongo.SessionContext) error) {
-	m.Client.UseSession(m.Ctx, fn)
+	defer m.Close()
+	if err := m.Client.UseSession(m.Ctx, fn); err != nil {
+		panic(err)
+	}
+}
+
+//BuildWhere 构造Where搜索
+func BuildWhere(Filter []string) [][]interface{} {
+	var where [][]interface{}
+	for i := 0; i < len(Filter); i++ {
+		var value = Filter[i]
+		var binding []interface{}
+		if err := json.Unmarshal(conv.Bytes(value), &binding); err != nil {
+			panic(err)
+		}
+		if len(binding) == 3 && binding[1] == "=" {
+			where = append(where, []interface{}{binding[0], binding[2]})
+		} else if len(binding) == 3 && binding[1] != "=" {
+			where = append(where, []interface{}{binding[0], condition(conv.String(binding[1])), binding[2]})
+		}
+
+	}
+	return where
+}
+
+//condition 条件选择器
+func condition(condition string) string {
+	switch condition {
+	case "<":
+		return "$lt"
+	case "=<", "<=":
+		return "$lte"
+	case ">":
+		return "$gt"
+	case ">=", "=>":
+		return "$gte"
+	case "!=", "<>":
+		return "$ne"
+	}
+	return "="
 }
