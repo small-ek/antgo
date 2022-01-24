@@ -2,8 +2,8 @@ package cache
 
 import (
 	"github.com/coocood/freecache"
-	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/crypto/hash"
+	"github.com/small-ek/antgo/utils/conv"
 )
 
 const (
@@ -18,8 +18,8 @@ var cache = freecache.NewCache(cacheSize)
 //Get cached data
 func Get(key string) []byte {
 	//判断是否有缓存
-	var hash = hash.Sha256(key)
-	getData, _ := cache.Get([]byte(hash))
+	h := hash.Sha1(key)
+	getData, _ := cache.Get([]byte(h))
 
 	return getData
 }
@@ -27,40 +27,39 @@ func Get(key string) []byte {
 //Set the cache data
 func Set(key string, value interface{}, expire ...int) {
 	//判断是否有缓存
-	var hash = hash.Sha256(conv.String(key))
+	h := hash.Sha1(conv.String(key))
 
 	if len(expire) > 0 {
-		_ = cache.Set([]byte(hash), conv.Bytes(value), expire[0])
+		_ = cache.Set([]byte(h), conv.Bytes(value), expire[0])
 	}
-	_ = cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
+	_ = cache.Set([]byte(h), conv.Bytes(value), cacheExpire)
 }
 
 //Sets cache data based on value
 func Sets(value interface{}, expire ...int) {
-	//判断是否有缓存
-	var hash = hash.Sha256(conv.String(value))
+	h := hash.Sha1(conv.String(value))
 
 	if len(expire) > 0 {
-		_ = cache.Set([]byte(hash), conv.Bytes(value), expire[0])
+		_ = cache.Set([]byte(h), conv.Bytes(value), expire[0])
 	}
-	_ = cache.Set([]byte(hash), conv.Bytes(value), cacheExpire)
+	_ = cache.Set([]byte(h), conv.Bytes(value), cacheExpire)
 }
 
 //GetOrSet returns existing value or if record doesn't exist
 func GetOrSet(key string, value interface{}, expire ...int) []byte {
-	var hash = hash.Sha256(key)
+	h := hash.Sha1(key)
 	if len(expire) > 0 {
-		var result, _ = cache.GetOrSet(conv.Bytes(hash), conv.Bytes(value), expire[0])
+		var result, _ = cache.GetOrSet(conv.Bytes(h), conv.Bytes(value), expire[0])
 		return result
 	}
-	var result, _ = cache.GetOrSet(conv.Bytes(hash), conv.Bytes(value), cacheExpire)
+	var result, _ = cache.GetOrSet(conv.Bytes(h), conv.Bytes(value), cacheExpire)
 	return result
 }
 
 //Remove Delete the cache
 func Remove(key string) bool {
-	var hash = hash.Sha256(key)
-	result := cache.Del([]byte(hash))
+	h := hash.Sha1(key)
+	result := cache.Del([]byte(h))
 	return result
 }
 
