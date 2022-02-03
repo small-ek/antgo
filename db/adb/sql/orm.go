@@ -131,10 +131,10 @@ func Filters(where interface{}) func(db *gorm.DB) *gorm.DB {
 
 //buildWhere
 func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
-	if len(arr) == 3 && arr[2] != "" {
+	if len(arr) == 3 && arr[2] != "" && arr[2] != nil {
 		db = and(arr[0].(string), arr[1].(string), arr[2], db)
 	}
-	if len(arr) == 4 && arr[3] != "" && arr[0] == "or" {
+	if len(arr) == 4 && arr[3] != "" && arr[3] != nil && arr[0] == "or" {
 		db = or(arr[1].(string), arr[2].(string), arr[3], db)
 	}
 	return db
