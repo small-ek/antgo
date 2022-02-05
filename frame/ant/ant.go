@@ -146,13 +146,3 @@ func (eng *Engine) SetLog(filePath string) *Engine {
 	logger.Default(filePath).Register()
 	return eng
 }
-
-// InitDatabase initialize all database connection.
-func (eng *Engine) initDatabase() *Engine {
-	if defaultAdapter == nil {
-		panic("adapter is nil")
-	}
-
-	eng.Adapter.SetConnection()
-	return eng
-}
