@@ -41,8 +41,8 @@ func New(prefixPath, language string, defaultType ...string) *I18n {
 	case "yml", "yaml":
 		file, _ := os.Open(filePath)
 		defer file.Close()
-		ydecode := yaml.NewDecoder(file)
-		if err := ydecode.Decode(&data); err != nil {
+		yamlDecode := yaml.NewDecoder(file)
+		if err := yamlDecode.Decode(&data); err != nil {
 			panic(err.Error())
 		}
 		break

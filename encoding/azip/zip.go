@@ -10,7 +10,6 @@ import (
 // Param 1: filename is the output zip file's name.
 // Param 2: files is a list of files to add to the zip.
 func Create(filename string, files []string) error {
-
 	newZipFile, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -31,7 +30,6 @@ func Create(filename string, files []string) error {
 
 //AddFileToZip ...
 func AddFileToZip(zipWriter *zip.Writer, filename string) error {
-
 	fileToZip, err := os.Open(filename)
 	if err != nil {
 		return err

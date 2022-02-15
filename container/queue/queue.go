@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const cicleSectionNum = 100
+const circleSectionNum = 100
 
 //TaskFunc ...
 type TaskFunc func(args ...interface{})
@@ -23,7 +23,7 @@ type Task struct {
 type DelayMessage struct {
 	cycleNum  int //当前运行到第几圈了
 	curIndex  int //当前运行到第几格
-	slots     [cicleSectionNum]map[string]*Task
+	slots     [circleSectionNum]map[string]*Task
 	closed    chan bool
 	taskClose chan bool
 	timeClose chan bool
@@ -40,7 +40,7 @@ func New() *DelayMessage {
 		timeClose: make(chan bool),
 		startTime: time.Now(),
 	}
-	for i := 0; i < cicleSectionNum; i++ {
+	for i := 0; i < circleSectionNum; i++ {
 		dm.slots[i] = make(map[string]*Task)
 	}
 	return dm
@@ -94,7 +94,7 @@ func (dm *DelayMessage) timeLoop() {
 		case <-dm.timeClose:
 			return
 		case <-tick.C:
-			dm.curIndex = (dm.curIndex + 1) % cicleSectionNum
+			dm.curIndex = (dm.curIndex + 1) % circleSectionNum
 			if dm.curIndex == 0 {
 				dm.cycleNum += 1
 			}
@@ -111,9 +111,9 @@ func (dm *DelayMessage) AddTask(t time.Time, key string, exec TaskFunc, params [
 	//当前时间与指定时间相差秒数
 	subSecond := t.Unix() - dm.startTime.Unix()
 	//计算循环次数
-	cycleNum := int(subSecond / cicleSectionNum)
+	cycleNum := int(subSecond / circleSectionNum)
 	//计算任务所在的slots的下标
-	ix := subSecond % cicleSectionNum
+	ix := subSecond % circleSectionNum
 	//把任务加入tasks中
 	tasks := dm.slots[ix]
 	if _, err := tasks[key]; err {

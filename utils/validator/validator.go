@@ -308,7 +308,7 @@ func between(value, ruleStr string) bool {
 	}
 
 	maxs, err3 := strconv.Atoi(str[1])
-	if err2 != nil {
+	if err3 != nil {
 		panic(err3)
 	}
 
@@ -336,7 +336,7 @@ func notBetween(value, ruleStr string) bool {
 	}
 
 	maxs, err3 := strconv.Atoi(str[1])
-	if err2 != nil {
+	if err3 != nil {
 		panic(err3)
 	}
 

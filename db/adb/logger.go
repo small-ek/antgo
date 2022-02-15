@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
-	"path/filepath"
 	"time"
 )
 
@@ -87,8 +86,3 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 		logger.Write.Info(out)
 	}
 }
-
-var (
-	gormPackage    = filepath.Join("gorm.io", "gorm")
-	zapgormPackage = filepath.Join("moul.io", "zapgorm2")
-)
