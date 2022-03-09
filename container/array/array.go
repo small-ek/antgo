@@ -79,7 +79,7 @@ func (a *Array) Search(value interface{}) int {
 			return i
 		}
 	}
-	return 0
+	return -1
 }
 
 //Clear Array
