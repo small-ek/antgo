@@ -1,6 +1,8 @@
 package array
 
-import "sync"
+import (
+	"sync"
+)
 
 //Array parameter structure
 type Array struct {
@@ -67,7 +69,10 @@ func (a *Array) Set(index int, value interface{}) {
 func (a *Array) Get(index int) interface{} {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
-	return a.Slice[index]
+	if len(a.Slice) > index && 0 < index {
+		return a.Slice[index]
+	}
+	return nil
 }
 
 //Search Array
