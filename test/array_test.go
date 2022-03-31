@@ -7,7 +7,6 @@ import (
 )
 
 func TestArray(t *testing.T) {
-
 	// 创建并发安全的int类型数组
 	a := array.New()
 

@@ -1,6 +1,8 @@
 package array
 
-import "sync"
+import (
+	"sync"
+)
 
 //Array parameter structure
 type Array struct {
@@ -17,6 +19,7 @@ func New() *Array {
 func (a *Array) Append(value interface{}) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
+
 	a.Slice = append(a.Slice, value)
 }
 
@@ -24,6 +27,7 @@ func (a *Array) Append(value interface{}) {
 func (a *Array) Len() int {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
+
 	return len(a.Slice)
 }
 
@@ -31,6 +35,7 @@ func (a *Array) Len() int {
 func (a *Array) List() []interface{} {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
+
 	return a.Slice
 }
 
@@ -38,6 +43,10 @@ func (a *Array) List() []interface{} {
 func (a *Array) InsertAfter(index int, value interface{}) []interface{} {
 	a.lock.Lock()
 	defer a.lock.Unlock()
+
+	if index < 0 || index >= len(a.Slice) {
+		return nil
+	}
 
 	var reset = make([]interface{}, 0)
 	prefix := append(reset, a.Slice[index:]...)
@@ -51,6 +60,10 @@ func (a *Array) Delete(index int) []interface{} {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
+	if index < 0 || index >= len(a.Slice) {
+		return nil
+	}
+
 	a.Slice = append(a.Slice[:index], a.Slice[index+1:]...)
 	return a.Slice
 }
@@ -60,6 +73,10 @@ func (a *Array) Set(index int, value interface{}) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
+	if index < 0 || index >= len(a.Slice) {
+		return
+	}
+
 	a.Slice[index] = value
 }
 
@@ -67,6 +84,11 @@ func (a *Array) Set(index int, value interface{}) {
 func (a *Array) Get(index int) interface{} {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
+
+	if index < 0 || index >= len(a.Slice) {
+		return nil
+	}
+
 	return a.Slice[index]
 }
 
@@ -74,18 +96,20 @@ func (a *Array) Get(index int) interface{} {
 func (a *Array) Search(value interface{}) int {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
+
 	for i := 0; i < len(a.Slice); i++ {
 		if a.Slice[i] == value {
 			return i
 		}
 	}
-	return 0
+	return -1
 }
 
 //Clear Array
 func (a *Array) Clear() {
 	a.lock.Lock()
 	defer a.lock.Unlock()
+
 	a.Slice = make([]interface{}, 0)
 }
 
