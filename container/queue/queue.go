@@ -48,13 +48,14 @@ func NewDelayMessage() *DelayMessage {
 
 //Start ...
 func (dm *DelayMessage) Start() {
+	defer close(dm.closed)
+
 	go dm.taskLoop()
 	go dm.timeLoop()
 	select {
 	case <-dm.closed:
 		dm.taskClose <- struct{}{}
 		dm.timeClose <- struct{}{}
-		break
 	}
 }
 
@@ -79,6 +80,9 @@ func (dm *DelayMessage) taskLoop() {
 				continue
 			}
 			for k, v := range tasks {
+				//***
+				//warning: 如果这个任务是在curIndex 前面添加上去，这样等到下次执行(cycleNum+1, idx)
+				//这样就会导致cycleNum 会永远小于当前的cycleNum的值，导致task 永远不能执行
 				if v.cycleNum == dm.cycleNum {
 					go v.exec(v.params...)
 					delete(tasks, k)
