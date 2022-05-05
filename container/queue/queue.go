@@ -24,20 +24,20 @@ type DelayMessage struct {
 	cycleNum  int //当前运行到第几圈了
 	curIndex  int //当前运行到第几格
 	slots     [circleSectionNum]map[string]*Task
-	closed    chan bool
-	taskClose chan bool
-	timeClose chan bool
+	closed    chan struct{}
+	taskClose chan struct{}
+	timeClose chan struct{}
 	startTime time.Time
 }
 
-//New ...
-func New() *DelayMessage {
+//NewDelayMessage ...
+func NewDelayMessage() *DelayMessage {
 	dm := &DelayMessage{
 		cycleNum:  0,
 		curIndex:  0,
-		closed:    make(chan bool),
-		taskClose: make(chan bool),
-		timeClose: make(chan bool),
+		closed:    make(chan struct{}),
+		taskClose: make(chan struct{}),
+		timeClose: make(chan struct{}),
 		startTime: time.Now(),
 	}
 	for i := 0; i < circleSectionNum; i++ {
@@ -52,43 +52,48 @@ func (dm *DelayMessage) Start() {
 	go dm.timeLoop()
 	select {
 	case <-dm.closed:
-		dm.taskClose <- true
-		dm.timeClose <- true
+		dm.taskClose <- struct{}{}
+		dm.timeClose <- struct{}{}
 		break
 	}
 }
 
 //Stop ...
 func (dm *DelayMessage) Stop() {
-	dm.closed <- true
+	dm.closed <- struct{}{}
 }
 
 //taskLoop
 func (dm *DelayMessage) taskLoop() {
+	defer close(dm.taskClose)
+
 	for {
 		select {
 		case <-dm.taskClose:
 			return
 		default:
-			{
-				tasks := dm.slots[dm.curIndex]
-				if len(tasks) > 0 {
-					for k, v := range tasks {
-						if v.cycleNum == dm.cycleNum {
-							go v.exec(v.params...)
-							delete(tasks, k)
-						}
-					}
+			tasks := dm.slots[dm.curIndex]
+			if len(tasks) == 0 {
+				//如果当前tasks是空，要等带1秒时间才能改变curIndex值，防止CPU 空转
+				time.Sleep(time.Millisecond * 500)
+				continue
+			}
+			for k, v := range tasks {
+				if v.cycleNum == dm.cycleNum {
+					go v.exec(v.params...)
+					delete(tasks, k)
 				}
 			}
 		}
-
 	}
 }
 
 //timeLoop
 func (dm *DelayMessage) timeLoop() {
 	tick := time.NewTicker(time.Second)
+	defer tick.Stop()
+	defer close(dm.timeClose)
+
 	for {
 		select {
 		case <-dm.timeClose:
@@ -100,7 +105,6 @@ func (dm *DelayMessage) timeLoop() {
 			}
 		}
 	}
-
 }
 
 //AddTask ...
@@ -116,7 +120,7 @@ func (dm *DelayMessage) AddTask(t time.Time, key string, exec TaskFunc, params [
 	ix := subSecond % circleSectionNum
 	//把任务加入tasks中
 	tasks := dm.slots[ix]
-	if _, err := tasks[key]; err {
+	if _, ok := tasks[key]; ok {
 		return errors.New("Queue key name already exists")
 	}
 	tasks[key] = &Task{

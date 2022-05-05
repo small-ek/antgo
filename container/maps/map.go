@@ -7,11 +7,11 @@ import (
 //Map parameter structure
 type Map struct {
 	Map  map[interface{}]interface{} //
-	lock sync.RWMutex           // 加锁
+	lock sync.RWMutex                // 加锁
 }
 
-//New ...
-func New() *Map {
+//NewMap
+func NewMap() *Map {
 	return &Map{Map: make(map[interface{}]interface{})}
 }
 
@@ -26,23 +26,23 @@ func (m *Map) Set(key interface{}, value interface{}) {
 func (m *Map) Get(key interface{}) interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	_, err := m.Map[key]
-	if err {
+	v, ok := m.Map[key]
+	if !ok {
 		return nil
 	}
-	return m.Map[key]
+	return v
 }
 
 //GetOrSet ...
 func (m *Map) GetOrSet(key interface{}, value interface{}) interface{} {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	_, err := m.Map[key]
-	if err {
+	v, ok := m.Map[key]
+	if !ok {
 		m.Map[key] = value
 		return value
 	}
-	return m.Map[key]
+	return v
 }
 
 //Count ...
@@ -53,15 +53,10 @@ func (m *Map) Count() int {
 }
 
 //Delete ...
-func (m *Map) Delete(key interface{}) bool {
+func (m *Map) Delete(key interface{}) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	delete(m.Map, key)
-	_, err := m.Map[key]
-	if err {
-		return false
-	}
-	return true
 }
 
 //LockFunc locks writing by callback function <f>
