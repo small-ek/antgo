@@ -35,76 +35,60 @@ func InitDb() {
 	cfg := config.Decode()
 	connections := cfg.Get("connections").Maps()
 	default_connections := cfg.Get("system.default_connections").String()
-	if default_connections != "" {
 
-		for i := 0; i < len(connections); i++ {
-			value := connections[i]
-			row := Db{}
-			conv.Struct(&row, value)
-
-			switch row.Type {
-			case "mysql":
-				dns := row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
-
-				if row.Name == default_connections {
-					row.Open(Mysql(dns), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Mysql(dns)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
-				break
-			case "postgres":
-				dns := "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password
-				if row.Name == default_connections {
-					row.Open(Postgres(dns), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Postgres(dns)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
-				break
-			case "mssql":
-				dns := "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database
-				if row.Name == default_connections {
-					row.Open(Sqlserver(dns), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Sqlserver(dns)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
-				break
-			case "sqlite":
-				dns := row.Dns
-				if row.Name == default_connections {
-					log.Println(dns)
-					row.Open(Sqlite(dns), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Sqlite(dns)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
-				break
-			}
-		}
-
+	if default_connections == "" {
+		log.Println("default_connections is empty")
+		return
 	}
 
-	if len(connections) > 1 {
-		err := Master.Use(Resolver)
-		if err != nil {
-			panic(err)
+	for i := 0; i < len(connections); i++ {
+		value := connections[i]
+		row := Db{}
+		conv.Struct(&row, value)
+
+		switch row.Type {
+		case "mysql":
+			dns := row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+			dbTypeSelect(row, default_connections, Mysql(dns))
+			break
+
+		case "postgres":
+			dns := "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password
+			dbTypeSelect(row, default_connections, Postgres(dns))
+			break
+
+		case "mssql":
+			dns := "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database
+			dbTypeSelect(row, default_connections, Sqlserver(dns))
+			break
+
+		case "sqlite":
+			dns := row.Dns
+			dbTypeSelect(row, default_connections, Sqlite(dns))
+			break
 		}
 	}
 
+	if len(connections) == 0 {
+		return
+	}
+
+	err := Master.Use(Resolver)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func dbTypeSelect(row Db, default_conns string, dialector gorm.Dialector) {
+	if row.Name == default_conns {
+		row.Open(dialector, getConfig(row.Log))
+	} else {
+		Resolver = dbresolver.Register(dbresolver.Config{
+			Replicas: []gorm.Dialector{dialector},
+			// sources/replicas 负载均衡策略
+			Policy: dbresolver.RandomPolicy{},
+		}, row.Name)
+	}
 }
 
 //getConfig

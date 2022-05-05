@@ -110,7 +110,7 @@ func (a *Array) Clear() {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	a.Slice = make([]interface{}, 0)
+	a.Slice = nil
 }
 
 //LockFunc locks writing by callback function <f>
