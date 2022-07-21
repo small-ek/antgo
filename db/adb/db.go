@@ -11,7 +11,6 @@ import (
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
-	"log"
 )
 
 var Master *gorm.DB
@@ -28,7 +27,7 @@ type Db struct {
 	Database string `json:"database"`
 	Params   string `json:"params"`
 	Log      bool   `json:"log"`
-	Dns      string `json:"dns"`
+	Dsn      string `json:"dsn"`
 }
 
 func InitDb() {
@@ -41,53 +40,58 @@ func InitDb() {
 			value := connections[i]
 			row := Db{}
 			conv.Struct(&row, value)
+			dsn := row.Dsn
 
 			switch row.Type {
 			case "mysql":
-				dns := row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+				if row.Dsn == "" {
+					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+				}
 
 				if row.Name == default_connections {
-					row.Open(Mysql(dns), getConfig(row.Log))
+					row.Open(Mysql(dsn), getConfig(row.Log))
 				} else {
 					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Mysql(dns)},
+						Replicas: []gorm.Dialector{Mysql(dsn)},
 						// sources/replicas 负载均衡策略
 						Policy: dbresolver.RandomPolicy{},
 					}, row.Name)
 				}
 				break
 			case "postgres":
-				dns := "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password
+				if row.Dsn == "" {
+					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
+				}
 				if row.Name == default_connections {
-					row.Open(Postgres(dns), getConfig(row.Log))
+					row.Open(Postgres(dsn), getConfig(row.Log))
 				} else {
 					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Postgres(dns)},
+						Replicas: []gorm.Dialector{Postgres(dsn)},
 						// sources/replicas 负载均衡策略
 						Policy: dbresolver.RandomPolicy{},
 					}, row.Name)
 				}
 				break
 			case "mssql":
-				dns := "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database
+				if row.Dsn == "" {
+					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
+				}
 				if row.Name == default_connections {
-					row.Open(Sqlserver(dns), getConfig(row.Log))
+					row.Open(Sqlserver(dsn), getConfig(row.Log))
 				} else {
 					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Sqlserver(dns)},
+						Replicas: []gorm.Dialector{Sqlserver(dsn)},
 						// sources/replicas 负载均衡策略
 						Policy: dbresolver.RandomPolicy{},
 					}, row.Name)
 				}
 				break
 			case "sqlite":
-				dns := row.Dns
 				if row.Name == default_connections {
-					log.Println(dns)
-					row.Open(Sqlite(dns), getConfig(row.Log))
+					row.Open(Sqlite(dsn), getConfig(row.Log))
 				} else {
 					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Sqlite(dns)},
+						Replicas: []gorm.Dialector{Sqlite(dsn)},
 						// sources/replicas 负载均衡策略
 						Policy: dbresolver.RandomPolicy{},
 					}, row.Name)
@@ -139,9 +143,9 @@ func (d *Db) Use(plugin gorm.Plugin) {
 }
 
 //Mysql connection
-func Mysql(dns string) gorm.Dialector {
+func Mysql(dsn string) gorm.Dialector {
 	return mysql.New(mysql.Config{
-		DSN:                       dns, // DSN data source name
+		DSN:                       dsn, // DSN data source name
 		DefaultStringSize:         256, // string 类型字段的默认长度
 		DefaultDatetimePrecision:  &datetimePrecision,
 		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
@@ -152,10 +156,10 @@ func Mysql(dns string) gorm.Dialector {
 }
 
 //Postgres connection
-func Postgres(dns string) gorm.Dialector {
+func Postgres(dsn string) gorm.Dialector {
 	return postgres.New(postgres.Config{
 		DriverName:           "",
-		DSN:                  dns,
+		DSN:                  dsn,
 		PreferSimpleProtocol: true,
 		WithoutReturning:     false,
 		Conn:                 nil,
@@ -163,13 +167,13 @@ func Postgres(dns string) gorm.Dialector {
 }
 
 //Sqlserver connection
-func Sqlserver(dns string) gorm.Dialector {
-	return sqlserver.Open(dns)
+func Sqlserver(dsn string) gorm.Dialector {
+	return sqlserver.Open(dsn)
 }
 
 //Sqlite connection
-func Sqlite(dns string) gorm.Dialector {
-	return sqlite.Open(dns)
+func Sqlite(dsn string) gorm.Dialector {
+	return sqlite.Open(dsn)
 }
 
 //Distributed
