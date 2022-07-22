@@ -1,4 +1,4 @@
-package gin
+package gin_cors
 
 import (
 	"github.com/gin-gonic/gin"
