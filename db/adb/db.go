@@ -183,14 +183,16 @@ func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbreso
 
 //Close 关闭数据库
 func Close() {
-	var db, err = Master.DB()
-	if err != nil {
-		loggers.Write.Error(err.Error())
-	}
+	if Master != nil {
+		var db, err = Master.DB()
+		if err != nil {
+			loggers.Write.Error(err.Error())
+		}
 
-	if db != nil {
-		if err2 := db.Close(); err2 != nil {
-			return
+		if db != nil {
+			if err2 := db.Close(); err2 != nil {
+				return
+			}
 		}
 	}
 }

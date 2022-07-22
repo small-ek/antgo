@@ -78,13 +78,8 @@ func defaultServer(app http.Handler) *http.Server {
 	}
 
 	return &http.Server{
-		Addr:              addr,
-		Handler:           app,
-		ReadTimeout:       240 * time.Second, //设置秒的读超时
-		WriteTimeout:      240 * time.Second, //设置秒的写超时
-		ReadHeaderTimeout: 60 * time.Second,  //读取头超时
-		IdleTimeout:       120 * time.Second, //空闲超时
-		MaxHeaderBytes:    2097152,           //请求头最大字节
+		Addr:    addr,
+		Handler: app,
 	}
 }
 
@@ -109,21 +104,23 @@ func (eng *Engine) Close() *Engine {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Println("Shutdown Server ...")
+	Log().Warn("Shutdown Server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	cfg := config.Decode()
 	connections := cfg.Get("connections").Maps()
+
 	if len(connections) > 0 {
 		defer adb.Close()
 	}
 
 	if err := eng.Srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+
+		Log().Error("Server Shutdown:" + err.Error())
 	}
-	log.Println("Server exiting")
+	Log().Warn("Server exiting")
 	return eng
 }
 
