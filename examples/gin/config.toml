@@ -40,7 +40,7 @@ compress = false
 #数据库设置1
 [[connections]]
 #数据库名称
-name = "mysql2"
+name = "mysql1"
 #数据库类型
 type = "mysql"
 #服务器地址

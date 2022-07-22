@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
@@ -86,17 +85,17 @@ func InitDb() {
 					}, row.Name)
 				}
 				break
-			case "sqlite":
-				if row.Name == default_connections {
-					row.Open(Sqlite(dsn), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Sqlite(dsn)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
-				break
+				//case "sqlite":
+				//	if row.Name == default_connections {
+				//		row.Open(Sqlite(dsn), getConfig(row.Log))
+				//	} else {
+				//		Resolver = dbresolver.Register(dbresolver.Config{
+				//			Replicas: []gorm.Dialector{Sqlite(dsn)},
+				//			// sources/replicas 负载均衡策略
+				//			Policy: dbresolver.RandomPolicy{},
+				//		}, row.Name)
+				//	}
+				//	break
 			}
 		}
 
@@ -172,9 +171,9 @@ func Sqlserver(dsn string) gorm.Dialector {
 }
 
 //Sqlite connection
-func Sqlite(dsn string) gorm.Dialector {
-	return sqlite.Open(dsn)
-}
+//func Sqlite(dsn string) gorm.Dialector {
+//	return sqlite.Open(dsn)
+//}
 
 //Distributed
 func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbresolver.DBResolver {
