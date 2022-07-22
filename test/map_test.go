@@ -10,7 +10,7 @@ import (
 
 func TestMap(t *testing.T) {
 
-	var data = maps.New()
+	var data = maps.NewMap()
 	wg := sync.WaitGroup{}
 
 	for i := 0; i < 10; i++ {

@@ -9,7 +9,7 @@ import (
 
 func TestQueueu(t *testing.T) {
 	go func() {
-		var dm = queue.New()
+		var dm = queue.NewDelayMessage()
 		//添加任务
 		dm.AddTask(time.Now().Add(time.Second*10), "testJob", func(args ...interface{}) {
 			log.Println(args)
