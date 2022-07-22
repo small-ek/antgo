@@ -85,17 +85,6 @@ func InitDb() {
 					}, row.Name)
 				}
 				break
-				//case "sqlite":
-				//	if row.Name == default_connections {
-				//		row.Open(Sqlite(dsn), getConfig(row.Log))
-				//	} else {
-				//		Resolver = dbresolver.Register(dbresolver.Config{
-				//			Replicas: []gorm.Dialector{Sqlite(dsn)},
-				//			// sources/replicas 负载均衡策略
-				//			Policy: dbresolver.RandomPolicy{},
-				//		}, row.Name)
-				//	}
-				//	break
 			}
 		}
 
@@ -169,11 +158,6 @@ func Postgres(dsn string) gorm.Dialector {
 func Sqlserver(dsn string) gorm.Dialector {
 	return sqlserver.Open(dsn)
 }
-
-//Sqlite connection
-//func Sqlite(dsn string) gorm.Dialector {
-//	return sqlite.Open(dsn)
-//}
 
 //Distributed
 func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbresolver.DBResolver {
