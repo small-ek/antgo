@@ -57,7 +57,7 @@ func InitDb() {
 					}, row.Name)
 				}
 				break
-			case "postgres":
+			case "pgsql":
 				if row.Dsn == "" {
 					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
 				}
@@ -71,7 +71,7 @@ func InitDb() {
 					}, row.Name)
 				}
 				break
-			case "mssql":
+			case "sqlsrv":
 				if row.Dsn == "" {
 					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
 				}
