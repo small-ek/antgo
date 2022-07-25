@@ -8,7 +8,7 @@ import (
 
 const (
 	//ERROR Default error code returned
-	ERROR = 404
+	ERROR = 422
 	//SUCCESS Default success code return
 	SUCCESS = 200
 )
@@ -51,7 +51,7 @@ func Success(msg string, data ...interface{}) *Write {
 func Fail(msg string, err ...string) *Write {
 	var lenErr = len(err)
 	if lenErr > 0 && config.Decode().Get("system.debug").Bool() == true {
-		logger.Write.Error("Return error", zap.Any("error", err))
+		logger.Write.Info("Return error", zap.Any("error", err))
 		return &Write{StatusCode: ERROR, Msg: msg, Error: err[0], Result: ""}
 	} else if lenErr > 1 {
 		return &Write{StatusCode: SUCCESS, Msg: msg, Result: err[0]}
