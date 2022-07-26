@@ -2,7 +2,6 @@ package aemail
 
 import (
 	"github.com/jordan-wright/email"
-	"log"
 	"net/smtp"
 )
 
@@ -19,6 +18,7 @@ type Email struct {
 	Address  string   //Send email address
 	Host     string   //Send email host
 	FilePath []string //Email attachment path
+	Err      error    //Email error
 }
 
 //SetFrom Set Send email
@@ -75,6 +75,11 @@ func (e *Email) SetFilePath(filePath []string) *Email {
 	return e
 }
 
+//Err Email Error
+func (e *Email) Error() error {
+	return e.Err
+}
+
 //New 创建
 func New(from ...string) *Email {
 	if len(from[0]) > 0 {
@@ -84,7 +89,7 @@ func New(from ...string) *Email {
 }
 
 //Send Email
-func (e *Email) Send() {
+func (e *Email) Send() *Email {
 	emails := email.NewEmail()
 	//设置发送方的邮箱
 	emails.From = e.From
@@ -105,7 +110,7 @@ func (e *Email) Send() {
 		for i := 0; i < len(e.FilePath); i++ {
 			_, err := emails.AttachFile(e.FilePath[i])
 			if err != nil {
-				panic(err)
+				e.Err = err
 			}
 		}
 	}
@@ -128,6 +133,7 @@ func (e *Email) Send() {
 
 	err := emails.Send(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host))
 	if err != nil {
-		log.Fatal(err)
+		e.Err = err
 	}
+	return e
 }
