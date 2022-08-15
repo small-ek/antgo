@@ -1,6 +1,7 @@
 package aemail
 
 import (
+	"crypto/tls"
 	"github.com/jordan-wright/email"
 	"net/smtp"
 )
@@ -132,6 +133,58 @@ func (e *Email) Send() *Email {
 	}
 
 	err := emails.Send(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host))
+	if err != nil {
+		e.Err = err
+	}
+	return e
+}
+
+//SendWithTLS  sends an email over tls with an optional TLS config.
+func (e *Email) SendWithTLS() *Email {
+	emails := email.NewEmail()
+	//设置发送方的邮箱
+	emails.From = e.From
+	// 设置接收方的邮箱
+	emails.To = e.To
+	//设置主题
+	emails.Subject = e.Title
+	//设置文件发送的内容
+	if e.Text != "" {
+		emails.Text = []byte(e.Text)
+	}
+	//设置文件发送的html
+	if e.Html != "" {
+		emails.HTML = []byte(e.Html)
+	}
+	//附件
+	if len(e.FilePath) > 0 {
+		for i := 0; i < len(e.FilePath); i++ {
+			_, err := emails.AttachFile(e.FilePath[i])
+			if err != nil {
+				e.Err = err
+			}
+		}
+	}
+	//设置服务器相关的配置
+	if e.Address == "" {
+		e.Address = "smtp.qq.com:25"
+	}
+	//发送地址
+	if e.Host == "" {
+		e.Host = "smtp.qq.com"
+	}
+	//设置抄送如果抄送多人逗号隔开
+	if len(e.Cc) > 0 {
+		emails.Cc = e.Cc
+	}
+	//设置秘密抄送
+	if len(e.Bcc) > 0 {
+		emails.Bcc = e.Bcc
+	}
+	tlsConfig := &tls.Config{
+		ServerName: e.Host, // 保证和 addr的host一致
+	}
+	err := emails.SendWithTLS(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host), tlsConfig)
 	if err != nil {
 		e.Err = err
 	}
