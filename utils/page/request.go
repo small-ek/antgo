@@ -18,5 +18,6 @@ func New() PageParam {
 	return PageParam{
 		CurrentPage: 1,
 		PageSize:    10,
+		Extra:       map[string]interface{}{},
 	}
 }
