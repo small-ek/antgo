@@ -84,7 +84,7 @@ func (logs *Logs) Register() *zap.Logger {
 			enc.AppendString("[" + level.CapitalString() + "]")
 		}
 		EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendString("[" + caller.String() + "]")
+			enc.AppendString(caller.String())
 		}
 	}
 
