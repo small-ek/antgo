@@ -19,6 +19,21 @@ func Map(any interface{}) map[string]interface{} {
 	return data
 }
 
+//Maps converts `any` to []map[string]interface{}.<将“any”转换为[]map[string]interface{}。>
+func Maps(any interface{}) []map[string]interface{} {
+	var data = []map[string]interface{}{}
+	result, err := json.Marshal(any)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(result, &data)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 //MapString converts `any` to map[string]string.<将“any”转换为map[string]string。>
 func MapString(any interface{}) map[string]string {
 	var data = make(map[string]string)

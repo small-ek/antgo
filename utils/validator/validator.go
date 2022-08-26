@@ -3,7 +3,6 @@ package validator
 import (
 	"errors"
 	"github.com/small-ek/antgo/utils/conv"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -85,15 +84,16 @@ func CheckItem(value interface{}, Rule string) error {
 	var rulesSplitStr = strings.Split(ruleSplit[0], ":")
 	var rules = rulesSplitStr[0]
 	var message = ruleSplit[1]
-	if len(ruleSplit) == 1 {
-		log.Println("Validator parameter syntax error")
-		return nil
+	if len(ruleSplit) == 1 || Rule == "" {
+		return errors.New("Validator parameter syntax error")
 	}
-
 	switch rules {
 	//必填
 	case "require":
-		if isRequire(conv.String(value)) == false {
+		if value == "" || value == 0 {
+			return errors.New(message)
+		}
+		if reflect.TypeOf(value).Kind() == reflect.Slice && len(conv.Maps(value)) == 0 {
 			return errors.New(message)
 		}
 	//在多少范围
