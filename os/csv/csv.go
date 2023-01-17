@@ -57,7 +57,7 @@ func (c *Csv) Insert(data [][]string) {
 }
 
 // InsertOne 插入数据
-func (c *Csv) InsertOne(data []string) {
+func (c *Csv) InsertOne(data []string) *Csv {
 	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err.Error())
@@ -73,7 +73,7 @@ func (c *Csv) InsertOne(data []string) {
 	}
 	c.Writer = w
 	//写入数据
-
+	return c
 }
 
 // Flush 写入数据

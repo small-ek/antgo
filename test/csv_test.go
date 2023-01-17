@@ -8,7 +8,7 @@ import (
 )
 
 func TestCsv(t *testing.T) {
-	acsv := csv.New("test.csv")
+	acsv := csv.New("test.csv").InsertOne([]string{"121212"})
 	for i := 0; i < 300; i++ {
 		acsv.InsertOne([]string{conv.String(i) + "_12", "刘备_" + conv.String(i), "111", "Hello", "张飞", "关羽"})
 	}
