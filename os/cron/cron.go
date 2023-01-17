@@ -13,7 +13,7 @@ type Crontab struct {
 	mutex sync.Mutex
 }
 
-// New new crontab
+// New crontab
 func New() *Crontab {
 	//设定支持秒级
 	secondParser := cron.NewParser(cron.Second | cron.Minute |
@@ -44,12 +44,12 @@ func (c *Crontab) IDs() []string {
 	return validIDs
 }
 
-// Start start the crontab engine
+// Start the crontab engine
 func (c *Crontab) Start() {
 	c.inner.Start()
 }
 
-// Stop stop the crontab engine
+// Stop the crontab engine
 func (c *Crontab) Stop() {
 	c.inner.Stop()
 }

@@ -13,14 +13,14 @@ type Csv struct {
 	File *os.File
 }
 
-//New 创建对象
+// New 创建对象
 func New(path string) *Csv {
 	return &Csv{
 		Path: path,
 	}
 }
 
-//Create 创建目录
+// Create 创建目录
 func (c *Csv) Create() *Csv {
 	f, err := os.Create(c.Path) //创建文件
 	if err != nil {
@@ -35,20 +35,30 @@ func (c *Csv) Create() *Csv {
 	return c
 }
 
-//Insert 插入数据
-func (c *Csv) Insert(data [][]string) {
-	c.Data = data
+// Insert 插入数据
+func (c *Csv) Insert(data []string) {
+	if c.File == nil {
+		file, err := os.OpenFile(c.Path, os.O_CREATE|os.O_RDWR, 0666)
+		if err != nil {
+			panic(err.Error())
+		}
+		defer file.Close()
+		c.File = file
+	}
+	// 写入UTF-8 BOM，防止中文乱码
+	c.File.WriteString("\xEF\xBB\xBF")
+
 	w := csv.NewWriter(c.File) //创建一个新的写入文件流
-	err := w.WriteAll(data)
+	log.Println(data)
+	err := w.Write(data)
 	if err != nil {
 		panic(err)
 	}
 	//写入数据
 	w.Flush()
-	defer c.File.Close()
 }
 
-//Read 读取大文件
+// Read 读取大文件
 func (c *Csv) Read() *Csv {
 	//准备读取文件
 	fileName := c.Path
@@ -72,7 +82,7 @@ func (c *Csv) Read() *Csv {
 	return c
 }
 
-//ReadMini 读取小文件
+// ReadMini 读取小文件
 func (c *Csv) ReadMini() *Csv {
 	fs, err1 := os.Open(c.Path)
 	defer fs.Close()
@@ -90,7 +100,7 @@ func (c *Csv) ReadMini() *Csv {
 	return c
 }
 
-//Get 获取数据
+// Get 获取数据
 func (c *Csv) Get() [][]string {
 	return c.Data
 }

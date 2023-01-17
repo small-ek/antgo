@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-//Mgo
+// Mgo
 type Mgo struct {
 	Database   *mongo.Database //数据库
 	Client     *mongo.Client   //默认链接
@@ -25,14 +25,14 @@ type Mgo struct {
 	Pages      Pages
 }
 
-//Pages 分页过滤排序
+// Pages 分页过滤排序
 type Pages struct {
 	Limit *int64
 	Skip  *int64
 	Sort  interface{}
 }
 
-//GetConfig 获取配置
+// GetConfig 获取配置
 func GetConfig() (string, string, uint64, int) {
 	cfg := config.Decode()
 	uri := cfg.Get("mgo.uri").String()
@@ -42,8 +42,8 @@ func GetConfig() (string, string, uint64, int) {
 	return uri, database, poollimit, timeout
 }
 
-//Connect Default connection<默认连接>
-//参考文档 https://docs.mongodb.com/drivers/go/
+// Connect Default connection<默认连接>
+// 参考文档 https://docs.mongodb.com/drivers/go/
 func Connect(databaseName ...string) *Mgo {
 	uri, db, poollimit, timeout := GetConfig()
 	if timeout == 0 {
@@ -80,13 +80,13 @@ func Connect(databaseName ...string) *Mgo {
 	}
 }
 
-//SetDatabase Modify database switch<修改数据库切换>
+// SetDatabase Modify database switch<修改数据库切换>
 func (m *Mgo) SetDatabase(databaseName string) *Mgo {
 	m.Database = m.Client.Database(databaseName)
 	return m
 }
 
-//Table Setting table<表>
+// Table Setting table<表>
 func (m *Mgo) Table(tableName string) *Mgo {
 	if m.Database.Name() != "" {
 		m.Collection = m.Database.Collection(tableName)
@@ -94,20 +94,20 @@ func (m *Mgo) Table(tableName string) *Mgo {
 	return m
 }
 
-//Create Create data<创建数据>
+// Create Create data<创建数据>
 func (m *Mgo) Create(data interface{}) (*mongo.InsertOneResult, error) {
 	defer m.Close()
 	return m.Collection.InsertOne(m.Ctx, data)
 }
 
-//SaveAll save all data<创建多条数据>
+// SaveAll save all data<创建多条数据>
 func (m *Mgo) SaveAll(data []interface{}) (*mongo.InsertManyResult, error) {
 	defer m.Close()
 	opts := options.InsertMany().SetOrdered(false)
 	return m.Collection.InsertMany(m.Ctx, data, opts)
 }
 
-//Update Update data<修改数据>
+// Update Update data<修改数据>
 func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	defer m.Close()
 	return m.Collection.UpdateMany(
@@ -119,7 +119,7 @@ func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResul
 	)
 }
 
-//UpdateById Modify data according to id<根据id修改>
+// UpdateById Modify data according to id<根据id修改>
 func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, error) {
 	defer m.Close()
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -136,7 +136,7 @@ func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, er
 	)
 }
 
-//Delete delete data<删除>
+// Delete delete data<删除>
 func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
 	defer m.Close()
 	return m.Collection.DeleteOne(
@@ -145,7 +145,7 @@ func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
 	)
 }
 
-//DeleteMany Delete multiple data<删除多个数据>
+// DeleteMany Delete multiple data<删除多个数据>
 func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
 	defer m.Close()
 	return m.Collection.DeleteMany(
@@ -154,7 +154,7 @@ func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
 	)
 }
 
-//Count Get the total quantity<获取总数量>
+// Count Get the total quantity<获取总数量>
 func (m *Mgo) Count() (int64, error) {
 	defer m.Close()
 	if m.Filter == nil {
@@ -163,7 +163,7 @@ func (m *Mgo) Count() (int64, error) {
 	return m.Collection.CountDocuments(m.Ctx, m.Filter)
 }
 
-//FindOne Single query<单个查询>
+// FindOne Single query<单个查询>
 func (m *Mgo) FindOne() (bson.M, error) {
 	defer m.Close()
 	var result bson.M
@@ -179,7 +179,7 @@ func (m *Mgo) FindOne() (bson.M, error) {
 	return nil, errors.New("Database connection failed")
 }
 
-//Find Multiple data search<多条数据查询>
+// Find Multiple data search<多条数据查询>
 func (m *Mgo) Find() (*mongo.Cursor, error) {
 	defer m.Close()
 	if m.Filter == nil {
@@ -193,7 +193,7 @@ func (m *Mgo) Find() (*mongo.Cursor, error) {
 
 }
 
-//Distinct Query unique data<查询不重复的数据>
+// Distinct Query unique data<查询不重复的数据>
 func (m *Mgo) Distinct(name string) ([]interface{}, error) {
 	defer m.Close()
 	if m.Filter == nil {
@@ -208,20 +208,20 @@ func (m *Mgo) Distinct(name string) ([]interface{}, error) {
 
 }
 
-//Limit Limited number<显示数量>
+// Limit Limited number<显示数量>
 func (m *Mgo) Limit(limit int64) *Mgo {
 	m.Pages.Limit = &limit
 	return m
 }
 
-//Skip How many pages to jump<跳转多少页>
+// Skip How many pages to jump<跳转多少页>
 func (m *Mgo) Skip(skip int64) *Mgo {
 	m.Pages.Skip = &skip
 	return m
 }
 
-//Sort Sort data<排序>
-//{KEY:1},{KEY:-1}
+// Sort Sort data<排序>
+// {KEY:1},{KEY:-1}
 func (m *Mgo) Sort(sort map[string]interface{}) *Mgo {
 	var bsonM bson.M
 	bsonM = sort
@@ -229,16 +229,18 @@ func (m *Mgo) Sort(sort map[string]interface{}) *Mgo {
 	return m
 }
 
-//Where 条件 [][]string{{"test", "name"},{"test", "$lt","1"}}
-//map[string]interface{}{
-//		"$or": []interface{}{map[string]interface{}{"author": "Nicolas222"}, map[string]interface{}{"author": "Nicolas333"}},
-//	}
-//等于	{<key>:<value>}
-//小于	{<key>:{$lt:<value>}}
-//小于或等于	{<key>:{$lte:<value>}}
-//大于	{<key>:{$gt:<value>}}
-//大于或等于	{<key>:{$gte:<value>}}
-//不等于	{<key>:{$ne:<value>}}
+// Where 条件 [][]string{{"test", "name"},{"test", "$lt","1"}}
+//
+//	map[string]interface{}{
+//			"$or": []interface{}{map[string]interface{}{"author": "Nicolas222"}, map[string]interface{}{"author": "Nicolas333"}},
+//		}
+//
+// 等于	{<key>:<value>}
+// 小于	{<key>:{$lt:<value>}}
+// 小于或等于	{<key>:{$lte:<value>}}
+// 大于	{<key>:{$gt:<value>}}
+// 大于或等于	{<key>:{$gte:<value>}}
+// 不等于	{<key>:{$ne:<value>}}
 func (m *Mgo) Where(filter interface{}) *Mgo {
 	where := bson.D{}
 	switch filters := filter.(type) {
@@ -272,7 +274,7 @@ func (m *Mgo) Where(filter interface{}) *Mgo {
 	return m
 }
 
-//Close Close the connection<关闭连接>
+// Close the connection<关闭连接>
 func (m *Mgo) Close() {
 	defer m.Cancel()
 	defer func() {
@@ -282,11 +284,11 @@ func (m *Mgo) Close() {
 	}()
 }
 
-//Aggregate Aggregate advanced queries<聚合高级查询>
-//id, _ := primitive.ObjectIDFromHex("5e3b37e51c9d4400004117e6")
-//matchStage := bson.D{{"$match", bson.D{{"podcast", id}}}}
-//groupStage := bson.D{{"$group", bson.D{{"_id", "$podcast"}, {"total", bson.D{{"$sum", "$duration"}}}}}}
-//mongo.Pipeline{matchStage, groupStage}
+// Aggregate Aggregate advanced queries<聚合高级查询>
+// id, _ := primitive.ObjectIDFromHex("5e3b37e51c9d4400004117e6")
+// matchStage := bson.D{{"$match", bson.D{{"podcast", id}}}}
+// groupStage := bson.D{{"$group", bson.D{{"_id", "$podcast"}, {"total", bson.D{{"$sum", "$duration"}}}}}}
+// mongo.Pipeline{matchStage, groupStage}
 func (m *Mgo) Aggregate() (*mongo.Cursor, error) {
 	defer m.Close()
 	if m.Collection != nil {
@@ -295,20 +297,20 @@ func (m *Mgo) Aggregate() (*mongo.Cursor, error) {
 	return nil, errors.New("Database connection failed")
 }
 
-//GetCtx Get context<获取上下文>
+// GetCtx Get context<获取上下文>
 func (m *Mgo) GetCtx() context.Context {
 	return m.Ctx
 }
 
-//GetClient Get Client<获取连接>
+// GetClient Get Client<获取连接>
 func (m *Mgo) GetClient() *mongo.Client {
 	return m.Client
 }
 
-//StartTrans 开启事务
-//sessionContext.StartTransaction() 开启事务
-//sessionContext.AbortTransaction(sessionContext) //终止事务
-//sessionContext.CommitTransaction(sessionContext) //提交事务
+// StartTrans 开启事务
+// sessionContext.StartTransaction() 开启事务
+// sessionContext.AbortTransaction(sessionContext) //终止事务
+// sessionContext.CommitTransaction(sessionContext) //提交事务
 func (m *Mgo) StartTrans(fn func(mongo.SessionContext) error) {
 	defer m.Close()
 	if err := m.Client.UseSession(m.Ctx, fn); err != nil {
@@ -316,7 +318,7 @@ func (m *Mgo) StartTrans(fn func(mongo.SessionContext) error) {
 	}
 }
 
-//BuildWhere 构造Where搜索
+// BuildWhere 构造Where搜索
 func BuildWhere(Filter []string) [][]interface{} {
 	var where [][]interface{}
 	for i := 0; i < len(Filter); i++ {
@@ -335,7 +337,7 @@ func BuildWhere(Filter []string) [][]interface{} {
 	return where
 }
 
-//condition 条件选择器
+// condition 条件选择器
 func condition(condition string) string {
 	switch condition {
 	case "<":

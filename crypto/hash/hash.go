@@ -8,7 +8,7 @@ import (
 	"hash/crc32"
 )
 
-//Sha256 encryption
+// Sha256 encryption
 func Sha256(str string) string {
 	var h = sha256.New()
 	h.Write([]byte(str))
@@ -17,14 +17,14 @@ func Sha256(str string) string {
 	return result
 }
 
-//Md5 encryption
+// Md5 encryption
 func Md5(str string) string {
 	var h = md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-//Sha1 sha1 encryption
+// Sha1 encryption
 func Sha1(str string) string {
 	var h = sha1.New()
 	h.Write([]byte(str))
@@ -33,7 +33,7 @@ func Sha1(str string) string {
 	return result
 }
 
-//Crc32 crc32 encryption
+// Crc32 crc32 encryption
 func Crc32(str string) uint32 {
 	return crc32.ChecksumIEEE([]byte(str))
 }
