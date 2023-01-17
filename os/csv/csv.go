@@ -8,9 +8,10 @@ import (
 )
 
 type Csv struct {
-	Path string
-	Data [][]string
-	File *os.File
+	Path   string
+	Data   [][]string
+	File   *os.File
+	Writer *csv.Writer
 }
 
 // New 创建对象
@@ -27,7 +28,7 @@ func (c *Csv) Create() *Csv {
 		panic(err)
 	}
 
-	_, err2 := f.WriteString("\xEF\xBB\xBF")
+	_, err2 := f.WriteString("\xEF\xBB\xBF") //写入utf-8 编码
 	if err2 != nil {
 		panic(err2)
 	} // 写入UTF-8 BOM
@@ -36,30 +37,52 @@ func (c *Csv) Create() *Csv {
 }
 
 // Insert 插入数据
-func (c *Csv) Insert(data []string) {
-	if c.File == nil {
-		file, err := os.OpenFile(c.Path, os.O_CREATE|os.O_RDWR, 0666)
-		if err != nil {
-			panic(err.Error())
-		}
-		defer file.Close()
-		c.File = file
+func (c *Csv) Insert(data [][]string) {
+	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err.Error())
 	}
-	// 写入UTF-8 BOM，防止中文乱码
-	c.File.WriteString("\xEF\xBB\xBF")
+	defer file.Close()
+	c.File = file
 
 	w := csv.NewWriter(c.File) //创建一个新的写入文件流
-	log.Println(data)
-	err := w.Write(data)
-	if err != nil {
-		panic(err)
+	for i := 0; i < len(data); i++ {
+		err = w.Write(data[i])
+		if err != nil {
+			panic(err)
+		}
 	}
 	//写入数据
 	w.Flush()
 }
 
+// InsertOne 插入数据
+func (c *Csv) InsertOne(data []string) {
+	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer file.Close()
+	c.File = file
+
+	w := csv.NewWriter(c.File) //创建一个新的写入文件流
+	err = w.Write(data)
+
+	if err != nil {
+		panic(err)
+	}
+	c.Writer = w
+	//写入数据
+
+}
+
+// Flush 写入数据
+func (c *Csv) Flush() {
+	c.Writer.Flush()
+}
+
 // Read 读取大文件
-func (c *Csv) Read() *Csv {
+func (c *Csv) Read() [][]string {
 	//准备读取文件
 	fileName := c.Path
 	fs, err := os.Open(fileName)
@@ -79,13 +102,14 @@ func (c *Csv) Read() *Csv {
 		}
 		c.Data = append(c.Data, row)
 	}
-	return c
+	return c.Data
 }
 
-// ReadMini 读取小文件
-func (c *Csv) ReadMini() *Csv {
+// ReadSmallFile 读取小文件
+func (c *Csv) ReadSmallFile() [][]string {
 	fs, err1 := os.Open(c.Path)
 	defer fs.Close()
+
 	if err1 != nil {
 		panic(err1)
 	}
@@ -94,13 +118,9 @@ func (c *Csv) ReadMini() *Csv {
 	if err2 != nil {
 		panic(err2)
 	}
-	for _, row := range content {
-		c.Data = append(c.Data, row)
+	for i := 0; i < len(content); i++ {
+		c.Data = append(c.Data, content[i])
 	}
-	return c
-}
 
-// Get 获取数据
-func (c *Csv) Get() [][]string {
 	return c.Data
 }
