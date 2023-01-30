@@ -24,7 +24,7 @@ type Engine struct {
 	announceLock sync.Once
 }
 
-//defaultAdapter is the default adapter.
+// defaultAdapter is the default adapter.
 var defaultAdapter serve.WebFrameWork
 
 // Default return the default engine instance.
@@ -58,19 +58,19 @@ func (eng *Engine) Use(router interface{}) *Engine {
 // Run http service<不加载配置服务>
 func (eng *Engine) Run(srv *http.Server) *Engine {
 	eng.Srv = srv
+	fmt.Printf("  PID: %d \n", os.Getpid())
+	fmt.Println("  App running at:")
+	fmt.Println("  -Local: http://127.0.0.1" + eng.Srv.Addr)
 	go func() {
 		// 服务连接
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
-
-	fmt.Println("  App running at:")
-	fmt.Println("  -Local: http://127.0.0.1" + eng.Srv.Addr)
 	return eng
 }
 
-//defaultServer
+// defaultServer
 func defaultServer(app http.Handler) *http.Server {
 	addr := GetConfig("system.address").String()
 	if addr == "" {
@@ -94,6 +94,7 @@ func (eng *Engine) Serve(app http.Handler) *Engine {
 		}
 	}()
 
+	fmt.Printf("  PID: %d \n", os.Getpid())
 	fmt.Println("  App running at:")
 	fmt.Println("  -Local: http://127.0.0.1" + eng.Srv.Addr)
 	return eng
