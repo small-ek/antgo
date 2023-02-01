@@ -79,3 +79,8 @@ func TestRedis(t *testing.T) {
 	n, err = IncrByXX.Run(conn.Ctx, conn.Clients, []string{"xx_counter"}, 2).Result()
 	fmt.Println(n, err)
 }
+
+func TestRedis2(t *testing.T) {
+	conn := aredis.New("127.0.0.1:6379", "", 0)
+	log.Println(conn.Remove("123"))
+}
