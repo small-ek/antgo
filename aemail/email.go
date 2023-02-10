@@ -127,15 +127,11 @@ func (e *Email) Send() error {
 		emails.Bcc = e.Bcc
 	}
 
-	err := emails.Send(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host))
-	if err != nil {
-		e.Err = err
-	}
-	return e.Err
+	return emails.Send(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host))
 }
 
 // SendWithTLS  sends an email over tls with an optional TLS config.
-func (e *Email) SendWithTLS() *Email {
+func (e *Email) SendWithTLS() error {
 	emails := email.NewEmail()
 	//设置发送方的邮箱
 	emails.From = e.From
@@ -179,9 +175,6 @@ func (e *Email) SendWithTLS() *Email {
 	tlsConfig := &tls.Config{
 		ServerName: e.Host, // 保证和 addr的host一致
 	}
-	err := emails.SendWithTLS(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host), tlsConfig)
-	if err != nil {
-		e.Err = err
-	}
-	return e
+
+	return emails.SendWithTLS(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host), tlsConfig)
 }
