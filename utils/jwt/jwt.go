@@ -1,53 +1,70 @@
 package jwt
 
 import (
+	"crypto/rsa"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/small-ek/antgo/os/aerror"
+	"sync"
 	"time"
 )
 
-//New Jwt parameter
+// New Jwt parameter
 type Jwt struct {
-	PrivateKey []byte //Private key
-	PublicKey  []byte //Public key
-	Exp        int64  //Expiration timestamp Default 15 days
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+	Exp        int64 //Expiration timestamp Default 15 days
+	mutex      sync.Mutex
 }
 
-//New function
-func New(PublicKey, PrivateKey []byte, exp ...int64) *Jwt {
-	var Exp = time.Now().Add(time.Hour * 168).Unix()
+const defaultExp = time.Hour * 168
+
+// New function
+func New(publicKey, privateKey []byte, exp ...int64) (*Jwt, error) {
+	var err error
+	j := &Jwt{}
+
 	if len(exp) > 0 {
-		Exp = exp[0]
+		j.Exp = exp[0]
+	} else {
+		j.Exp = time.Now().Add(defaultExp).Unix()
 	}
 
-	return &Jwt{
-		PublicKey:  PublicKey,
-		PrivateKey: PrivateKey,
-		Exp:        Exp,
+	j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+	if err != nil {
+		return nil, aerror.WithMessage(err, "Private key error")
 	}
+
+	j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
+	if err != nil {
+		return nil, aerror.WithMessage(err, "Public key error")
+	}
+
+	return j, nil
+
 }
 
-//Encrypt json web token encryption<json web token 加密>
+// Encrypt json web token encryption<json web token 加密>
 func (j *Jwt) Encrypt(row map[string]interface{}) (string, error) {
-	Key, _ := jwt.ParseRSAPrivateKeyFromPEM(j.PrivateKey)
-	if j.Exp == 0 {
-		j.Exp = time.Now().Add(time.Hour * 168).Unix()
-	}
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
 	MapClaims := jwt.MapClaims{}
 	MapClaims = row
-	return jwt.NewWithClaims(jwt.SigningMethodRS256, MapClaims).SignedString(Key)
+	return jwt.NewWithClaims(jwt.SigningMethodRS256, MapClaims).SignedString(j.privateKey)
 }
 
-//Decode json web token decryption<json web token解密>
+// Decode json web token decryption<json web token解密>
 func (j *Jwt) Decode(tokenStr string) (map[string]interface{}, error) {
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
+
 	result := map[string]interface{}{}
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(j.PublicKey)
 
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, errors.New("token encryption type error")
 		}
-		return publicKey, nil
+		return j.publicKey, nil
 	})
 
 	if err != nil {

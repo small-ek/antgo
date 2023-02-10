@@ -67,4 +67,3 @@ func TestCharset2(t *testing.T) {
 		log.Println(conv.String(str))
 	}
 }
-

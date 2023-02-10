@@ -6,7 +6,7 @@ import (
 	"net/smtp"
 )
 
-//Email Email parameter structure
+// Email Email parameter structure
 type Email struct {
 	From     string   //Send email
 	To       []string //Accept mailbox
@@ -22,66 +22,61 @@ type Email struct {
 	Err      error    //Email error
 }
 
-//SetFrom Set Send email
+// SetFrom Set Send email
 func (e *Email) SetFrom(from string) *Email {
 	e.From = from
 	return e
 }
 
-//SetTo Set To
+// SetTo Set To
 func (e *Email) SetTo(to []string) *Email {
 	e.To = to
 	return e
 }
 
-//SetTitle Set Title
+// SetTitle Set Title
 func (e *Email) SetTitle(title string) *Email {
 	e.Title = title
 	return e
 }
 
-//SetText Set Text
+// SetText Set Text
 func (e *Email) SetText(text string) *Email {
 	e.Text = text
 	return e
 }
 
-//SetHtml Set Html
+// SetHtml Set Html
 func (e *Email) SetHtml(html string) *Email {
 	e.Html = html
 	return e
 }
 
-//SetPassword Set Password
+// SetPassword Set Password
 func (e *Email) SetPassword(password string) *Email {
 	e.Password = password
 	return e
 }
 
-//SetAddress Set Address
+// SetAddress Set Address
 func (e *Email) SetAddress(address string) *Email {
 	e.Address = address
 	return e
 }
 
-//SetHost Set Host
+// SetHost Set Host
 func (e *Email) SetHost(host string) *Email {
 	e.Host = host
 	return e
 }
 
-//SetFilePath Set Email attachment path
+// SetFilePath Set Email attachment path
 func (e *Email) SetFilePath(filePath []string) *Email {
 	e.FilePath = filePath
 	return e
 }
 
-//Err Email Error
-func (e *Email) Error() error {
-	return e.Err
-}
-
-//New 创建
+// New 创建
 func New(from ...string) *Email {
 	if len(from[0]) > 0 {
 		return &Email{From: from[0]}
@@ -89,8 +84,8 @@ func New(from ...string) *Email {
 	return &Email{}
 }
 
-//Send Email
-func (e *Email) Send() *Email {
+// Send Email
+func (e *Email) Send() error {
 	emails := email.NewEmail()
 	//设置发送方的邮箱
 	emails.From = e.From
@@ -136,10 +131,10 @@ func (e *Email) Send() *Email {
 	if err != nil {
 		e.Err = err
 	}
-	return e
+	return e.Err
 }
 
-//SendWithTLS  sends an email over tls with an optional TLS config.
+// SendWithTLS  sends an email over tls with an optional TLS config.
 func (e *Email) SendWithTLS() *Email {
 	emails := email.NewEmail()
 	//设置发送方的邮箱

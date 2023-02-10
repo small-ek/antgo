@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//Client parameter structure
+// Client parameter structure
 type Client struct {
 	Options       redis.Options
 	Clients       *redis.Client
@@ -15,7 +15,7 @@ type Client struct {
 	Mode          bool
 }
 
-//New setting redis
+// New setting redis
 func New(Addr, Password string, DB int) *Client {
 	var ctx = context.Background()
 	options := redis.Options{
@@ -37,7 +37,7 @@ func New(Addr, Password string, DB int) *Client {
 	}
 }
 
-//NewClusterClient <Redis集群>
+// NewClusterClient <Redis集群>
 func NewClusterClient(Addrs []string, Password string) *Client {
 	var ctx = context.Background()
 	client := redis.NewClusterClient(&redis.ClusterOptions{
@@ -61,7 +61,7 @@ func NewClusterClient(Addrs []string, Password string) *Client {
 	}
 }
 
-//NewFailoverClient <Redis哨兵>
+// NewFailoverClient <Redis哨兵>
 func NewFailoverClient(SentinelAddrs []string, MasterName, Password string, Db int) *Client {
 	var ctx = context.Background()
 	client := redis.NewFailoverClient(&redis.FailoverOptions{
@@ -82,13 +82,13 @@ func NewFailoverClient(SentinelAddrs []string, MasterName, Password string, Db i
 	}
 }
 
-//SetOptions <修改配置>
+// SetOptions <修改配置>
 func (c *Client) SetOptions(Options *redis.Options) *Client {
 	c.Options = *Options
 	return c
 }
 
-//Close <关闭>
+// Close <关闭>
 func (c *Client) Close() {
 	if c.Mode {
 		defer c.Clients.Close()
@@ -97,36 +97,28 @@ func (c *Client) Close() {
 	}
 }
 
-//Ping <心跳>
+// Ping <心跳>
 func (c *Client) Ping() string {
 	var pong string
-	var err error
 
 	if c.Mode {
-		pong, err = c.Clients.Ping(c.Ctx).Result()
+		pong = c.Clients.Ping(c.Ctx).Val()
 	} else {
-		pong, err = c.Clients.Ping(c.Ctx).Result()
+		pong = c.Clients.Ping(c.Ctx).Val()
 	}
 
-	if err != nil {
-		panic(err)
-	}
 	return pong
 }
 
-//TTL<获取过期时间>
+// TTL<获取过期时间>
 func (c *Client) TTL(key string) time.Duration {
 	var result time.Duration
-	var err error
 
 	if c.Mode {
-		result, err = c.Clients.TTL(c.Ctx, key).Result()
+		result = c.Clients.TTL(c.Ctx, key).Val()
 	} else {
-		result, err = c.ClusterClient.TTL(c.Ctx, key).Result()
+		result = c.ClusterClient.TTL(c.Ctx, key).Val()
 	}
 
-	if err != nil {
-		panic(err)
-	}
 	return result
 }

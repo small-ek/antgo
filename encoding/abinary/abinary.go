@@ -5,17 +5,17 @@ import (
 	"encoding/binary"
 )
 
-//Encode
-func Encode(value interface{}) *bytes.Buffer {
+// Encode
+func Encode(value interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.LittleEndian, value); err != nil {
-		panic(err)
+	err := binary.Write(buf, binary.LittleEndian, value)
+	if err != nil {
+		return nil, err
 	}
-	return buf
+	return buf.Bytes(), nil
 }
 
-//Encode
+// Encode
 func Decode(b []byte, value interface{}) error {
-	err := binary.Read(bytes.NewReader(b), binary.LittleEndian, value)
-	return err
+	return binary.Read(bytes.NewReader(b), binary.LittleEndian, value)
 }

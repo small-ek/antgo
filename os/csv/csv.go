@@ -23,73 +23,69 @@ func New(path string) *Csv {
 
 // Create 创建目录
 func (c *Csv) Create() *Csv {
-	f, err := os.Create(c.Path) //创建文件
+	file, err := os.Create(c.Path) //创建文件
 	if err != nil {
-		panic(err)
+		log.Fatalf("can not create file, err is %v", err)
 	}
+	defer file.Close()
+	c.File = file
 
-	_, err2 := f.WriteString("\xEF\xBB\xBF") //写入utf-8 编码
-	if err2 != nil {
-		panic(err2)
-	} // 写入UTF-8 BOM
-	c.File = f
+	if _, err := file.WriteString("\xEF\xBB\xBF"); err != nil {
+		log.Fatalf("can not write UTF-8 BOM, err is %v", err)
+	}
 	return c
 }
 
 // Insert 插入数据
-func (c *Csv) Insert(data [][]string) {
+func (c *Csv) Insert(data [][]string) error {
 	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_APPEND, 0666)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	defer file.Close()
-	c.File = file
 
-	w := csv.NewWriter(c.File) //创建一个新的写入文件流
+	w := csv.NewWriter(c.File)
+
 	for i := 0; i < len(data); i++ {
 		err = w.Write(data[i])
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
-	//写入数据
+
 	w.Flush()
+	return nil
 }
 
 // InsertOne 插入数据
-func (c *Csv) InsertOne(data []string) *Csv {
+func (c *Csv) InsertOne(data []string) error {
 	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_APPEND, 0666)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	defer file.Close()
-	c.File = file
 
-	w := csv.NewWriter(c.File) //创建一个新的写入文件流
+	w := csv.NewWriter(c.File)
 	err = w.Write(data)
-
 	if err != nil {
-		panic(err)
+		return err
 	}
-	c.Writer = w
-	//写入数据
-	return c
-}
 
-// Flush 写入数据
-func (c *Csv) Flush() {
-	c.Writer.Flush()
+	c.Writer = w
+	w.Flush()
+
+	return nil
 }
 
 // Read 读取大文件
 func (c *Csv) Read() [][]string {
 	//准备读取文件
-	fileName := c.Path
-	fs, err := os.Open(fileName)
+	fs, err := os.Open(c.Path)
 	if err != nil {
 		log.Fatalf("can not open the file, err is %+v", err)
 	}
 	defer fs.Close()
+
 	r := csv.NewReader(fs)
 	//针对大文件，一行一行的读取文件
 	for {
@@ -103,6 +99,20 @@ func (c *Csv) Read() [][]string {
 		c.Data = append(c.Data, row)
 	}
 	return c.Data
+}
+
+// GetCount 获取总共多少条
+func (c *Csv) GetCount() (int, error) {
+	fs, err := os.Open(c.Path)
+	defer fs.Close()
+
+	if err != nil {
+		return 0, err
+	}
+	r := csv.NewReader(fs)
+	content, err := r.ReadAll()
+
+	return len(content), err
 }
 
 // ReadSmallFile 读取小文件

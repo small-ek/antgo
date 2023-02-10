@@ -2,6 +2,7 @@ package acharset
 
 import (
 	"bytes"
+	"errors"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
 	"golang.org/x/text/transform"
@@ -14,8 +15,14 @@ var charsetList = map[string]string{
 	"hzgb2312": "HZ-GB-2312",
 	"gb2312":   "HZ-GB-2312",
 }
+
 func Decode(value string, charset string) ([]byte, error) {
-	reader := transform.NewReader(bytes.NewReader([]byte(value)), getEncoding(charset).NewDecoder())
+	enc := getEncoding(charset)
+	if enc == nil {
+		return nil, errors.New("unsupported charset")
+	}
+
+	reader := transform.NewReader(bytes.NewReader([]byte(value)), enc.NewDecoder())
 	d, e := ioutil.ReadAll(reader)
 	if e != nil {
 		return nil, e
@@ -30,7 +37,7 @@ func getEncoding(charset string) encoding.Encoding {
 	}
 	enc, err := ianaindex.MIB.Encoding(charset)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return enc
 }

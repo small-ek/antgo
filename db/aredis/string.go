@@ -7,15 +7,11 @@ import (
 // Get value
 func (c *Client) Get(key string) string {
 	var result string
-	var err error
-	if c.Mode {
-		result, err = c.Clients.Get(c.Ctx, key).Result()
-	} else {
-		result, err = c.ClusterClient.Get(c.Ctx, key).Result()
-	}
 
-	if err != nil {
-		return ""
+	if c.Mode {
+		result = c.Clients.Get(c.Ctx, key).Val()
+	} else {
+		result = c.ClusterClient.Get(c.Ctx, key).Val()
 	}
 	return result
 }
