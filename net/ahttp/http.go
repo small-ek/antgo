@@ -2,6 +2,7 @@ package ahttp
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/small-ek/antgo/utils/conv"
@@ -20,7 +21,7 @@ import (
 
 // HttpSend Request parameter
 type HttpSend struct {
-	Client      http.Client                                  //Client
+	Client      *http.Client                                 //Client
 	Response    *http.Response                               //Response
 	Req         *http.Request                                //Request
 	Proxy       func(*http.Request) (*url.URL, error)        //Request proxy<代理地址>
@@ -41,11 +42,35 @@ type HttpSend struct {
 	sync.RWMutex
 }
 
+var SingletonHttpSend *HttpSend
+var once sync.Once
+
 // Client Default request
 func Client() *HttpSend {
-	return &HttpSend{
-		ContentType: "application/json",
-	}
+	once.Do(func() {
+		SingletonHttpSend = &HttpSend{
+			ContentType: "application/json",
+			Client: &http.Client{
+				Timeout: 30 * time.Second,
+				Transport: &http.Transport{
+					MaxIdleConns:        10000,
+					MaxIdleConnsPerHost: 0,
+					MaxConnsPerHost:     0,
+					TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+					DialContext: (&net.Dialer{
+						Timeout:   30 * time.Second,
+						KeepAlive: 30 * time.Second,
+					}).DialContext,
+					ForceAttemptHTTP2:     true,
+					IdleConnTimeout:       300 * time.Second,
+					TLSHandshakeTimeout:   10 * time.Second,
+					ExpectContinueTimeout: 1 * time.Second,
+				},
+			},
+		}
+	})
+
+	return SingletonHttpSend
 }
 
 // GetResponse <获取结果>
