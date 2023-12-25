@@ -42,13 +42,13 @@ type HttpSend struct {
 	sync.RWMutex
 }
 
-var SingletonHttpSend *HttpSend
+var singletonHttpSend *HttpSend
 var once sync.Once
 
 // Client Default request
 func Client() *HttpSend {
 	once.Do(func() {
-		SingletonHttpSend = &HttpSend{
+		singletonHttpSend = &HttpSend{
 			ContentType: "application/json",
 			Client: &http.Client{
 				Timeout: 30 * time.Second,
@@ -70,12 +70,13 @@ func Client() *HttpSend {
 		}
 	})
 
-	return SingletonHttpSend
+	return singletonHttpSend
 }
 
-// GetResponse <获取结果>
-func (h *HttpSend) GetResponse() *http.Response {
-	return h.Response
+// SetTransport <设置>
+func (h *HttpSend) SetTransport(transport *http.Transport) *HttpSend {
+	h.Client.Transport = transport
+	return h
 }
 
 // SetBody Set body<设置请求体>
