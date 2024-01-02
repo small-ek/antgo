@@ -5,7 +5,9 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/small-ek/antgo/os/logger"
 	"github.com/small-ek/antgo/utils/conv"
+	"go.uber.org/zap"
 	"io"
 	"io/ioutil"
 	"log"
@@ -73,7 +75,13 @@ func Client() *HttpSend {
 	return singletonHttpSend
 }
 
-// SetTransport <设置>
+// SetClient <设置http.Client>
+func (h *HttpSend) SetClient(client *http.Client) *HttpSend {
+	h.Client = client
+	return h
+}
+
+// SetTransport <设置http.Transport>
 func (h *HttpSend) SetTransport(transport *http.Transport) *HttpSend {
 	h.Client.Transport = transport
 	return h
@@ -186,15 +194,15 @@ func (h *HttpSend) GetHeader() map[string][]string {
 }
 
 // Get request<GET 请求>
-func (h *HttpSend) Get(url string) ([]byte, error) {
+func (h *HttpSend) Get(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "GET"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+
+	return
 }
 
 // SetFiles Set Files<设置多个文件路径上传>
@@ -242,111 +250,102 @@ func (h *HttpSend) SetFileKeyAndName(fileKey, fileName string) *HttpSend {
 }
 
 // PostForm request<Post 表单提交>
-func (h *HttpSend) PostForm(url string) ([]byte, error) {
+func (h *HttpSend) PostForm(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "POST"
-	var result, err = h.SendForm()
+	result, err = h.SendForm()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Post request<POST 请求>
-func (h *HttpSend) Post(url string) ([]byte, error) {
+func (h *HttpSend) Post(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "POST"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Put request<PUT 请求>
-func (h *HttpSend) Put(url string) ([]byte, error) {
+func (h *HttpSend) Put(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "PUT"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Delete request<DELETE 请求>
-func (h *HttpSend) Delete(url string) ([]byte, error) {
+func (h *HttpSend) Delete(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "DELETE"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Connect request<CONNECT 请求>
-func (h *HttpSend) Connect(url string) ([]byte, error) {
+func (h *HttpSend) Connect(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "CONNECT"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Head request<HEAD 请求>
-func (h *HttpSend) Head(url string) ([]byte, error) {
+func (h *HttpSend) Head(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "HEAD"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Options request<OPTIONS 请求嗅探>
-func (h *HttpSend) Options(url string) ([]byte, error) {
+func (h *HttpSend) Options(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "OPTIONS"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Trace request<TRACE 请求>
-func (h *HttpSend) Trace(url string) ([]byte, error) {
+func (h *HttpSend) Trace(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "TRACE"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // Patch request<PATCH 请求>
-func (h *HttpSend) Patch(url string) ([]byte, error) {
+func (h *HttpSend) Patch(url string) (result []byte, err error) {
 	h.Url = url
 	h.Method = "PATCH"
-	var result, err = h.Send()
+	result, err = h.Send()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	return ioutil.ReadAll(result)
+	return
 }
 
 // SetUrlBuild <根据Map对象设置url地址拼接参数>
@@ -429,10 +428,8 @@ func (h *HttpSend) sendFiles(sendData io.Writer) error {
 }
 
 // SendForm <一般用于发送表单请求>
-func (h *HttpSend) SendForm() (io.ReadCloser, error) {
+func (h *HttpSend) SendForm() (body []byte, err error) {
 	sendData := &bytes.Buffer{}
-	var err error
-
 	var Transport = &http.Transport{}
 	if h.Proxy != nil {
 		Transport.Proxy = h.Proxy
@@ -458,7 +455,7 @@ func (h *HttpSend) SendForm() (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println(h.ContentType)
+
 	if len(h.Header) == 0 {
 		h.Header = map[string]string{
 			"Content-Type": h.ContentType,
@@ -477,12 +474,15 @@ func (h *HttpSend) SendForm() (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	h.print()
-	return h.Response.Body, nil
+
+	body, err = ioutil.ReadAll(h.Response.Body)
+	h.print(body)
+	defer h.Close()
+	return
 }
 
 // PostFormFile Request file byte stream<请求文件字节流>
-func (h *HttpSend) PostFormFile(url, files string) ([]byte, error) {
+func (h *HttpSend) PostFormFile(url, files string) (body []byte, err error) {
 	h.Url = url
 	h.Method = "POST"
 	file, err := os.Open(files)
@@ -492,17 +492,17 @@ func (h *HttpSend) PostFormFile(url, files string) ([]byte, error) {
 	defer file.Close()
 
 	h.Response, err = http.Post(url, "binary/octet-stream", file)
+	body, err = ioutil.ReadAll(h.Response.Body)
+	h.print(body)
+	defer h.Close()
 	if err != nil {
 		return nil, err
 	}
-	defer h.Close()
-	h.print()
-	return ioutil.ReadAll(h.Response.Body)
+	return
 }
 
 // Send <扩展一般用于手动请求>
-func (h *HttpSend) Send() (io.ReadCloser, error) {
-	var err error
+func (h *HttpSend) Send() (body []byte, err error) {
 	var Transport = &http.Transport{}
 	if h.Proxy != nil {
 		Transport.Proxy = h.Proxy
@@ -537,24 +537,34 @@ func (h *HttpSend) Send() (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	h.print()
-	return h.Response.Body, nil
+	body, err = ioutil.ReadAll(h.Response.Body)
+	h.print(body)
+	defer h.Close()
+	return
 }
 
 // Debug<用于最后打印>
-func (h *HttpSend) Debug() *HttpSend {
-	h.debug = true
+func (h *HttpSend) Debug(debug ...bool) *HttpSend {
+	if len(debug) > 0 {
+		h.debug = debug[0]
+	} else {
+		h.debug = false
+	}
 	return h
 }
 
 // print<打印>
-func (h *HttpSend) print() {
+func (h *HttpSend) print(body []byte) {
 	if h.debug == true {
-		body, _ := ioutil.ReadAll(h.Response.Body)
-		fmt.Printf("[HttpRequest]\n")
-		fmt.Printf("-------------------------------------------------------------------\n")
-		fmt.Printf("Request: %s %s %s\nHeaders: %v\nCookies: %v\nTimeout: %ds\nReqBody: %v\n\n", h.Method, h.Url, h.Body,
-			h.Header, h.Cookies, h.Timeout, string(body))
+		log.Println(logger.Write)
+		if logger.Write != nil {
+			logger.Write.Debug(h.Url, zap.String("Method:", h.Method), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)))
+		} else {
+			fmt.Printf("[HttpRequest]\n")
+			fmt.Printf("-------------------------------------------------------------------\n")
+			fmt.Printf("Request: %s %s %s\nHeaders: %v\nCookies: %v\nTimeout: %ds\nReqBody: %v\n\n", h.Method, h.Url, conv.String(h.Body),
+				conv.String(h.Header), conv.String(h.Cookies), h.Timeout, string(body))
+		}
 	}
 }
 
