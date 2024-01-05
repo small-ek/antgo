@@ -1,259 +1,57 @@
 package config
 
 import (
-	"encoding/json"
-	"github.com/BurntSushi/toml"
-	"github.com/small-ek/antgo/utils/conv"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"os"
-	"path"
-	"strings"
+	"github.com/spf13/viper"
+	"sync"
 )
 
-// Data config data
-var Data map[string]interface{}
+var Config *ConfigStr
+var once sync.Once
 
-// SetPath Set path.
-func SetPath(filePath string) {
-	fileNameWithSuffix := path.Base(filePath)
-	fileType := path.Ext(fileNameWithSuffix)
-	switch fileType {
-	case ".toml":
-		if _, err := toml.DecodeFile(filePath, &Data); err != nil {
-			panic(err.Error())
-		}
-		break
-	case ".yml", ".yaml":
-		file, err1 := os.Open(filePath)
-		if err1 != nil {
-			panic(err1)
-		}
-		defer func(file *os.File) {
-			err2 := file.Close()
-			if err2 != nil {
-				panic(err2)
-			}
-		}(file)
-		ydecode := yaml.NewDecoder(file)
-		if err := ydecode.Decode(&Data); err != nil {
-			panic(err)
-		}
-		break
-	case "json":
-		bytes, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			panic(err)
-			return
-		}
-		err2 := json.Unmarshal(bytes, &Data)
-		if err2 != nil {
-			panic(err)
-			return
-		}
-	}
-
+type ConfigStr struct {
+	Viper *viper.Viper
 }
 
-// Result ...
-type Config struct {
-	Child interface{}
+// New<初始化配置>
+func New(filePath ...string) *ConfigStr {
+	once.Do(func() {
+		Config.Viper = viper.New()
+
+		if len(filePath) > 0 && filePath[0] != "" {
+			Config.Viper.AddConfigPath(filePath[0])
+		}
+	})
+	return Config
 }
 
-// Decode config
-func Decode() *Config {
-	return &Config{
-		Child: Data,
-	}
+// AddRemoteProvider 添加远程连接
+func (c *ConfigStr) AddRemoteProvider(provider, endpoint, path string) error {
+	return c.Viper.AddRemoteProvider(provider, endpoint, path)
 }
 
-// Next config
-func (c *Config) Next(name interface{}) *Config {
-	var child = c.Child
-	switch child.(type) {
-	case map[string]interface{}:
-		return &Config{
-			Child: child.(map[string]interface{})[conv.String(name)],
-		}
-	case map[interface{}]interface{}:
-		return &Config{
-			Child: child.(map[interface{}]interface{})[conv.String(name)],
-		}
-	case map[string]string:
-		return &Config{
-			Child: child.(map[string]string)[conv.String(name)],
-		}
-	case map[string]int:
-		return &Config{
-			Child: child.(map[string]string)[conv.String(name)],
-		}
-	case []interface{}:
-		return &Config{
-			Child: child.([]interface{})[conv.Int(name)],
-		}
-	case []string:
-		return &Config{
-			Child: child.([]interface{})[conv.Int(name)],
-		}
-	case []int:
-		return &Config{
-			Child: child.([]interface{})[conv.Int(name)],
-		}
-	case []int64:
-		return &Config{
-			Child: child.([]interface{})[conv.Int(name)],
-		}
-	}
-	return &Config{
-		Child: child,
-	}
-}
-
-// Get Parse config according to point split
-func (c *Config) Get(name string) *Config {
-	var list = strings.Split(name, ".")
-	for i := 0; i < len(list); i++ {
-		var value = list[i]
-		var result = c.Next(value)
-		c.Child = result.Child
-	}
+// AddPath 增加配置文件路径
+func (c *ConfigStr) AddPath(in string) *ConfigStr {
+	c.Viper.AddConfigPath(in)
 	return c
 }
 
-// String Data type conversion.
-func (c *Config) String() string {
-	if c.Child == nil {
-		return ""
-	}
-	defer c.End()
-	return conv.String(c.Child)
+// SetType 设置文件类型
+func (c *ConfigStr) SetType(in string) *ConfigStr {
+	c.Viper.SetConfigType(in)
+	return c
 }
 
-// End Data type conversion.
-func (c *Config) End() {
-	c.Child = Data
+// Regiter 注册读取配置
+func (c *ConfigStr) Regiter() error {
+	return c.Viper.ReadInConfig()
 }
 
-// Strings Data type conversion.
-func (c *Config) Strings() []string {
-	defer c.End()
-	return conv.Strings(c.Child)
+// SetKey 设置值
+func SetKey(key string, value any) {
+	Config.Viper.Set(key, value)
 }
 
-// Byte Data type conversion.
-func (c *Config) Byte() byte {
-	defer c.End()
-	return conv.Byte(c.Child)
-}
-
-// Bytes Data type conversion.
-func (c *Config) Bytes() []byte {
-	defer c.End()
-	return conv.Bytes(c.Child)
-}
-
-// Int Data type conversion.
-func (c *Config) Int() int {
-	if c.Child == nil {
-		return 0
-	}
-	defer c.End()
-	return conv.Int(c.Child)
-}
-
-// Bool Data type conversion.
-func (c *Config) Bool() bool {
-	defer c.End()
-	return conv.Bool(c.Child)
-}
-
-// Ints Data type conversion.
-func (c *Config) Ints() []int {
-	defer c.End()
-	return conv.Ints(c.Child)
-}
-
-// Int64 Data type conversion.
-func (c *Config) Int64() int64 {
-	if c.Child == nil {
-		return 0
-	}
-	defer c.End()
-	return conv.Int64(c.Child)
-}
-
-// Float64 Data type conversion.
-func (c *Config) Float64() float64 {
-	if c.Child == nil {
-		return 0
-	}
-	defer c.End()
-	return conv.Float64(c.Child)
-}
-
-// Map Data type conversion.
-func (c *Config) Map() map[string]interface{} {
-	if c.Child == nil {
-		return nil
-	}
-	defer c.End()
-	return c.Child.(map[string]interface{})
-}
-
-// Maps Data type conversion.
-func (c *Config) Maps() []map[string]interface{} {
-	if c.Child == nil {
-		return nil
-	}
-	defer c.End()
-	return c.Child.([]map[string]interface{})
-}
-
-// Array Data type conversion.
-func (c *Config) Array() []interface{} {
-	if c.Child == nil {
-		return nil
-	}
-	defer c.End()
-	return c.Child.([]interface{})
-}
-
-// Uint Data type conversion.
-func (c *Config) Uint() uint {
-	defer c.End()
-	return conv.Uint(c.Child)
-}
-
-// Uint Data type conversion.
-func (c *Config) Uint8() uint8 {
-	defer c.End()
-	return conv.Uint8(c.Child)
-}
-
-// Uint Data type conversion.
-func (c *Config) Uint16() uint16 {
-	defer c.End()
-	return conv.Uint16(c.Child)
-}
-
-// Uint Data type conversion.
-func (c *Config) Uint32() uint32 {
-	defer c.End()
-	return conv.Uint32(c.Child)
-}
-
-// Uint Data type conversion.
-func (c *Config) Uint64() uint64 {
-	defer c.End()
-	return conv.Uint64(c.Child)
-}
-
-// Interfaces Data type conversion.
-func (c *Config) Interfaces() []interface{} {
-	return conv.Interfaces(c.Child)
-}
-
-// Interface Data type conversion.
-func (c *Config) Interface() interface{} {
-	return c.Child
+// Get 获取
+func Get(key string) any {
+	return Config.Viper.Get(key)
 }

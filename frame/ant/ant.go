@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/small-ek/antgo/db/adb"
 	"github.com/small-ek/antgo/frame/serve"
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
-	"github.com/small-ek/antgo/os/logger"
 	"log"
 	"net/http"
 	"os"
@@ -141,6 +141,6 @@ func (eng *Engine) SetConfig(filePath string) *Engine {
 
 // SetLog Modify log path.<修改日志路径>
 func (eng *Engine) SetLog(filePath string) *Engine {
-	logger.Default(filePath).Register()
+	alog.Default(filePath).Register()
 	return eng
 }

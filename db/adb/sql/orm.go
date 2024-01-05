@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//Like Fuzzy search when there is value
+// Like Fuzzy search when there is value
 func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
@@ -17,7 +17,7 @@ func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-//Ilike Fuzzy search when there is value
+// Ilike Fuzzy search when there is value
 func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
@@ -27,7 +27,7 @@ func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-//WhereIn WhereIn search when there is value
+// WhereIn WhereIn search when there is value
 func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		switch value := value.(type) {
@@ -85,7 +85,7 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 	}
 }
 
-//Order Sort
+// Order Sort
 func Order(str string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if str == "" {
@@ -95,14 +95,14 @@ func Order(str string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-//Paginate ...
+// Paginate ...
 func Paginate(pageSize, currentPage int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Limit(pageSize).Offset((currentPage - 1) * pageSize)
 	}
 }
 
-//OnlyTrashed ...
+// OnlyTrashed ...
 func OnlyTrashed(res bool) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if res == true {
@@ -113,7 +113,7 @@ func OnlyTrashed(res bool) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-//Filters ...
+// Filters ...
 func Filters(where interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if where == nil {
@@ -129,7 +129,7 @@ func Filters(where interface{}) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-//buildWhere
+// buildWhere
 func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
 	if len(arr) == 3 && arr[2] != "" && arr[2] != nil {
 		db = and(arr[0].(string), arr[1].(string), arr[2], db)
@@ -140,7 +140,7 @@ func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
 	return db
 }
 
-//and
+// and
 func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	switch condition {
 	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":
@@ -164,7 +164,7 @@ func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	return db
 }
 
-//or
+// or
 func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
 	switch condition {
 	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":

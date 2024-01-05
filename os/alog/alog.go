@@ -1,7 +1,6 @@
-package logger
+package alog
 
 import (
-	"fmt"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -9,35 +8,35 @@ import (
 	"time"
 )
 
-//Write Inherit zap log
+// Write Inherit zap log
 var Write *zap.Logger
 
-//Log parameter structure
+// Log parameter structure
 type Logs struct {
 	Path        string //Save Path
 	Level       string //Set log level,info debug warn
 	MaxBackups  int    //Keep 30 backups, 300 by default
-	MaxSize     int    //Each log file saves 10M, the default is 1M
-	MaxAge      int    //7 days reserved, 30 days by default
+	MaxSize     int    //Each log file saves 10M, the default is 10M
+	MaxAge      int    //7 days reserved, 180 days by default
 	Compress    bool   //Whether to compress, no compression by default
 	ServiceName string //Log service name, default Ginp
 	Format      string //Log format default console
 	Console     bool   //Whether to output the console display
 }
 
-//Default setting log
+// Default setting log
 func Default(path string) *Logs {
 	return &Logs{
 		Path:        path,
-		MaxSize:     1,
+		MaxSize:     10,
 		MaxBackups:  300,
-		MaxAge:      30,
+		MaxAge:      180,
 		Compress:    false,
 		ServiceName: "antgo",
 	}
 }
 
-//Register Set log
+// Register Set log
 func (logs *Logs) Register() *zap.Logger {
 	// Log split
 	hook := lumberjack.Logger{
@@ -135,113 +134,93 @@ func (logs *Logs) Register() *zap.Logger {
 	// Open document and line number
 	development := zap.Development()
 	// Set the initialization field, such as: add a server name
-	filed := zap.Fields(zap.String("service name", logs.ServiceName))
+	filed := zap.Fields(zap.String("service_name", logs.ServiceName))
 	// Construction log
 	Write = zap.New(core, caller, development, filed)
 	defer Write.Sync()
 	return Write
 }
 
-//SetServiceName setting log
+// SetServiceName setting log<打印日志服务名称>
 func (logs *Logs) SetServiceName(ServiceName string) *Logs {
 	logs.ServiceName = ServiceName
 	return logs
 }
 
-//SetConsole Whether to output the console display
+// SetConsole Whether to output the console display<是否控制台打印>
 func (logs *Logs) SetConsole(console bool) *Logs {
 	logs.Console = console
 	return logs
 }
 
-//SetMaxAge setting log
+// SetMaxAge setting log
 func (logs *Logs) SetMaxAge(MaxAge int) *Logs {
 	logs.MaxAge = MaxAge
 	return logs
 }
 
-//SetMaxBackups setting log
+// SetMaxBackups setting log
 func (logs *Logs) SetMaxBackups(MaxBackups int) *Logs {
 	logs.MaxBackups = MaxBackups
 	return logs
 }
 
-//SetMaxSize Set log maximum
+// SetMaxSize Set log maximum
 func (logs *Logs) SetMaxSize(MaxSize int) *Logs {
 	logs.MaxSize = MaxSize
 	return logs
 }
 
-//SetLevel setting log level
+// SetLevel setting log level
 func (logs *Logs) SetLevel(level string) *Logs {
 	logs.Level = level
 	return logs
 }
 
-//SetPath setting log path
+// SetPath setting log path
 func (logs *Logs) SetPath(path string) *Logs {
 	logs.Path = path
 	return logs
 }
 
-//SetFormat Log format default console
+// SetFormat Log format default console
 func (logs *Logs) SetFormat(format string) *Logs {
 	logs.Format = format
 	return logs
 }
 
-//SetCompress Do you need compression
+// SetCompress Do you need compression
 func (logs *Logs) SetCompress(compress bool) *Logs {
 	logs.Compress = compress
 	return logs
 }
 
-//ToJsonData ...
-func ToJsonData(args []interface{}) zap.Field {
-	det := make([]string, 0)
-	if len(args) > 0 {
-		for _, v := range args {
-			det = append(det, fmt.Sprintf("%+v", v))
-		}
-	}
-	result := zap.Any("detail", det)
-	return result
+// Debug Debug printing<调试打印>
+func Debug(msg string, fields ...zap.Field) {
+	Write.Debug(msg, fields...)
 }
 
-//FormateLog ...
-func FormateLog(args []interface{}) *zap.Logger {
-	logs := Write.With(ToJsonData(args))
-	return logs
+// Error  printing<错误打印>
+func Error(msg string, fields ...zap.Field) {
+	Write.Error(msg, fields...)
 }
 
-//Debug Debug printing<调试打印>
-func Debug(msg string, args ...interface{}) {
-	FormateLog(args).Sugar().Debugf(msg)
+// Warn Warning print<警告打印>
+func Warn(msg string, fields ...zap.Field) {
+	Write.Warn(msg, fields...)
 }
 
-//Errors Error printing<错误打印>
-func Errors(msg string, args ...interface{}) {
-	FormateLog(args).Sugar().Errorf(msg)
+// Panic Abnormal printing<异常打印>
+func Panic(msg string, fields ...zap.Field) {
+	Write.Panic(msg, fields...)
 }
 
-//Warn Warning print<警告打印>
-func Warn(msg string, args ...interface{}) {
-	FormateLog(args).Sugar().Warn(msg)
+// DPanic passed at the log site, as well as any fields accumulated on the logger.<如果记录器处于开发模式，则会恐慌（DPANIC表示 “发展恐慌”）。 这对于捕获错误很有用>
+func DPanic(msg string, fields ...zap.Field) {
+	Write.DPanic(msg, fields...)
 }
 
-//Panic Abnormal printing<异常打印>
-func Panic(msg string, args ...interface{}) {
-	FormateLog(args).Sugar().Panic(msg)
-}
-
-//Info Print log by default<默认情况下打印日志>
-func Info(msg string, args ...interface{}) {
-	FormateLog(args).Sugar().Infof(msg)
-}
-
-//AsyncInfo Asynchronous print log<异步打印日志>
-func AsyncInfo(msg string, args ...interface{}) {
-	go func() {
-		FormateLog(args).Sugar().Infof(msg)
-	}()
+// Info Print log by default<默认情况下打印日志>
+func Info(msg string, fields ...zap.Field) {
+	Write.Info(msg, fields...)
 }

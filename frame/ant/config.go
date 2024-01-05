@@ -2,7 +2,6 @@ package ant
 
 import (
 	"github.com/small-ek/antgo/os/config"
-	"github.com/small-ek/antgo/os/logger"
 )
 
 // GetConfig Get configuration content<获取配置>
@@ -16,7 +15,7 @@ func initConfigLog() {
 	logPath := cfg.Get("log.path").String()
 
 	if cfg.Get("log.switch").Bool() == true && logPath != "" {
-		logger.Default(logPath).
+		alog.Default(logPath).
 			SetLevel(cfg.Get("log.level").String()).
 			SetServiceName(cfg.Get("log.service_name").String()).
 			SetMaxSize(cfg.Get("log.max_size").Int()).

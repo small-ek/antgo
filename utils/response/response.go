@@ -2,7 +2,6 @@ package response
 
 import (
 	"github.com/small-ek/antgo/os/config"
-	"github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"
 )
 
@@ -51,7 +50,7 @@ func Success(msg string, data ...interface{}) *Write {
 func Fail(msg string, err ...string) *Write {
 	var lenErr = len(err)
 	if lenErr > 0 && config.Decode().Get("system.debug").Bool() == true {
-		logger.Write.Info("Return error", zap.Any("error", err))
+		alog.Write.Info("Return error", zap.Any("error", err))
 		return &Write{StatusCode: ERROR, Msg: msg, Error: err[0], Result: ""}
 	} else if lenErr > 1 {
 		return &Write{StatusCode: SUCCESS, Msg: msg, Result: err[0]}

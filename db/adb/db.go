@@ -1,8 +1,8 @@
 package adb
 
 import (
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
-	loggers "github.com/small-ek/antgo/os/logger"
 	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -99,7 +99,7 @@ func InitDb() {
 
 }
 
-//getConfig
+// getConfig
 func getConfig(isLog bool) *gorm.Config {
 	if isLog {
 		zapLog := New(zap.L())
@@ -113,24 +113,24 @@ func getConfig(isLog bool) *gorm.Config {
 	}
 }
 
-//Open connection
+// Open connection
 func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) {
 	var db, err = gorm.Open(Dialector, opts)
 	if err != nil {
-		loggers.Write.Panic(err.Error())
+		alog.Panic(err.Error())
 	}
 	Master = db
 }
 
-//Use
+// Use
 func (d *Db) Use(plugin gorm.Plugin) {
 	if err := Master.Use(plugin); err != nil {
-		loggers.Write.Panic(err.Error())
+		alog.Panic(err.Error())
 	}
 
 }
 
-//Mysql connection
+// Mysql connection
 func Mysql(dsn string) gorm.Dialector {
 	return mysql.New(mysql.Config{
 		DSN:                       dsn, // DSN data source name
@@ -143,7 +143,7 @@ func Mysql(dsn string) gorm.Dialector {
 	})
 }
 
-//Postgres connection
+// Postgres connection
 func Postgres(dsn string) gorm.Dialector {
 	return postgres.New(postgres.Config{
 		DriverName:           "",
@@ -154,22 +154,22 @@ func Postgres(dsn string) gorm.Dialector {
 	})
 }
 
-//Sqlserver connection
+// Sqlserver connection
 func Sqlserver(dsn string) gorm.Dialector {
 	return sqlserver.Open(dsn)
 }
 
-//Distributed
+// Distributed
 func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbresolver.DBResolver {
 	return dbresolver.Register(config, datas)
 }
 
-//Close 关闭数据库
+// Close 关闭数据库
 func Close() {
 	if Master != nil {
 		var db, err = Master.DB()
 		if err != nil {
-			loggers.Write.Error(err.Error())
+			alog.Error(err.Error())
 		}
 
 		if db != nil {

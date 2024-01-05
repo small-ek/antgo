@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/small-ek/antgo/os/logger"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -48,21 +47,21 @@ func (l Logger) Info(ctx context.Context, str string, args ...interface{}) {
 	if l.LogLevel < gormlogger.Info {
 		return
 	}
-	logger.Write.Sugar().Debugf(str, args...)
+	alog.Write.Sugar().Debugf(str, args...)
 }
 
 func (l Logger) Warn(ctx context.Context, str string, args ...interface{}) {
 	if l.LogLevel < gormlogger.Warn {
 		return
 	}
-	logger.Write.Sugar().Warnf(str, args...)
+	alog.Write.Sugar().Warnf(str, args...)
 }
 
 func (l Logger) Error(ctx context.Context, str string, args ...interface{}) {
 	if l.LogLevel < gormlogger.Error {
 		return
 	}
-	logger.Write.Sugar().Errorf(str, args...)
+	alog.Write.Sugar().Errorf(str, args...)
 }
 
 func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -75,14 +74,14 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
 		sql, rows := fc()
 		out := fmt.Sprintf("%s [%s] [%s] [%.3fms] [rows:%v]", utils.FileWithLineNum(), err, sql, float64(elapsed.Nanoseconds())/1e6, rows)
-		logger.Write.Error(out)
+		alog.Write.Error(out)
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
 		sql, rows := fc()
 		out := fmt.Sprintf("%s [%s] [%.3fms] [rows:%v]", utils.FileWithLineNum(), sql, float64(elapsed.Nanoseconds())/1e6, rows)
-		logger.Write.Warn(out)
+		alog.Write.Warn(out)
 	case l.LogLevel >= gormlogger.Info:
 		sql, rows := fc()
 		out := fmt.Sprintf("%s [%s] [%.3fms] [rows:%v]", utils.FileWithLineNum(), sql, float64(elapsed.Nanoseconds())/1e6, rows)
-		logger.Write.Info(out)
+		alog.Write.Info(out)
 	}
 }

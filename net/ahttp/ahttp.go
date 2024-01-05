@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/small-ek/antgo/os/logger"
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"io"
@@ -556,9 +556,8 @@ func (h *HttpSend) Debug(debug ...bool) *HttpSend {
 // print<打印>
 func (h *HttpSend) print(body []byte) {
 	if h.debug == true {
-		log.Println(logger.Write)
-		if logger.Write != nil {
-			logger.Write.Debug(h.Url, zap.String("Method:", h.Method), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)))
+		if alog.Write != nil {
+			alog.Write.Info(h.Url, zap.String("Method:", h.Method), zap.String("Timeout", h.Timeout.String()), zap.String("Headers", conv.String(h.Header)), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)))
 		} else {
 			fmt.Printf("[HttpRequest]\n")
 			fmt.Printf("-------------------------------------------------------------------\n")
