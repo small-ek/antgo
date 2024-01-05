@@ -7,9 +7,9 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	err := config.New("config.yaml").Regiter()
+	err := config.New("./", "config.yaml").SetFile("config.toml").Regiter()
 	if err != nil {
 		fmt.Println(err)
 	}
-	config.Get("en.hello")
+	fmt.Println(config.Get("en"))
 }

@@ -15,10 +15,12 @@ type ConfigStr struct {
 // New<初始化配置>
 func New(filePath ...string) *ConfigStr {
 	once.Do(func() {
-		Config.Viper = viper.New()
-
+		Config = &ConfigStr{Viper: viper.New()}
 		if len(filePath) > 0 && filePath[0] != "" {
 			Config.Viper.AddConfigPath(filePath[0])
+		}
+		if len(filePath) > 1 && filePath[1] != "" {
+			Config.Viper.SetConfigFile(filePath[1])
 		}
 	})
 	return Config
@@ -32,6 +34,12 @@ func (c *ConfigStr) AddRemoteProvider(provider, endpoint, path string) error {
 // AddPath 增加配置文件路径
 func (c *ConfigStr) AddPath(in string) *ConfigStr {
 	c.Viper.AddConfigPath(in)
+	return c
+}
+
+// SetFile 设置目录
+func (c *ConfigStr) SetFile(in string) *ConfigStr {
+	c.Viper.SetConfigFile(in)
 	return c
 }
 
