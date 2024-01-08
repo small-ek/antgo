@@ -1,29 +1,29 @@
 package ant
 
 import (
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
 )
 
 // GetConfig Get configuration content<获取配置>
-func GetConfig(name string) *config.Config {
-	return config.Decode().Get(name)
+func GetConfig(name string) any {
+	return config.Get(name)
 }
 
-//initConfigLog Set log according to the configuration file<初始化配置日志>
+// initConfigLog Set log according to the configuration file<初始化配置日志>
 func initConfigLog() {
-	cfg := config.Decode()
-	logPath := cfg.Get("log.path").String()
+	logPath := config.GetString("log.path")
 
-	if cfg.Get("log.switch").Bool() == true && logPath != "" {
+	if config.GetBool("log.switch") == true && logPath != "" {
 		alog.Default(logPath).
-			SetLevel(cfg.Get("log.level").String()).
-			SetServiceName(cfg.Get("log.service_name").String()).
-			SetMaxSize(cfg.Get("log.max_size").Int()).
-			SetMaxAge(cfg.Get("log.max_age").Int()).
-			SetMaxBackups(cfg.Get("log.max_backups").Int()).
-			SetFormat(cfg.Get("log.format").String()).
-			SetConsole(cfg.Get("log.console").Bool()).
-			SetCompress(cfg.Get("log.compress").Bool()).
+			SetLevel(config.GetString("log.level")).
+			SetServiceName(config.GetString("log.service_name")).
+			SetMaxSize(config.GetInt("log.max_size")).
+			SetMaxAge(config.GetInt("log.max_age")).
+			SetMaxBackups(config.GetInt("log.max_backups")).
+			SetFormat(config.GetString("log.format")).
+			SetConsole(config.GetBool("log.console")).
+			SetCompress(config.GetBool("log.compress")).
 			Register()
 	}
 }

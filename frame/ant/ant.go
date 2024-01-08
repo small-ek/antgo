@@ -20,7 +20,7 @@ import (
 type Engine struct {
 	Adapter      serve.WebFrameWork
 	Srv          *http.Server
-	Config       config.Config
+	Config       config.ConfigStr
 	announceLock sync.Once
 }
 
@@ -72,7 +72,7 @@ func (eng *Engine) Run(srv *http.Server) *Engine {
 
 // defaultServer
 func defaultServer(app http.Handler) *http.Server {
-	addr := GetConfig("system.address").String()
+	addr := config.GetString("system.address")
 	if addr == "" {
 		addr = ":8080"
 	}
@@ -110,8 +110,7 @@ func (eng *Engine) Close() *Engine {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cfg := config.Decode()
-	connections := cfg.Get("connections").Maps()
+	connections := config.GetMaps("connections")
 
 	if len(connections) > 0 {
 		defer adb.Close()
@@ -132,7 +131,7 @@ func (eng *Engine) GetServer() *http.Server {
 
 // SetConfig Modify the configuration path<修改配置路径>
 func (eng *Engine) SetConfig(filePath string) *Engine {
-	config.SetPath(filePath)
+	config.New(filePath)
 	//加载默认配置
 	initConfigLog()
 	adb.InitDb()
