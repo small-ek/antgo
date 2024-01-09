@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-//Client 客户端连接管理
+// Client 客户端连接管理
 type Client struct {
 	Clients     map[*Connection]bool   // 全部的连接
 	ClientsLock sync.RWMutex           // 读写锁
@@ -17,7 +17,7 @@ type Client struct {
 	Broadcast   chan []byte            // 广播消息通道处理
 }
 
-//NewClient 默认初始化客户端
+// NewClient 默认初始化客户端
 func NewClient() (clientManager *Client) {
 	return &Client{
 		Clients:   make(map[*Connection]bool),
@@ -29,14 +29,14 @@ func NewClient() (clientManager *Client) {
 	}
 }
 
-//IsClient 是否存在
+// IsClient 是否存在
 func (get *Client) IsClient(client *Connection) bool {
 	get.ClientsLock.RLock()
 	defer get.ClientsLock.RUnlock()
 	return get.Clients[client]
 }
 
-//GetClient Get client 获取客户端连接
+// GetClient Get client 获取客户端连接
 func (get *Client) GetClient() (clients map[*Connection]bool) {
 	clients = make(map[*Connection]bool)
 	get.GetClientsLoop(func(client *Connection, value bool) (result bool) {
@@ -46,7 +46,7 @@ func (get *Client) GetClient() (clients map[*Connection]bool) {
 	return
 }
 
-//GetClientsLoop Loop all connections<循环所有的客户端连接>
+// GetClientsLoop Loop all connections<循环所有的客户端连接>
 func (get *Client) GetClientsLoop(f func(client *Connection, value bool) (result bool)) {
 	get.ClientsLock.RLock()
 	for key, value := range get.Clients {
@@ -59,19 +59,19 @@ func (get *Client) GetClientsLoop(f func(client *Connection, value bool) (result
 	return
 }
 
-//GetClientsCount Gets the length of the connection<获取客户端的总长度>
+// GetClientsCount Gets the length of the connection<获取客户端的总长度>
 func (get *Client) GetClientsCount() int {
 	return len(get.Clients)
 }
 
-//AddClients Adding a connection 添加客户端
+// AddClients Adding a connection 添加客户端
 func (get *Client) AddClients(client *Connection) {
 	get.ClientsLock.Lock()
 	get.Clients[client] = true
 	defer get.ClientsLock.Unlock()
 }
 
-//DeleteClients Delete client<删除客户端>
+// DeleteClients Delete client<删除客户端>
 func (get *Client) DeleteClients(client *Connection) {
 	get.ClientsLock.Lock()
 	if _, ok := get.Clients[client]; ok {
@@ -80,19 +80,19 @@ func (get *Client) DeleteClients(client *Connection) {
 	defer get.ClientsLock.Unlock()
 }
 
-//GetUserKey 获取用户key
+// GetUserKey 获取用户key
 func GetUserKey(appId string, userId string) string {
 	return hash.Sha1(appId + userId)
 }
 
-//AddUsers 添加用户
+// AddUsers 添加用户
 func (get *Client) AddUsers(key string, connection *Connection) {
 	get.UserLock.Lock()
 	get.Users[key] = connection
 	defer get.UserLock.Unlock()
 }
 
-//GetUserClient 获取用户的连接
+// GetUserClient 获取用户的连接
 func (get *Client) GetUserClient(appId string, userId string) (connection *Connection) {
 	get.UserLock.RLock()
 	userKey := GetUserKey(appId, userId)
@@ -103,12 +103,12 @@ func (get *Client) GetUserClient(appId string, userId string) (connection *Conne
 	return
 }
 
-//GetUsersCount Get the total number of users<获取用户总数>
+// GetUsersCount Get the total number of users<获取用户总数>
 func (get *Client) GetUsersCount() int {
 	return len(get.Users)
 }
 
-//DeleteUsers Delete user<删除用户>
+// DeleteUsers Delete user<删除用户>
 func (get *Client) DeleteUsers(connection *Connection) (result bool) {
 	get.UserLock.Lock()
 	key := GetUserKey(connection.AppId, connection.UserId)
@@ -124,7 +124,7 @@ func (get *Client) DeleteUsers(connection *Connection) (result bool) {
 	return
 }
 
-//GetUserKeys Get the keys for all users<获取所有的key>
+// GetUserKeys Get the keys for all users<获取所有的key>
 func (get *Client) GetUserKeys() (userKeys []string) {
 	userKeys = make([]string, 0)
 	get.UserLock.RLock()
@@ -135,7 +135,7 @@ func (get *Client) GetUserKeys() (userKeys []string) {
 	return
 }
 
-//GetUserList 获取用户的key
+// GetUserList 获取用户的key
 func (get *Client) GetUserList(appId string) (userList []string) {
 	userList = make([]string, 0)
 	get.UserLock.RLock()
@@ -148,7 +148,7 @@ func (get *Client) GetUserList(appId string) (userList []string) {
 	return
 }
 
-//GetUserClients 获取用户的连接
+// GetUserClients 获取用户的连接
 func (get *Client) GetUserClients() (connection []*Connection) {
 
 	connection = make([]*Connection, 0)
@@ -161,7 +161,7 @@ func (get *Client) GetUserClients() (connection []*Connection) {
 	return
 }
 
-//SendAll 向全部成员(除了自己)发送数据
+// SendAll 向全部成员(除了自己)发送数据
 func (get *Client) SendAll(message []byte, connection *Connection) {
 	clients := get.GetUserClients()
 	for _, conn := range clients {
@@ -171,12 +171,12 @@ func (get *Client) SendAll(message []byte, connection *Connection) {
 	}
 }
 
-//OnRegister 用户建立连接事件
+// OnRegister 用户建立连接事件
 func (get *Client) OnRegister(connection *Connection) {
 	get.AddClients(connection)
 }
 
-//OnLogin 用户登录
+// OnLogin 用户登录
 func (get *Client) OnLogin(login *Login) {
 	var client = login.Client
 	// 连接存在，在添加
@@ -186,7 +186,7 @@ func (get *Client) OnLogin(login *Login) {
 	}
 }
 
-//OnUserLogout 用户断开连接
+// OnUserLogout 用户断开连接
 func (get *Client) OnUserLogout(client *Connection) {
 	get.DeleteClients(client)
 	deleteResult := get.DeleteUsers(client)

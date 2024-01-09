@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//Cors Cross-domain request
+// Cors Cross-domain request
 func Cors(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")                                      //允许访问所有域
 	c.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE,OPTIONS") //允许请求类型

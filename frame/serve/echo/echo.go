@@ -18,7 +18,7 @@ func init() {
 	ant.Register(&Echo{})
 }
 
-//Name implements the method Adapter.Name.
+// Name implements the method Adapter.Name.
 func (e *Echo) Name() string {
 	return "echo"
 }

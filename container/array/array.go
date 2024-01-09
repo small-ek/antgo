@@ -4,18 +4,18 @@ import (
 	"sync"
 )
 
-//Array parameter structure
+// Array parameter structure
 type Array struct {
 	Slice []interface{}
 	lock  sync.RWMutex // 加锁
 }
 
-//New Array
+// New Array
 func New() *Array {
 	return &Array{Slice: make([]interface{}, 0)}
 }
 
-//Append Set Array
+// Append Set Array
 func (a *Array) Append(value interface{}) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -23,7 +23,7 @@ func (a *Array) Append(value interface{}) {
 	a.Slice = append(a.Slice, value)
 }
 
-//Len Count Array
+// Len Count Array
 func (a *Array) Len() int {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
@@ -31,7 +31,7 @@ func (a *Array) Len() int {
 	return len(a.Slice)
 }
 
-//List Array
+// List Array
 func (a *Array) List() []interface{} {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
@@ -39,7 +39,7 @@ func (a *Array) List() []interface{} {
 	return a.Slice
 }
 
-//InsertAfter Array
+// InsertAfter Array
 func (a *Array) InsertAfter(index int, value interface{}) []interface{} {
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -55,7 +55,7 @@ func (a *Array) InsertAfter(index int, value interface{}) []interface{} {
 	return a.Slice
 }
 
-//Delete Array
+// Delete Array
 func (a *Array) Delete(index int) []interface{} {
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -68,7 +68,7 @@ func (a *Array) Delete(index int) []interface{} {
 	return a.Slice
 }
 
-//Set Array
+// Set Array
 func (a *Array) Set(index int, value interface{}) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -80,7 +80,7 @@ func (a *Array) Set(index int, value interface{}) {
 	a.Slice[index] = value
 }
 
-//Get Array
+// Get Array
 func (a *Array) Get(index int) interface{} {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
@@ -92,7 +92,7 @@ func (a *Array) Get(index int) interface{} {
 	return a.Slice[index]
 }
 
-//Search Array
+// Search Array
 func (a *Array) Search(value interface{}) int {
 	a.lock.RLock()
 	defer a.lock.RUnlock()
@@ -105,7 +105,7 @@ func (a *Array) Search(value interface{}) int {
 	return -1
 }
 
-//Clear Array
+// Clear Array
 func (a *Array) Clear() {
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -113,7 +113,7 @@ func (a *Array) Clear() {
 	a.Slice = nil
 }
 
-//LockFunc locks writing by callback function <f>
+// LockFunc locks writing by callback function <f>
 func (a *Array) LockFunc(f func(array []interface{})) *Array {
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -122,7 +122,7 @@ func (a *Array) LockFunc(f func(array []interface{})) *Array {
 	return a
 }
 
-//ReadLockFunc locks writing by callback function <f>
+// ReadLockFunc locks writing by callback function <f>
 func (a *Array) ReadLockFunc(f func(array []interface{})) *Array {
 	a.lock.RLock()
 	defer a.lock.RUnlock()

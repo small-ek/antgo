@@ -13,7 +13,7 @@ type xmlMapEntry struct {
 	Value   string `xml:",chardata"`
 }
 
-//MarshalXML
+// MarshalXML
 func (m StringMap) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if len(m) == 0 {
 		return nil
@@ -31,7 +31,7 @@ func (m StringMap) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	return e.EncodeToken(start.End())
 }
 
-//UnmarshalXML
+// UnmarshalXML
 func (m *StringMap) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	*m = StringMap{}
 	for {
@@ -49,7 +49,7 @@ func (m *StringMap) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return nil
 }
 
-//Encode
+// Encode
 func Encode(data map[string]string) ([]byte, error) {
 	result, err := xml.Marshal(StringMap(data))
 	if err != nil {
@@ -58,7 +58,7 @@ func Encode(data map[string]string) ([]byte, error) {
 	return result, nil
 }
 
-//Encode
+// Encode
 func Decode(data []byte) (map[string]string, error) {
 	result := make(map[string]string)
 	if err := xml.Unmarshal(data, (*StringMap)(&result)); err != nil {
@@ -67,7 +67,7 @@ func Decode(data []byte) (map[string]string, error) {
 	return result, nil
 }
 
-//DecodeTo
+// DecodeTo
 func DecodeTo(data []byte, result map[string]string) error {
 	if err := xml.Unmarshal(data, (*StringMap)(&result)); err != nil {
 		return err
@@ -75,7 +75,7 @@ func DecodeTo(data []byte, result map[string]string) error {
 	return nil
 }
 
-//ToJson
+// ToJson
 func ToJson(v []byte) ([]byte, error) {
 	if r, err := Decode(v); err != nil {
 		return nil, err

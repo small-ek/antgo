@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-//Float32 converts `any` to float32.<将“any”转换为float32。>
+// Float32 converts `any` to float32.<将“any”转换为float32。>
 func Float32(any interface{}) float32 {
 	if any == nil {
 		return 0
@@ -27,7 +27,7 @@ func Float32(any interface{}) float32 {
 	}
 }
 
-//Float64 converts `any` to float64.<将“any”转换为float64。>
+// Float64 converts `any` to float64.<将“any”转换为float64。>
 func Float64(any interface{}) float64 {
 	if any == nil {
 		return 0

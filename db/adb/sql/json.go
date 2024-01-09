@@ -8,7 +8,7 @@ import (
 
 type Json []byte
 
-//Value
+// Value
 func (j Json) Value() (driver.Value, error) {
 	if j.IsNull() {
 		return nil, nil
@@ -16,7 +16,7 @@ func (j Json) Value() (driver.Value, error) {
 	return string(j), nil
 }
 
-//Scan
+// Scan
 func (j *Json) Scan(value interface{}) error {
 	if value == nil {
 		*j = nil
@@ -30,7 +30,7 @@ func (j *Json) Scan(value interface{}) error {
 	return nil
 }
 
-//MarshalJSON
+// MarshalJSON
 func (m Json) MarshalJSON() ([]byte, error) {
 	if m == nil {
 		return []byte("null"), nil
@@ -38,7 +38,7 @@ func (m Json) MarshalJSON() ([]byte, error) {
 	return m, nil
 }
 
-//UnmarshalJSON
+// UnmarshalJSON
 func (m *Json) UnmarshalJSON(data []byte) error {
 	if m == nil {
 		return errors.New("null point exception")
@@ -47,12 +47,12 @@ func (m *Json) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-//IsNull
+// IsNull
 func (j Json) IsNull() bool {
 	return len(j) == 0 || string(j) == "null"
 }
 
-//Equals
+// Equals
 func (j Json) Equals(j1 Json) bool {
 	return bytes.Equal([]byte(j), []byte(j1))
 }

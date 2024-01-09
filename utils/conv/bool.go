@@ -2,7 +2,7 @@ package conv
 
 import "strings"
 
-//Bool converts `any` to bool.<将“any”转换为bool。>
+// Bool converts `any` to bool.<将“any”转换为bool。>
 func Bool(any interface{}) bool {
 	if any == nil {
 		return false

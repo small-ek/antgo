@@ -10,8 +10,8 @@ func GetConfig(name string) any {
 	return config.Get(name)
 }
 
-// initConfigLog Set log according to the configuration file<初始化配置日志>
-func initConfigLog() {
+// initLog Set log according to the configuration file<初始化配置日志>
+func initLog() {
 	logPath := config.GetString("log.path")
 
 	if config.GetBool("log.switch") == true && logPath != "" {

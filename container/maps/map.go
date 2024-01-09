@@ -4,25 +4,25 @@ import (
 	"sync"
 )
 
-//Map parameter structure
+// Map parameter structure
 type Map struct {
 	Map  map[interface{}]interface{} //
 	lock sync.RWMutex                // 加锁
 }
 
-//NewMap
+// NewMap
 func NewMap() *Map {
 	return &Map{Map: make(map[interface{}]interface{})}
 }
 
-//Set ...
+// Set ...
 func (m *Map) Set(key interface{}, value interface{}) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.Map[key] = value
 }
 
-//Get ...
+// Get ...
 func (m *Map) Get(key interface{}) interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
@@ -33,7 +33,7 @@ func (m *Map) Get(key interface{}) interface{} {
 	return v
 }
 
-//GetOrSet ...
+// GetOrSet ...
 func (m *Map) GetOrSet(key interface{}, value interface{}) interface{} {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -45,21 +45,21 @@ func (m *Map) GetOrSet(key interface{}, value interface{}) interface{} {
 	return v
 }
 
-//Count ...
+// Count ...
 func (m *Map) Count() int {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	return len(m.Map)
 }
 
-//Delete ...
+// Delete ...
 func (m *Map) Delete(key interface{}) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	delete(m.Map, key)
 }
 
-//LockFunc locks writing by callback function <f>
+// LockFunc locks writing by callback function <f>
 func (m *Map) LockFunc(f func(Map map[interface{}]interface{})) *Map {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -68,7 +68,7 @@ func (m *Map) LockFunc(f func(Map map[interface{}]interface{})) *Map {
 	return m
 }
 
-//ReadLockFunc locks writing by callback function <f>
+// ReadLockFunc locks writing by callback function <f>
 func (m *Map) ReadLockFunc(f func(Map map[interface{}]interface{})) *Map {
 	m.lock.RLock()
 	defer m.lock.RUnlock()

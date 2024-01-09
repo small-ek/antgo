@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-//Int converts "any" to int.<将“any”转换为int。>
+// Int converts "any" to int.<将“any”转换为int。>
 func Int(any interface{}) int {
 	if any == nil {
 		return 0
@@ -16,7 +16,7 @@ func Int(any interface{}) int {
 	return int(Int64(any))
 }
 
-//Int8 converts "any" to int8.<将“any”转换为int8。>
+// Int8 converts "any" to int8.<将“any”转换为int8。>
 func Int8(any interface{}) int8 {
 	if any == nil {
 		return 0
@@ -27,7 +27,7 @@ func Int8(any interface{}) int8 {
 	return int8(Int64(any))
 }
 
-//Int16 converts "any" to int16.<将“any”转换为int16。>
+// Int16 converts "any" to int16.<将“any”转换为int16。>
 func Int16(any interface{}) int16 {
 	if any == nil {
 		return 0
@@ -38,7 +38,7 @@ func Int16(any interface{}) int16 {
 	return int16(Int64(any))
 }
 
-//Int32 converts "any" to int32.<将“any”转换为int32。>
+// Int32 converts "any" to int32.<将“any”转换为int32。>
 func Int32(any interface{}) int32 {
 	if any == nil {
 		return 0
@@ -49,7 +49,7 @@ func Int32(any interface{}) int32 {
 	return int32(Int64(any))
 }
 
-//Int64 converts "any" to int64.<将“any”转换为int64。>
+// Int64 converts "any" to int64.<将“any”转换为int64。>
 func Int64(any interface{}) int64 {
 	if any == nil {
 		return 0
@@ -73,7 +73,7 @@ func Int64(any interface{}) int64 {
 	return any.(int64)
 }
 
-//Uint converts "any" to uint.<将“any”转换为uint。>
+// Uint converts "any" to uint.<将“any”转换为uint。>
 func Uint(any interface{}) uint {
 	if any == nil {
 		return 0
@@ -84,7 +84,7 @@ func Uint(any interface{}) uint {
 	return uint(Uint64(any))
 }
 
-//Uint8 converts "any" to uint8.<将“any”转换为uint8。>
+// Uint8 converts "any" to uint8.<将“any”转换为uint8。>
 func Uint8(any interface{}) uint8 {
 	if any == nil {
 		return 0
@@ -95,7 +95,7 @@ func Uint8(any interface{}) uint8 {
 	return uint8(Uint64(any))
 }
 
-//Uint16 converts "any" to uint16.<将“any”转换为uint16。>
+// Uint16 converts "any" to uint16.<将“any”转换为uint16。>
 func Uint16(any interface{}) uint16 {
 	if any == nil {
 		return 0
@@ -106,7 +106,7 @@ func Uint16(any interface{}) uint16 {
 	return uint16(Uint64(any))
 }
 
-//Uint32 converts "any" to uint32.<将“any”转换为uint32。>
+// Uint32 converts "any" to uint32.<将“any”转换为uint32。>
 func Uint32(any interface{}) uint32 {
 	if any == nil {
 		return 0
@@ -117,7 +117,7 @@ func Uint32(any interface{}) uint32 {
 	return uint32(Uint64(any))
 }
 
-//Uint64 converts "any" to uint64.<将“any”转换为uint64。>
+// Uint64 converts "any" to uint64.<将“any”转换为uint64。>
 func Uint64(any interface{}) uint64 {
 	if any == nil {
 		return 0

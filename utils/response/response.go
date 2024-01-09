@@ -1,6 +1,7 @@
 package response
 
 import (
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
 	"go.uber.org/zap"
 )
@@ -12,7 +13,7 @@ const (
 	SUCCESS = 200
 )
 
-//Write Return parameter
+// Write Return parameter
 type Write struct {
 	StatusCode int         `json:"statusCode"` //Error Code
 	Msg        string      `json:"msg"`        //Msg Prompt message
@@ -20,13 +21,13 @@ type Write struct {
 	Error      string      `json:"error"`      //Error message
 }
 
-//Page Pagination return
+// Page Pagination return
 type Page struct {
 	Total int64       `json:"total"` //Total total pages
 	List  interface{} `json:"list"`  //List json data
 }
 
-//ErrorResponse Error output
+// ErrorResponse Error output
 func ErrorResponse(err string) *Write {
 	return &Write{
 		StatusCode: ERROR,
@@ -35,7 +36,7 @@ func ErrorResponse(err string) *Write {
 	}
 }
 
-//Success Successfully returned
+// Success Successfully returned
 func Success(msg string, data ...interface{}) *Write {
 	var lenData = len(data)
 	if lenData == 1 {
@@ -46,11 +47,11 @@ func Success(msg string, data ...interface{}) *Write {
 	return &Write{StatusCode: SUCCESS, Msg: msg}
 }
 
-//Fail Error return, the second parameter is passed back to the front end and printed
+// Fail Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...string) *Write {
 	var lenErr = len(err)
-	if lenErr > 0 && config.Decode().Get("system.debug").Bool() == true {
-		alog.Write.Info("Return error", zap.Any("error", err))
+	if lenErr > 0 && config.GetBool("system.debug") == true {
+		alog.Write.Debug("Return error", zap.Any("error", err))
 		return &Write{StatusCode: ERROR, Msg: msg, Error: err[0], Result: ""}
 	} else if lenErr > 1 {
 		return &Write{StatusCode: SUCCESS, Msg: msg, Result: err[0]}

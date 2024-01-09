@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-//Ints converts `any` to []int.<将“any”转换为[]int。>
+// Ints converts `any` to []int.<将“any”转换为[]int。>
 func Ints(any interface{}) []int {
 	if any == nil {
 		return nil
@@ -101,7 +101,7 @@ func Ints(any interface{}) []int {
 	return array
 }
 
-//Int32s converts `any` to []int32.<将“any”转换为[]int32。>
+// Int32s converts `any` to []int32.<将“any”转换为[]int32。>
 func Int32s(any interface{}) []int32 {
 	if any == nil {
 		return nil
@@ -199,7 +199,7 @@ func Int32s(any interface{}) []int32 {
 	return array
 }
 
-//Int64s converts `any` to []int64.<将“any”转换为[]int64。>
+// Int64s converts `any` to []int64.<将“any”转换为[]int64。>
 func Int64s(any interface{}) []int64 {
 	if any == nil {
 		return nil
@@ -297,7 +297,7 @@ func Int64s(any interface{}) []int64 {
 	return array
 }
 
-//Strings converts `any` to []string.<将“any”转换为[]string。>
+// Strings converts `any` to []string.<将“any”转换为[]string。>
 func Strings(any interface{}) []string {
 	if any == nil {
 		return nil
@@ -390,7 +390,7 @@ func Strings(any interface{}) []string {
 	return array
 }
 
-//Uints converts `any` to []uint.<将“any”转换为[]uint。>
+// Uints converts `any` to []uint.<将“any”转换为[]uint。>
 func Uints(any interface{}) []uint {
 	if any == nil {
 		return nil
@@ -482,7 +482,7 @@ func Uints(any interface{}) []uint {
 	return array
 }
 
-//Uint32s converts `any` to []uint32.<将“any”转换为[]uint32。>
+// Uint32s converts `any` to []uint32.<将“any”转换为[]uint32。>
 func Uint32s(any interface{}) []uint32 {
 	if any == nil {
 		return nil
@@ -574,7 +574,7 @@ func Uint32s(any interface{}) []uint32 {
 	return array
 }
 
-//Uint64s converts `any` to []uint64.<将“any”转换为[]uint64。>
+// Uint64s converts `any` to []uint64.<将“any”转换为[]uint64。>
 func Uint64s(any interface{}) []uint64 {
 	if any == nil {
 		return nil
@@ -666,7 +666,7 @@ func Uint64s(any interface{}) []uint64 {
 	return array
 }
 
-//Interfaces converts `any` to []interface{}.<将“any”转换为[]interface{}。>
+// Interfaces converts `any` to []interface{}.<将“any”转换为[]interface{}。>
 func Interfaces(any interface{}) []interface{} {
 	if any == nil {
 		return nil

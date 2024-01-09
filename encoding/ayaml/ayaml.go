@@ -5,12 +5,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//Encode
+// Encode
 func Encode(v interface{}) ([]byte, error) {
 	return yaml.Marshal(v)
 }
 
-//Decode
+// Decode
 func Decode(v []byte) (map[string]interface{}, error) {
 	var result map[string]interface{}
 	if err := yaml.Unmarshal(v, &result); err != nil {
@@ -19,12 +19,12 @@ func Decode(v []byte) (map[string]interface{}, error) {
 	return result, nil
 }
 
-//DecodeTo
+// DecodeTo
 func DecodeTo(v []byte, result interface{}) error {
 	return yaml.Unmarshal(v, result)
 }
 
-//ToJson
+// ToJson
 func ToJson(v []byte) ([]byte, error) {
 	if r, err := Decode(v); err != nil {
 		return nil, err

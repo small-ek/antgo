@@ -9,13 +9,13 @@ import (
 	"errors"
 )
 
-//New ...
+// New ...
 type Rsa struct {
 	PrivateKey []byte
 	PublicKey  []byte
 }
 
-//New Default key
+// New Default key
 func New(publicKey, privateKey []byte) *Rsa {
 	return &Rsa{
 		PublicKey:  publicKey,
@@ -23,7 +23,7 @@ func New(publicKey, privateKey []byte) *Rsa {
 	}
 }
 
-//Encrypt RSA encryption
+// Encrypt RSA encryption
 func (r *Rsa) Encrypt(origData string) (string, error) {
 	block, _ := pem.Decode(r.PublicKey)
 	if block == nil {
@@ -39,7 +39,7 @@ func (r *Rsa) Encrypt(origData string) (string, error) {
 	return encodeString, err
 }
 
-//Decrypt RSA decryption
+// Decrypt RSA decryption
 func (r *Rsa) Decrypt(ciphertext string) (string, error) {
 	decodeBytes, _ := base64.StdEncoding.DecodeString(ciphertext)
 	block, _ := pem.Decode(r.PrivateKey)

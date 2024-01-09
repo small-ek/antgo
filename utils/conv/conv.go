@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//Rune converts `any` to rune.<将“any”转换为rune。>
+// Rune converts `any` to rune.<将“any”转换为rune。>
 func Rune(any interface{}) rune {
 	if v, ok := any.(rune); ok {
 		return v
@@ -17,7 +17,7 @@ func Rune(any interface{}) rune {
 	return Int32(any)
 }
 
-//Runes converts `any` to []rune.<将“any”转换为[]rune。>
+// Runes converts `any` to []rune.<将“any”转换为[]rune。>
 func Runes(any interface{}) []rune {
 	if v, ok := any.([]rune); ok {
 		return v
@@ -25,7 +25,7 @@ func Runes(any interface{}) []rune {
 	return []rune(String(any))
 }
 
-//Byte converts `any` to byte.<将“any”转换为byte。>
+// Byte converts `any` to byte.<将“any”转换为byte。>
 func Byte(any interface{}) byte {
 	if v, ok := any.(byte); ok {
 		return v
@@ -33,7 +33,7 @@ func Byte(any interface{}) byte {
 	return Uint8(any)
 }
 
-//Bytes converts `any` to []byte.<将“any”转换为[]byte。>
+// Bytes converts `any` to []byte.<将“any”转换为[]byte。>
 func Bytes(any interface{}) []byte {
 	if any == nil {
 		return nil
@@ -63,7 +63,7 @@ func Bytes(any interface{}) []byte {
 	}
 }
 
-//String converts `any` to string.<将“any”转换为string。>
+// String converts `any` to string.<将“any”转换为string。>
 func String(any interface{}) string {
 	if any == nil {
 		return ""
@@ -105,7 +105,7 @@ func String(any interface{}) string {
 	return any.(string)
 }
 
-//intToBytes converts `any` to []byte.<将“any”转换为[]byte。>
+// intToBytes converts `any` to []byte.<将“any”转换为[]byte。>
 func intToBytes(any interface{}) []byte {
 	x := Int64(any)
 	bytesBuffer := bytes.NewBuffer([]byte{})
@@ -116,7 +116,7 @@ func intToBytes(any interface{}) []byte {
 	return bytesBuffer.Bytes()
 }
 
-//float32ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
+// float32ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
 func float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
 	result := make([]byte, 4)
@@ -124,7 +124,7 @@ func float32ToBytes(float float32) []byte {
 	return result
 }
 
-//float64ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
+// float64ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
 func float64ToBytes(float float64) []byte {
 	bits := math.Float64bits(float)
 	result := make([]byte, 8)

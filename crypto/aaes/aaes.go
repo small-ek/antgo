@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-//EncryptCBC CBC encryption
+// EncryptCBC CBC encryption
 func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	// 分组秘钥
 	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
@@ -24,7 +24,7 @@ func EncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	return encrypted
 }
 
-//DecryptCBC CBC Decrypt
+// DecryptCBC CBC Decrypt
 func DecryptCBC(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key) // 分组秘钥
 	if err != nil {
@@ -38,7 +38,7 @@ func DecryptCBC(encrypted []byte, key []byte) (decrypted []byte) {
 	return decrypted
 }
 
-//EncryptCFB CFB encryption
+// EncryptCFB CFB encryption
 func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -54,7 +54,7 @@ func EncryptCFB(origData []byte, key []byte) (encrypted []byte) {
 	return encrypted
 }
 
-//DecryptCFB CFB Decrypt
+// DecryptCFB CFB Decrypt
 func DecryptCFB(encrypted []byte, key []byte) (decrypted []byte) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -71,14 +71,14 @@ func DecryptCFB(encrypted []byte, key []byte) (decrypted []byte) {
 	return encrypted
 }
 
-//pkcs5Padding
+// pkcs5Padding
 func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-//pkcs5UnPadding
+// pkcs5UnPadding
 func pkcs5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])

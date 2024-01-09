@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-//Struct conversion binding
-//model Bound model
-//data Data
+// Struct conversion binding
+// model Bound model
+// data Data
 func Struct(model interface{}, data interface{}) {
 	result, err := json.Marshal(data)
 	err = json.Unmarshal(result, model)
@@ -19,7 +19,7 @@ func Struct(model interface{}, data interface{}) {
 	}
 }
 
-//StructToBytes Use gob encoding generally used for "similar" two structure transmission binding or RPC communication
+// StructToBytes Use gob encoding generally used for "similar" two structure transmission binding or RPC communication
 func StructToBytes(data interface{}) []byte {
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
@@ -30,14 +30,14 @@ func StructToBytes(data interface{}) []byte {
 	return buf.Bytes()
 }
 
-//BytesToStruct Using gob encoding is generally used for "similar" two structure transmission binding or RPC communication
+// BytesToStruct Using gob encoding is generally used for "similar" two structure transmission binding or RPC communication
 func BytesToStruct(data []byte, to interface{}) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	return dec.Decode(to)
 }
 
-//InterfaceToStruct interface conversion Struct
+// InterfaceToStruct interface conversion Struct
 func InterfaceToStruct(data interface{}) interface{} {
 	if data == nil {
 		return nil

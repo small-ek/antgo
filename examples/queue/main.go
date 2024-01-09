@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func main()  {
+func main() {
 	go func() {
 		var dm = queue.New()
 		//添加任务

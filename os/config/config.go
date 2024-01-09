@@ -4,6 +4,7 @@ import (
 	"github.com/small-ek/antgo/utils/conv"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,12 +21,15 @@ func New(filePath ...string) *ConfigStr {
 	once.Do(func() {
 		Config = &ConfigStr{Viper: viper.New()}
 		if len(filePath) > 0 && filePath[0] != "" {
-			Config.Viper.AddConfigPath(filePath[0])
-		}
-		if len(filePath) > 1 && filePath[1] != "" {
-			Config.Viper.SetConfigFile(filePath[1])
+			Config.Viper.SetConfigFile(filePath[0])
+			types := strings.Split(filePath[0], ".")
+
+			if len(types) == 2 {
+				Config.Viper.SetConfigType(types[1])
+			}
 		}
 	})
+
 	return Config
 }
 

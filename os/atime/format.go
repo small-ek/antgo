@@ -50,7 +50,7 @@ type Times struct {
 	Time time.Time
 }
 
-//New 创建对象
+// New 创建对象
 func New(param ...interface{}) *Times {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
@@ -73,7 +73,7 @@ func New(param ...interface{}) *Times {
 	return &Times{Time: time.Now()}
 }
 
-//StrToTime String转Time
+// StrToTime String转Time
 func StrToTime(str string) *Times {
 	t, err := time.ParseInLocation("2006-01-02 15:04:05", str, time.Local)
 	if err != nil {
@@ -102,18 +102,18 @@ func NewFromTimeStamp(timestamp int64) *Times {
 	return WithTime(time.Unix(sec, nano))
 }
 
-//Now
+// Now
 func Now() *Times {
 	timeNow := time.Now()
 	return WithTime(timeNow)
 }
 
-//WithTime
+// WithTime
 func WithTime(t time.Time) *Times {
 	return &Times{Time: t}
 }
 
-//Format ...
+// Format ...
 func (t *Times) Format(layout string, chinese ...bool) string {
 	var c bool
 	if len(chinese) > 0 {
@@ -126,7 +126,7 @@ func (t *Times) Format(layout string, chinese ...bool) string {
 	return d
 }
 
-//parseLayout [yyyy-MM-dd]->{{.year}}-{{.month}}-{{.day}}
+// parseLayout [yyyy-MM-dd]->{{.year}}-{{.month}}-{{.day}}
 func (t *Times) parseLayout(layout string, chinese bool) (string, error) {
 	if len(strings.TrimSpace(layout)) == 0 {
 		return "", ErrLayout
@@ -303,7 +303,7 @@ func (t *Times) parseLayout(layout string, chinese bool) (string, error) {
 	return times.String(), nil
 }
 
-//end ...
+// end ...
 func end(from int, in string, target rune) (string, int) {
 	var out = new(strings.Builder)
 	for i := from; i < len(in); i++ {

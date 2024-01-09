@@ -7,10 +7,10 @@ import (
 
 const circleSectionNum = 100
 
-//TaskFunc ...
+// TaskFunc ...
 type TaskFunc func(args ...interface{})
 
-//Task ...
+// Task ...
 type Task struct {
 	runTime  time.Time //初次运行时间
 	cycleNum int       //需要第几圈
@@ -19,7 +19,7 @@ type Task struct {
 	params   []interface{}
 }
 
-//DelayMessage ...
+// DelayMessage ...
 type DelayMessage struct {
 	cycleNum  int //当前运行到第几圈了
 	curIndex  int //当前运行到第几格
@@ -30,7 +30,7 @@ type DelayMessage struct {
 	startTime time.Time
 }
 
-//NewDelayMessage ...
+// NewDelayMessage ...
 func NewDelayMessage() *DelayMessage {
 	dm := &DelayMessage{
 		cycleNum:  0,
@@ -46,7 +46,7 @@ func NewDelayMessage() *DelayMessage {
 	return dm
 }
 
-//Start ...
+// Start ...
 func (dm *DelayMessage) Start() {
 	defer close(dm.closed)
 
@@ -59,12 +59,12 @@ func (dm *DelayMessage) Start() {
 	}
 }
 
-//Stop ...
+// Stop ...
 func (dm *DelayMessage) Stop() {
 	dm.closed <- struct{}{}
 }
 
-//taskLoop
+// taskLoop
 func (dm *DelayMessage) taskLoop() {
 	defer close(dm.taskClose)
 
@@ -92,7 +92,7 @@ func (dm *DelayMessage) taskLoop() {
 	}
 }
 
-//timeLoop
+// timeLoop
 func (dm *DelayMessage) timeLoop() {
 	tick := time.NewTicker(time.Second)
 	defer tick.Stop()
@@ -111,7 +111,7 @@ func (dm *DelayMessage) timeLoop() {
 	}
 }
 
-//AddTask ...
+// AddTask ...
 func (dm *DelayMessage) AddTask(t time.Time, key string, exec TaskFunc, params []interface{}) error {
 	if dm.startTime.After(t) {
 		return errors.New("Queue time error")

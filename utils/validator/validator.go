@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-//New Validator default structure
+// New Validator default structure
 type Validator struct {
 	Rule  map[string][]string //Validation rules {"require|required", "max:25|maximum length","min:5|minimum length","number|number","email|mailbox",">:8|greater than 8"," <:8|Less than 8","=:8|equal to 8"}
 	Scene []string            //Detected field
 }
 
-//New
+// New
 func New(Scene []string, Rule map[string][]string) *Validator {
 	return &Validator{
 		Rule:  Rule,
@@ -24,19 +24,19 @@ func New(Scene []string, Rule map[string][]string) *Validator {
 	}
 }
 
-//SetRule
+// SetRule
 func (v *Validator) SetRule(Rule map[string][]string) *Validator {
 	v.Rule = Rule
 	return v
 }
 
-//SetScene
+// SetScene
 func (v *Validator) SetScene(Scene []string) *Validator {
 	v.Scene = Scene
 	return v
 }
 
-//CheckRule Form validator rules
+// CheckRule Form validator rules
 func (v *Validator) Check(Request interface{}) error {
 	var Scene = v.Scene
 	var request map[string]interface{}
@@ -54,7 +54,7 @@ func (v *Validator) Check(Request interface{}) error {
 	return nil
 }
 
-//CheckStruct TODO
+// CheckStruct TODO
 func CheckStruct(structModel interface{}) error {
 	var types = reflect.TypeOf(structModel)
 	if types.Kind() == reflect.Ptr {
@@ -78,7 +78,7 @@ func CheckStruct(structModel interface{}) error {
 	return nil
 }
 
-//CheckItem The validation field can define the rules you need TODO
+// CheckItem The validation field can define the rules you need TODO
 func CheckItem(value interface{}, Rule string) error {
 	var ruleSplit = strings.Split(Rule, "|")
 	var rulesSplitStr = strings.Split(ruleSplit[0], ":")
@@ -171,7 +171,7 @@ func CheckItem(value interface{}, Rule string) error {
 	return nil
 }
 
-//moreThan 大于
+// moreThan 大于
 func moreThan(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(value)
 
@@ -190,7 +190,7 @@ func moreThan(value, ruleStr string) bool {
 	return false
 }
 
-//equal 等于
+// equal 等于
 func equal(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(value)
 
@@ -209,7 +209,7 @@ func equal(value, ruleStr string) bool {
 	return false
 }
 
-//lessThan 小于
+// lessThan 小于
 func lessThan(value, ruleStr string) bool {
 	newValue, err := strconv.Atoi(ruleStr)
 
@@ -228,7 +228,7 @@ func lessThan(value, ruleStr string) bool {
 	return false
 }
 
-//isRequire 验证数据不为空
+// isRequire 验证数据不为空
 func isRequire(value string) bool {
 	if len(value) == 0 {
 		return false
@@ -236,7 +236,7 @@ func isRequire(value string) bool {
 	return true
 }
 
-//length 验证数据范围
+// length 验证数据范围
 func length(value, ruleStr string) bool {
 	var str = strings.Split(ruleStr, ",")
 	if len(str) == 1 && len(value) > conv.Int(str[0]) {
@@ -248,7 +248,7 @@ func length(value, ruleStr string) bool {
 	return false
 }
 
-//isMax 验证数据最大长度
+// isMax 验证数据最大长度
 func isMax(value, ruleStr string) bool {
 	newMax, err := strconv.Atoi(ruleStr)
 	if err != nil {
@@ -260,7 +260,7 @@ func isMax(value, ruleStr string) bool {
 	return true
 }
 
-//isMin 验证数据最小长度
+// isMin 验证数据最小长度
 func isMin(value, ruleStr string) bool {
 	newMin, err := strconv.Atoi(ruleStr)
 
@@ -274,14 +274,14 @@ func isMin(value, ruleStr string) bool {
 	return true
 }
 
-//isEmail 验证邮箱
+// isEmail 验证邮箱
 func isEmail(value string) bool {
 	pattern := `\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*` //匹配电子邮箱
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(value)
 }
 
-//isNumber 验证是否为合法数字
+// isNumber 验证是否为合法数字
 func isNumber(value string) bool {
 	_, err := strconv.ParseFloat(value, 64)
 	if err == nil {
@@ -290,7 +290,7 @@ func isNumber(value string) bool {
 	return false
 }
 
-//between 在多少之间
+// between 在多少之间
 func between(value, ruleStr string) bool {
 	var str = strings.Split(ruleStr, ",")
 	if len(str) == 1 {
@@ -318,7 +318,7 @@ func between(value, ruleStr string) bool {
 	return false
 }
 
-//notBetween 不在多少之间
+// notBetween 不在多少之间
 func notBetween(value, ruleStr string) bool {
 	var str = strings.Split(ruleStr, ",")
 	if len(str) == 1 {
@@ -346,7 +346,7 @@ func notBetween(value, ruleStr string) bool {
 	return false
 }
 
-//date
+// date
 func date(value string) bool {
 	_, err := time.Parse("2006-01-02", value)
 	if err != nil {
@@ -355,7 +355,7 @@ func date(value string) bool {
 	return true
 }
 
-//isUrl
+// isUrl
 func isUrl(value string) bool {
 	if strings.Contains(value, "http") || strings.Contains(value, "https") || strings.Contains(value, "www") {
 		return true
@@ -363,7 +363,7 @@ func isUrl(value string) bool {
 	return false
 }
 
-//in
+// in
 func in(value, ruleStr string) bool {
 	if strings.Index(ruleStr, value) > -1 {
 		return true
@@ -371,7 +371,7 @@ func in(value, ruleStr string) bool {
 	return false
 }
 
-//notIn
+// notIn
 func notIn(value, ruleStr string) bool {
 	if strings.Index(ruleStr, value) == -1 {
 		return true

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//管理员
+// 管理员
 type Admin struct {
 	Id             int    `json:"id" form:"id" uri:"id" gorm:"primaryKey;autoIncrement;comment:'标识'" `
 	Name           string `json:"name" form:"name" gorm:"comment:'名称'"`
@@ -19,19 +19,19 @@ type Admin struct {
 	RoleId         int    `json:"role_id" form:"role_id" gorm:"comment:'角色标识'"`
 }
 
-//TableName
+// TableName
 func (Admin) TableName() string {
 	return "admin"
 }
 
-//BeforeCreate 在创建之前
+// BeforeCreate 在创建之前
 func (m *Admin) BeforeCreate(tx *gorm.DB) (err error) {
 	m.Salt = uuid.Create().String()
 	m.Password = hash.Sha256(m.Salt + m.Password)
 	return
 }
 
-//BeforeUpdate 在跟新之前
+// BeforeUpdate 在跟新之前
 func (m *Admin) BeforeUpdate(tx *gorm.DB) (err error) {
 	if m.Password != "" {
 		m.Salt = uuid.Create().String()

@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//I18n
+// I18n
 type I18n struct {
 	Path     string
 	Language string
@@ -21,7 +21,7 @@ type I18n struct {
 	Child    interface{}
 }
 
-//New initialization
+// New initialization
 func New(prefixPath, language string, defaultType ...string) *I18n {
 	data := make(map[string]interface{})
 
@@ -65,17 +65,17 @@ func New(prefixPath, language string, defaultType ...string) *I18n {
 	}
 }
 
-//SetPath Language pack path
+// SetPath Language pack path
 func (i *I18n) SetPath(path string) {
 	i.Path = path
 }
 
-//SetLanguage language setting
+// SetLanguage language setting
 func (i *I18n) SetLanguage(language string) {
 	i.Language = language
 }
 
-//Next config
+// Next config
 func (i18n *I18n) Next(name interface{}) *I18n {
 	var child = i18n.Child
 	switch child.(type) {
@@ -121,7 +121,7 @@ func (i18n *I18n) Next(name interface{}) *I18n {
 	}
 }
 
-//T language translation
+// T language translation
 func (i18n *I18n) T(key string, args ...interface{}) string {
 	list := strings.Split(key, ".")
 	format := key
@@ -149,7 +149,7 @@ func (i18n *I18n) T(key string, args ...interface{}) string {
 	return format
 }
 
-//TOption Choose language translation
+// TOption Choose language translation
 func (i18n *I18n) TOption(key string, language string, args ...interface{}) string {
 	lang := New(i18n.Path, language)
 
@@ -162,7 +162,7 @@ func (i18n *I18n) TOption(key string, language string, args ...interface{}) stri
 	return format
 }
 
-//preArgs Formatted text
+// preArgs Formatted text
 func (i *I18n) preArgs(format string, args ...interface{}) string {
 	if len(args) > 0 {
 		format = fmt.Sprintf(format, args...)

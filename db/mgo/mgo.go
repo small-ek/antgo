@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/utils/conv"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,18 +12,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"time"
+	"sync"
+)
+
+var (
+	client *mongo.Client
 )
 
 // Mgo
 type Mgo struct {
-	Database   *mongo.Database //数据库
-	Client     *mongo.Client   //默认链接
-	Ctx        context.Context
-	Collection *mongo.Collection
-	Cancel     context.CancelFunc
-	Filter     interface{}
-	Pages      Pages
+	Database     *mongo.Database //数据库
+	Ctx          context.Context
+	Collection   *mongo.Collection
+	Cancel       context.CancelFunc
+	DataBaseName string
+	TableName    string
+	Filter       interface{}
+	Pages        Pages
+	Timeout      int
+	Err          error
+	sync.Mutex
 }
 
 // Pages 分页过滤排序
@@ -34,83 +43,83 @@ type Pages struct {
 
 // GetConfig 获取配置
 func GetConfig() (string, string, uint64, int) {
-	cfg := config.Decode()
-	uri := cfg.Get("mgo.uri").String()
-	database := cfg.Get("mgo.database").String()
-	poollimit := cfg.Get("mgo.poollimit").Uint64()
-	timeout := cfg.Get("mgo.timeout").Int()
-	return uri, database, poollimit, timeout
+	uri := config.GetString("mgo_uri")
+	database := config.GetString("mgo_database")
+	poollimit := config.GetInt64("mgo_poollimit")
+	timeout := config.GetInt("mgo_timeout")
+	return uri, database, conv.Uint64(poollimit), timeout
 }
 
-// Connect Default connection<默认连接>
+// InitEngine 初始化
 // 参考文档 https://docs.mongodb.com/drivers/go/
-func Connect(databaseName ...string) *Mgo {
-	uri, db, poollimit, timeout := GetConfig()
-	if timeout == 0 {
-		timeout = 120
-	}
+func InitEngine(databaseName ...string) error {
+	uri, _, poollimit, _ := GetConfig()
+	ctx := context.Background()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	opts := options.Client()
 	opts.ApplyURI(uri)
 
 	opts.SetMaxPoolSize(poollimit)
 
-	Client, err := mongo.Connect(ctx, opts)
+	c, err := mongo.Connect(ctx, opts)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := Client.Ping(ctx, readpref.Primary()); err != nil {
+	if err := c.Ping(ctx, readpref.Primary()); err != nil {
 		panic(err)
 	}
 
+	client = c
+	return err
+}
+
+// Connect Default connection<默认连接>
+// 参考文档 https://docs.mongodb.com/drivers/go/
+func NewMongoDB(tableName string, databaseName ...string) *Mgo {
+	_, database, _, _ := GetConfig()
+	var databaseNames = ""
 	if len(databaseName) > 0 {
-		db = databaseName[0]
+		databaseNames = databaseName[0]
+	} else {
+		databaseNames = database
 	}
-	database := &mongo.Database{}
-	if db != "" {
-		database = Client.Database(db)
-	}
+
 	return &Mgo{
-		Client:   Client,
-		Cancel:   cancel,
-		Database: database,
-		Ctx:      ctx,
+		DataBaseName: databaseNames,
+		TableName:    tableName,
+		Ctx:          context.Background(),
 	}
 }
 
 // SetDatabase Modify database switch<修改数据库切换>
 func (m *Mgo) SetDatabase(databaseName string) *Mgo {
-	m.Database = m.Client.Database(databaseName)
+	m.DataBaseName = databaseName
 	return m
 }
 
 // Table Setting table<表>
 func (m *Mgo) Table(tableName string) *Mgo {
-	if m.Database.Name() != "" {
-		m.Collection = m.Database.Collection(tableName)
-	}
+
+	m.TableName = tableName
+
 	return m
 }
 
 // Create Create data<创建数据>
 func (m *Mgo) Create(data interface{}) (*mongo.InsertOneResult, error) {
-	defer m.Close()
-	return m.Collection.InsertOne(m.Ctx, data)
+	return client.Database(m.DataBaseName).Collection(m.TableName).InsertOne(m.Ctx, data)
 }
 
 // SaveAll save all data<创建多条数据>
 func (m *Mgo) SaveAll(data []interface{}) (*mongo.InsertManyResult, error) {
-	defer m.Close()
 	opts := options.InsertMany().SetOrdered(false)
-	return m.Collection.InsertMany(m.Ctx, data, opts)
+	return client.Database(m.DataBaseName).Collection(m.TableName).InsertMany(m.Ctx, data, opts)
 }
 
 // Update Update data<修改数据>
 func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
-	defer m.Close()
-	return m.Collection.UpdateMany(
+	return client.Database(m.DataBaseName).Collection(m.TableName).UpdateMany(
 		m.Ctx,
 		filter,
 		bson.M{
@@ -121,13 +130,12 @@ func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResul
 
 // UpdateById Modify data according to id<根据id修改>
 func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, error) {
-	defer m.Close()
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return m.Collection.UpdateOne(
+	return client.Database(m.DataBaseName).Collection(m.TableName).UpdateOne(
 		m.Ctx,
 		bson.M{"_id": oid},
 		bson.M{
@@ -138,8 +146,7 @@ func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, er
 
 // Delete delete data<删除>
 func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
-	defer m.Close()
-	return m.Collection.DeleteOne(
+	return client.Database(m.DataBaseName).Collection(m.TableName).DeleteOne(
 		m.Ctx,
 		update,
 	)
@@ -147,47 +154,56 @@ func (m *Mgo) Delete(update interface{}) (*mongo.DeleteResult, error) {
 
 // DeleteMany Delete multiple data<删除多个数据>
 func (m *Mgo) DeleteMany(update interface{}) (*mongo.DeleteResult, error) {
-	defer m.Close()
-	return m.Collection.DeleteMany(
+	return client.Database(m.DataBaseName).Collection(m.TableName).DeleteMany(
 		m.Ctx,
 		update,
 	)
 }
 
 // Count Get the total quantity<获取总数量>
-func (m *Mgo) Count() (int64, error) {
-	defer m.Close()
+func (m *Mgo) Count(count *int64) *Mgo {
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
-	return m.Collection.CountDocuments(m.Ctx, m.Filter)
+	total, err := client.Database(m.DataBaseName).Collection(m.TableName).CountDocuments(m.Ctx, m.Filter)
+	if err != nil {
+		fmt.Println(err)
+		m.Err = err
+	}
+
+	*count = total
+	return m
 }
 
 // FindOne Single query<单个查询>
-func (m *Mgo) FindOne() (bson.M, error) {
-	defer m.Close()
-	var result bson.M
+func (m *Mgo) FindOne(v interface{}) error {
+	m.Lock()
+	defer m.Unlock()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
-	if m.Collection != nil {
-		if err := m.Collection.FindOne(m.Ctx, m.Filter).Decode(&result); err != nil {
-			return nil, err
+	if client != nil {
+		if err := client.Database(m.DataBaseName).Collection(m.TableName).FindOne(m.Ctx, m.Filter).Decode(v); err != nil {
+			return err
 		}
-		return result, nil
+
+		return nil
 	}
-	return nil, errors.New("Database connection failed")
+
+	return errors.New("Database connection failed")
 }
 
 // Find Multiple data search<多条数据查询>
 func (m *Mgo) Find() (*mongo.Cursor, error) {
-	defer m.Close()
+	m.Lock()
+	defer m.Unlock()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
 
-	if m.Collection != nil {
-		return m.Collection.Find(m.Ctx, m.Filter, &options.FindOptions{Limit: m.Pages.Limit, Skip: m.Pages.Skip, Sort: m.Pages.Sort})
+	if client != nil {
+
+		return client.Database(m.DataBaseName).Collection(m.TableName).Find(m.Ctx, m.Filter, &options.FindOptions{Limit: m.Pages.Limit, Skip: m.Pages.Skip, Sort: m.Pages.Sort})
 	}
 	return nil, errors.New("Database connection failed")
 
@@ -195,13 +211,14 @@ func (m *Mgo) Find() (*mongo.Cursor, error) {
 
 // Distinct Query unique data<查询不重复的数据>
 func (m *Mgo) Distinct(name string) ([]interface{}, error) {
-	defer m.Close()
+	m.Lock()
+	defer m.Unlock()
 	if m.Filter == nil {
 		m.Filter = bson.D{}
 	}
 
-	if m.Collection != nil {
-		return m.Collection.Distinct(m.Ctx, name, m.Filter, &options.DistinctOptions{})
+	if client != nil {
+		return client.Database(m.DataBaseName).Collection(m.TableName).Distinct(m.Ctx, name, m.Filter, &options.DistinctOptions{})
 
 	}
 	return nil, errors.New("Database connection failed")
@@ -275,10 +292,10 @@ func (m *Mgo) Where(filter interface{}) *Mgo {
 }
 
 // Close the connection<关闭连接>
-func (m *Mgo) Close() {
-	defer m.Cancel()
+func Close() {
+
 	defer func() {
-		if err := m.Client.Disconnect(m.Ctx); err != nil {
+		if err := client.Disconnect(context.Background()); err != nil {
 			panic(err)
 		}
 	}()
@@ -290,9 +307,8 @@ func (m *Mgo) Close() {
 // groupStage := bson.D{{"$group", bson.D{{"_id", "$podcast"}, {"total", bson.D{{"$sum", "$duration"}}}}}}
 // mongo.Pipeline{matchStage, groupStage}
 func (m *Mgo) Aggregate() (*mongo.Cursor, error) {
-	defer m.Close()
-	if m.Collection != nil {
-		return m.Collection.Aggregate(m.Ctx, m.Filter)
+	if client != nil {
+		return client.Database(m.DataBaseName).Collection(m.TableName).Aggregate(m.Ctx, m.Filter)
 	}
 	return nil, errors.New("Database connection failed")
 }
@@ -302,18 +318,13 @@ func (m *Mgo) GetCtx() context.Context {
 	return m.Ctx
 }
 
-// GetClient Get Client<获取连接>
-func (m *Mgo) GetClient() *mongo.Client {
-	return m.Client
-}
-
 // StartTrans 开启事务
 // sessionContext.StartTransaction() 开启事务
 // sessionContext.AbortTransaction(sessionContext) //终止事务
 // sessionContext.CommitTransaction(sessionContext) //提交事务
 func (m *Mgo) StartTrans(fn func(mongo.SessionContext) error) {
-	defer m.Close()
-	if err := m.Client.UseSession(m.Ctx, fn); err != nil {
+
+	if err := client.UseSession(m.Ctx, fn); err != nil {
 		panic(err)
 	}
 }
@@ -324,6 +335,7 @@ func BuildWhere(Filter []string) [][]interface{} {
 	for i := 0; i < len(Filter); i++ {
 		var value = Filter[i]
 		var binding []interface{}
+
 		if err := json.Unmarshal(conv.Bytes(value), &binding); err != nil {
 			panic(err)
 		}

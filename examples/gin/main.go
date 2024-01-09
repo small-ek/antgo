@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/antgo/examples/gin/model"
 	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
 	"io/ioutil"
@@ -24,12 +25,12 @@ func main() {
 	app.GET("/test", func(c *gin.Context) {
 		c.String(200, "Hello, World!")
 	})
-	config := *flag.String("config", "config.toml", "Configuration file path")
-	eng := ant.Default().SetConfig(config).Serve(app)
+	config := *flag.String("config", "./config.toml", "Configuration file path")
+	eng := ant.New(config).Serve(app)
 
-	//result := model.Admin{}
+	result := model.Admin{}
 	//ant.Db().Find(&result)
-	////ant.Db().Table("s_admin").Find(&result)
+	ant.Db("mysql2").Table("s_admin").Find(&result)
 	//
 	//ant.Log().Info(conv.String(result))
 	//tt := Test{Name: "22121"}

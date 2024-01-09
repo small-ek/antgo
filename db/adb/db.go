@@ -10,11 +10,11 @@ import (
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
-	"strconv"
 )
 
-var Master *gorm.DB
-var Resolver *dbresolver.DBResolver
+var Master map[string]*gorm.DB
+
+// var Resolver *dbresolver.DBResolver
 var datetimePrecision = 2
 
 type Db struct {
@@ -31,72 +31,77 @@ type Db struct {
 }
 
 func InitDb() {
-
-	connections := conv.Map(config.Get("connections"))
+	if Master == nil {
+		Master = make(map[string]*gorm.DB)
+	}
+	connections := config.GetMaps("connections")
 	default_connections := conv.String(config.Get("system.default_connections"))
 	if default_connections != "" {
 
 		for i := 0; i < len(connections); i++ {
-			value := connections[strconv.Itoa(i)]
+			value := connections[i]
 			row := Db{}
 			conv.Struct(&row, value)
 			dsn := row.Dsn
 
 			switch row.Type {
 			case "mysql":
-				if row.Dsn == "" {
+				if row.Dsn == "" && row.Name != "" {
 					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+					Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
 				}
-
-				if row.Name == default_connections {
-					row.Open(Mysql(dsn), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Mysql(dsn)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
+				//if row.Name == default_connections {
+				//	Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
+				//
+				//} else {
+				//	Resolver = dbresolver.Register(dbresolver.Config{
+				//		Replicas: []gorm.Dialector{Mysql(dsn)},
+				//		// sources/replicas 负载均衡策略
+				//		Policy: dbresolver.RandomPolicy{},
+				//	}, row.Name)
+				//}
 				break
 			case "pgsql":
-				if row.Dsn == "" {
+				if row.Dsn == "" && row.Name != "" {
 					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
+					Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
 				}
-				if row.Name == default_connections {
-					row.Open(Postgres(dsn), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Postgres(dsn)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
+				//if row.Name == default_connections {
+				//	Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
+				//} else {
+				//	Resolver = dbresolver.Register(dbresolver.Config{
+				//		Replicas: []gorm.Dialector{Postgres(dsn)},
+				//		// sources/replicas 负载均衡策略
+				//		Policy: dbresolver.RandomPolicy{},
+				//	}, row.Name)
+				//}
 				break
 			case "sqlsrv":
-				if row.Dsn == "" {
+				if row.Dsn == "" && row.Name != "" {
 					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
+					Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
 				}
-				if row.Name == default_connections {
-					row.Open(Sqlserver(dsn), getConfig(row.Log))
-				} else {
-					Resolver = dbresolver.Register(dbresolver.Config{
-						Replicas: []gorm.Dialector{Sqlserver(dsn)},
-						// sources/replicas 负载均衡策略
-						Policy: dbresolver.RandomPolicy{},
-					}, row.Name)
-				}
+				//if row.Name == default_connections {
+				//	Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
+				//} else {
+				//	Resolver = dbresolver.Register(dbresolver.Config{
+				//		Replicas: []gorm.Dialector{Sqlserver(dsn)},
+				//		// sources/replicas 负载均衡策略
+				//		Policy: dbresolver.RandomPolicy{},
+				//	}, row.Name)
+				//}
 				break
 			}
 		}
 
 	}
 
-	if len(connections) > 1 {
-		err := Master.Use(Resolver)
-		if err != nil {
-			panic(err)
-		}
-	}
+	//if len(connections) > 1 {
+	//	err := Master[default_connections].Use(Resolver)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//}
 
 }
 
@@ -115,18 +120,28 @@ func getConfig(isLog bool) *gorm.Config {
 }
 
 // Open connection
-func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) {
-	var db, err = gorm.Open(Dialector, opts)
+func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err error) {
+	db, err = gorm.Open(Dialector, opts)
 	if err != nil {
-		alog.Panic(err.Error())
+		alog.Panic("Open", zap.Error(err))
 	}
-	Master = db
+	return
 }
 
 // Use
-func (d *Db) Use(plugin gorm.Plugin) {
-	if err := Master.Use(plugin); err != nil {
-		alog.Panic(err.Error())
+func (d *Db) Use(name string, plugin gorm.Plugin) {
+	connections := config.GetMaps("connections")
+
+	for i := 0; i < len(connections); i++ {
+		value := connections[i]
+		row := Db{}
+		conv.Struct(&row, value)
+		if name == row.Name {
+			if err := Master[row.Name].Use(plugin); err != nil {
+				alog.Error("Use", zap.Error(err))
+			}
+		}
+
 	}
 
 }
@@ -167,16 +182,24 @@ func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbreso
 
 // Close 关闭数据库
 func Close() {
-	if Master != nil {
-		var db, err = Master.DB()
-		if err != nil {
-			alog.Error(err.Error())
-		}
+	connections := config.GetMaps("connections")
 
-		if db != nil {
-			if err2 := db.Close(); err2 != nil {
-				return
+	for i := 0; i < len(connections); i++ {
+		value := connections[i]
+		row := Db{}
+		conv.Struct(&row, value)
+		if Master[row.Name] != nil {
+			var db, err = Master[row.Name].DB()
+			if err != nil {
+				alog.Error(err.Error())
+			}
+
+			if db != nil {
+				if err2 := db.Close(); err2 != nil {
+					return
+				}
 			}
 		}
 	}
+
 }

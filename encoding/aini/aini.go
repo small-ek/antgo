@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//Decode
+// Decode
 func Decode(data []byte) (res map[string]interface{}, err error) {
 	res = make(map[string]interface{})
 	fieldMap := make(map[string]interface{})

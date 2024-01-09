@@ -1,6 +1,6 @@
 package page
 
-//PageParam Paging parameters
+// PageParam Paging parameters
 type PageParam struct {
 	CurrentPage int                    `form:"current_page" json:"current_page" bson:"current_page" xml:"current_page" yaml:"current_page"`
 	PageSize    int                    `form:"page_size" json:"page_size" bson:"page_size" xml:"page_size" yaml:"page_size"`
@@ -13,7 +13,7 @@ type PageParam struct {
 	Extra       map[string]interface{} `form:"extra" json:"extra" bson:"extra" xml:"extra" yaml:"extra"`
 }
 
-//New Default pagination
+// New Default pagination
 func New() PageParam {
 	return PageParam{
 		CurrentPage: 1,

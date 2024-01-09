@@ -6,8 +6,8 @@ import (
 )
 
 // Db Get database connection
-func Db() *gorm.DB {
-	return adb.Master
+func Db(name string) *gorm.DB {
+	return adb.Master[name]
 }
 
 // CloseDb Close database connection

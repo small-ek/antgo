@@ -27,10 +27,20 @@ type Engine struct {
 // defaultAdapter is the default adapter.
 var defaultAdapter serve.WebFrameWork
 
-// Default return the default engine instance.
-func Default() *Engine {
+// New return the default engine instance.
+func New(filePath ...string) *Engine {
 	log.SetFlags(log.Llongfile | log.LstdFlags)
 	flag.Parse()
+	if len(filePath) > 0 {
+		err := config.New(filePath...).Regiter()
+		if err != nil {
+			panic(err)
+		}
+		//加载默认配置
+		initLog()
+		adb.InitDb()
+	}
+
 	return &Engine{
 		Adapter: defaultAdapter,
 	}
@@ -73,7 +83,7 @@ func (eng *Engine) Run(srv *http.Server) *Engine {
 // defaultServer
 func defaultServer(app http.Handler) *http.Server {
 	addr := config.GetString("system.address")
-
+	fmt.Println(addr)
 	if addr == "" {
 		addr = ":8080"
 	}
@@ -131,11 +141,13 @@ func (eng *Engine) GetServer() *http.Server {
 }
 
 // SetConfig Modify the configuration path<修改配置路径>
-func (eng *Engine) SetConfig(filePath string) *Engine {
-	config.New("./", filePath)
-
+func (eng *Engine) SetConfig(filePath ...string) *Engine {
+	err := config.New(filePath...).Regiter()
+	if err != nil {
+		panic(err)
+	}
 	//加载默认配置
-	initConfigLog()
+	initLog()
 	adb.InitDb()
 	return eng
 }

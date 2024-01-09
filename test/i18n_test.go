@@ -21,6 +21,6 @@ func TestI18n(t *testing.T) {
 	str3 := lang.T("hello", "12", "23")
 	log.Println(str3)
 
-	str4 := lang.T("common.name","2222")
+	str4 := lang.T("common.name", "2222")
 	log.Println(str4)
 }

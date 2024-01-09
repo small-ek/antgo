@@ -25,7 +25,7 @@ func main() {
 	r.Run(bindAddress)
 }
 
-//webSocket请求ping 返回pong
+// webSocket请求ping 返回pong
 func ping(c *gin.Context) {
 	var (
 		websocket *websocket.Conn

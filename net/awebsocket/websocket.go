@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-//Connection ...
+// Connection ...
 type Connection struct {
 	Address       string          // 客户端地址
 	AppId         string          // 登录的平台Id
@@ -24,7 +24,7 @@ type Connection struct {
 	isClosed      bool            // 防止closeChan被关闭多次
 }
 
-//New ...
+// New ...
 func New(socket *websocket.Conn, address string, firstTime uint64) *Connection {
 	var get = &Connection{
 		Address:       address,
@@ -43,7 +43,7 @@ func New(socket *websocket.Conn, address string, firstTime uint64) *Connection {
 	return get
 }
 
-//ReadMessage Read client messages<读取客户端消息>
+// ReadMessage Read client messages<读取客户端消息>
 func (get *Connection) ReadMessage() (data []byte, err error) {
 	select {
 	case data = <-get.ReadChan:
@@ -53,7 +53,7 @@ func (get *Connection) ReadMessage() (data []byte, err error) {
 	return
 }
 
-//WriteMessage Write message sending client(写入消息发送客户端)
+// WriteMessage Write message sending client(写入消息发送客户端)
 func (get *Connection) WriteMessage(data []byte) (err error) {
 	select {
 	case get.WriteChan <- data:
@@ -63,7 +63,7 @@ func (get *Connection) WriteMessage(data []byte) (err error) {
 	return
 }
 
-//Close Close the connection<关闭连接>
+// Close Close the connection<关闭连接>
 func (get *Connection) Close() {
 	// 线程安全，可多次调用
 	get.Socket.Close()
@@ -76,7 +76,7 @@ func (get *Connection) Close() {
 	defer get.mutex.Unlock()
 }
 
-//readLoop Read the channel message loop<读取通道消息循环>
+// readLoop Read the channel message loop<读取通道消息循环>
 func (get *Connection) readLoop() {
 	var (
 		data []byte
@@ -99,7 +99,7 @@ ERR:
 	get.Close()
 }
 
-//writeLoop Writes to the channel message loop<写入通道消息循环>
+// writeLoop Writes to the channel message loop<写入通道消息循环>
 func (get *Connection) writeLoop() {
 	var (
 		data []byte
@@ -119,19 +119,19 @@ ERR:
 	get.Close()
 }
 
-//SetHeartbeat 设置用户心跳
+// SetHeartbeat 设置用户心跳
 func (get *Connection) SetHeartbeat(currentTime uint64) {
 	get.HeartbeatTime = currentTime
 	return
 }
 
-//SetTimeOut 设置超时时间
+// SetTimeOut 设置超时时间
 func (get *Connection) SetTimeOut(TimeOut uint64) {
 	get.TimeOut = TimeOut
 	return
 }
 
-//GetHeartbeat 获取心跳是否超时
+// GetHeartbeat 获取心跳是否超时
 func (get *Connection) GetHeartbeat(currentTime uint64) bool {
 	if get.HeartbeatTime+get.TimeOut <= currentTime {
 		return true
@@ -139,7 +139,7 @@ func (get *Connection) GetHeartbeat(currentTime uint64) bool {
 	return false
 }
 
-//SetLogin 设置用户登录
+// SetLogin 设置用户登录
 func (get *Connection) SetLogin(appId string, userId string, loginTime uint64) {
 	get.AppId = appId
 	get.UserId = userId
@@ -147,7 +147,7 @@ func (get *Connection) SetLogin(appId string, userId string, loginTime uint64) {
 	get.SetHeartbeat(loginTime)
 }
 
-//GetLogin 获取是否登录
+// GetLogin 获取是否登录
 func (get *Connection) GetLogin() bool {
 	if get.UserId != "" {
 		return true
@@ -155,14 +155,14 @@ func (get *Connection) GetLogin() bool {
 	return false
 }
 
-//Login 用户登录
+// Login 用户登录
 type Login struct {
 	AppId  string
 	UserId string
 	Client *Connection
 }
 
-//GetUserKey 获取用户的Key
+// GetUserKey 获取用户的Key
 func (get *Login) GetUserKey() (key string) {
 	key = hash.Sha1(get.AppId + get.UserId)
 	return

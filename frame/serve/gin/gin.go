@@ -18,7 +18,7 @@ func init() {
 	ant.Register(new(Gin))
 }
 
-//Name implements the method Adapter.Name.
+// Name implements the method Adapter.Name.
 func (gins *Gin) Name() string {
 	return "gin"
 }

@@ -11,5 +11,4 @@ type WebFrameWork interface {
 
 // BaseAdapter is a base adapter contains some helper functions.
 type BaseAdapter struct {
-
 }

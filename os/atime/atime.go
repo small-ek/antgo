@@ -11,12 +11,12 @@ func (t *Times) UTC() *Times {
 	return WithTime(t.Time.UTC())
 }
 
-//Timestamp Get timestamp.时间转时间戳
+// Timestamp Get timestamp.时间转时间戳
 func (t *Times) Timestamp() int64 {
 	return t.Time.Unix()
 }
 
-//Millisecond 毫秒
+// Millisecond 毫秒
 func (t *Times) Millisecond() int64 {
 	return t.Time.UnixNano() / 1e6
 }
@@ -31,7 +31,7 @@ func (t *Times) Nanosecond() int64 {
 	return t.Time.UnixNano()
 }
 
-//Adds returns the time t+d.
+// Adds returns the time t+d.
 func (t *Times) Add(d time.Duration) *Times {
 	timeStr := t.Time.Add(d)
 	return WithTime(timeStr)
@@ -73,14 +73,14 @@ func (t *Times) AddDate(years int, months int, days int) *Times {
 	return WithTime(t.Time.AddDate(years, months, days))
 }
 
-//WithDate ...
+// WithDate ...
 func WithDate(year, month, date, hour, minute, second int) *Times {
 	t := time.Date(year, time.Month(month), date, hour, minute, second, 0, time.Local)
 	return WithTime(t)
 }
 
-//SetTimeZone creates and returns a Time object with given timestamp
-//Set time zone 设置时区
+// SetTimeZone creates and returns a Time object with given timestamp
+// Set time zone 设置时区
 func SetTimeZone(zone string) error {
 	location, err := time.LoadLocation(zone)
 	if err != nil {

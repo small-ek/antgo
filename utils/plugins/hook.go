@@ -1,17 +1,17 @@
 package plugins
 
-//pluginFunc Define an interface, there are two methods
+// pluginFunc Define an interface, there are two methods
 type pluginFunc interface {
 	Before() interface{} //Before what
 	After()              //After what
 }
 
-//New Define a class to store our plugin
+// New Define a class to store our plugin
 type New struct {
 	List map[string]pluginFunc //Plugin list
 }
 
-//Init Initialize the plugin
+// Init Initialize the plugin
 func (p *New) Init() {
 	p.List = make(map[string]pluginFunc)
 }

@@ -15,7 +15,7 @@ const (
 
 var cache = freecache.NewCache(cacheSize)
 
-//Get cached data
+// Get cached data
 func Get(key string) []byte {
 	//判断是否有缓存
 	h := hash.Sha1(key)
@@ -24,7 +24,7 @@ func Get(key string) []byte {
 	return getData
 }
 
-//Set the cache data
+// Set the cache data
 func Set(key string, value interface{}, expire ...int) {
 	//判断是否有缓存
 	h := hash.Sha1(conv.String(key))
@@ -35,7 +35,7 @@ func Set(key string, value interface{}, expire ...int) {
 	_ = cache.Set([]byte(h), conv.Bytes(value), cacheExpire)
 }
 
-//Sets cache data based on value
+// Sets cache data based on value
 func Sets(value interface{}, expire ...int) {
 	h := hash.Sha1(conv.String(value))
 
@@ -45,7 +45,7 @@ func Sets(value interface{}, expire ...int) {
 	_ = cache.Set([]byte(h), conv.Bytes(value), cacheExpire)
 }
 
-//GetOrSet returns existing value or if record doesn't exist
+// GetOrSet returns existing value or if record doesn't exist
 func GetOrSet(key string, value interface{}, expire ...int) []byte {
 	h := hash.Sha1(key)
 	if len(expire) > 0 {
@@ -56,14 +56,14 @@ func GetOrSet(key string, value interface{}, expire ...int) []byte {
 	return result
 }
 
-//Remove Delete the cache
+// Remove Delete the cache
 func Remove(key string) bool {
 	h := hash.Sha1(key)
 	result := cache.Del([]byte(h))
 	return result
 }
 
-//Clear the cache
+// Clear the cache
 func Clear() bool {
 	cache.Clear()
 	return true
