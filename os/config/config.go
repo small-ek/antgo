@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 	"sync"
 )
 
@@ -28,7 +29,20 @@ func New(filePath ...string) *ConfigStr {
 
 // AddRemoteProvider 添加远程连接
 func (c *ConfigStr) AddRemoteProvider(provider, endpoint, path string) error {
-	return c.Viper.AddRemoteProvider(provider, endpoint, path)
+	err := c.Viper.AddRemoteProvider(provider, endpoint, path)
+	if err != nil {
+		return err
+	}
+	return c.Viper.ReadRemoteConfig()
+}
+
+// AddSecureRemoteProvider 添加远程连接
+func (c *ConfigStr) AddSecureRemoteProvider(provider, endpoint, path, secretkeyring string) error {
+	err := c.Viper.AddSecureRemoteProvider(provider, endpoint, path, secretkeyring)
+	if err != nil {
+		return err
+	}
+	return c.Viper.ReadRemoteConfig()
 }
 
 // AddPath 增加配置文件路径

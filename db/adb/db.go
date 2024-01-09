@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
+	"strconv"
 )
 
 var Master *gorm.DB
@@ -30,13 +31,13 @@ type Db struct {
 }
 
 func InitDb() {
-	cfg := config.Decode()
-	connections := cfg.Get("connections").Maps()
-	default_connections := cfg.Get("system.default_connections").String()
+
+	connections := conv.Map(config.Get("connections"))
+	default_connections := conv.String(config.Get("system.default_connections"))
 	if default_connections != "" {
 
 		for i := 0; i < len(connections); i++ {
-			value := connections[i]
+			value := connections[strconv.Itoa(i)]
 			row := Db{}
 			conv.Struct(&row, value)
 			dsn := row.Dsn
