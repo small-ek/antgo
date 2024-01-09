@@ -1,9 +1,11 @@
 package config
 
 import (
+	"github.com/small-ek/antgo/utils/conv"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
 	"sync"
+	"time"
 )
 
 var Config *ConfigStr
@@ -76,4 +78,64 @@ func SetKey(key string, value any) {
 // Get 获取
 func Get(key string) any {
 	return Config.Viper.Get(key)
+}
+
+// GetString 获取
+func GetString(key string) string {
+	return Config.Viper.GetString(key)
+}
+
+// GetBool 获取
+func GetBool(key string) bool {
+	return Config.Viper.GetBool(key)
+}
+
+// GetInt 获取
+func GetInt(key string) int {
+	return Config.Viper.GetInt(key)
+}
+
+// GetInt64 获取
+func GetInt64(key string) int64 {
+	return Config.Viper.GetInt64(key)
+}
+
+// GetStringMap 获取
+func GetStringMap(key string) map[string]any {
+	return Config.Viper.GetStringMap(key)
+}
+
+// GetStringMapStringSlice 获取
+func GetStringMapStringSlice(key string) map[string][]string {
+	return Config.Viper.GetStringMapStringSlice(key)
+}
+
+// GetDuration 获取
+func GetDuration(key string) time.Duration {
+	return Config.Viper.GetDuration(key)
+}
+
+// GetFloat64 获取
+func GetFloat64(key string) float64 {
+	return Config.Viper.GetFloat64(key)
+}
+
+// GetTime 获取
+func GetTime(key string) time.Time {
+	return Config.Viper.GetTime(key)
+}
+
+// GetStringSlice 获取
+func GetStringSlice(key string) []string {
+	return Config.Viper.GetStringSlice(key)
+}
+
+// GetIntSlice 获取
+func GetIntSlice(key string) []int {
+	return Config.Viper.GetIntSlice(key)
+}
+
+// GetMaps 获取
+func GetMaps(key string) []map[string]any {
+	return conv.Maps(Config.Viper.Get(key))
 }
