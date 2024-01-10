@@ -25,7 +25,7 @@ type Logs struct {
 }
 
 // Default setting log
-func Default(path string) *Logs {
+func New(path string) *Logs {
 	return &Logs{
 		Path:        path,
 		MaxSize:     10,

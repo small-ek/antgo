@@ -35,7 +35,9 @@ func New(filePath ...string) *ConfigStr {
 
 // AddRemoteProvider 添加远程连接
 func (c *ConfigStr) AddRemoteProvider(provider, endpoint, path string) error {
+	c.Viper.SetConfigType("toml")
 	err := c.Viper.AddRemoteProvider(provider, endpoint, path)
+
 	if err != nil {
 		return err
 	}

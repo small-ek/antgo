@@ -28,11 +28,11 @@ type Engine struct {
 var defaultAdapter serve.WebFrameWork
 
 // New return the default engine instance.
-func New(filePath ...string) *Engine {
+func New(configPath ...string) *Engine {
 	log.SetFlags(log.Llongfile | log.LstdFlags)
 	flag.Parse()
-	if len(filePath) > 0 {
-		err := config.New(filePath...).Regiter()
+	if len(configPath) > 0 {
+		err := config.New(configPath...).Regiter()
 		if err != nil {
 			panic(err)
 		}
@@ -152,8 +152,20 @@ func (eng *Engine) SetConfig(filePath ...string) *Engine {
 	return eng
 }
 
+// AddSecureRemoteProvider.<添加远程连接>
+func (eng *Engine) AddRemoteProvider(provider, endpoint, path string) *Engine {
+	err := config.New().AddRemoteProvider(provider, endpoint, path)
+	if err != nil {
+		panic(err)
+	}
+	//加载默认配置
+	initLog()
+	adb.InitDb()
+	return eng
+}
+
 // SetLog Modify log path.<修改日志路径>
 func (eng *Engine) SetLog(filePath string) *Engine {
-	alog.Default(filePath).Register()
+	alog.New(filePath).Register()
 	return eng
 }

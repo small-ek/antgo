@@ -15,7 +15,7 @@ func initLog() {
 	logPath := config.GetString("log.path")
 
 	if config.GetBool("log.switch") == true && logPath != "" {
-		alog.Default(logPath).
+		alog.New(logPath).
 			SetLevel(config.GetString("log.level")).
 			SetServiceName(config.GetString("log.service_name")).
 			SetMaxSize(config.GetInt("log.max_size")).
