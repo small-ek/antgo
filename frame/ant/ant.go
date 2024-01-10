@@ -31,14 +31,13 @@ var defaultAdapter serve.WebFrameWork
 func New(configPath ...string) *Engine {
 	log.SetFlags(log.Llongfile | log.LstdFlags)
 	flag.Parse()
+
 	if len(configPath) > 0 {
 		err := config.New(configPath...).Regiter()
 		if err != nil {
 			panic(err)
 		}
-		//加载默认配置
-		initLog()
-		adb.InitDb()
+		loadApp()
 	}
 
 	return &Engine{
@@ -83,7 +82,6 @@ func (eng *Engine) Run(srv *http.Server) *Engine {
 // defaultServer
 func defaultServer(app http.Handler) *http.Server {
 	addr := config.GetString("system.address")
-	fmt.Println(addr)
 	if addr == "" {
 		addr = ":8080"
 	}
@@ -146,9 +144,8 @@ func (eng *Engine) SetConfig(filePath ...string) *Engine {
 	if err != nil {
 		panic(err)
 	}
-	//加载默认配置
-	initLog()
-	adb.InitDb()
+
+	loadApp()
 	return eng
 }
 
@@ -158,9 +155,7 @@ func (eng *Engine) AddRemoteProvider(provider, endpoint, path string) *Engine {
 	if err != nil {
 		panic(err)
 	}
-	//加载默认配置
-	initLog()
-	adb.InitDb()
+	loadApp()
 	return eng
 }
 
@@ -168,4 +163,13 @@ func (eng *Engine) AddRemoteProvider(provider, endpoint, path string) *Engine {
 func (eng *Engine) SetLog(filePath string) *Engine {
 	alog.New(filePath).Register()
 	return eng
+}
+
+// loadApp.<加载应用>
+func loadApp() {
+	if config.Config != nil {
+		//加载默认配置
+		initLog()
+		adb.InitDb()
+	}
 }
