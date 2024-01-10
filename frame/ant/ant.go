@@ -110,11 +110,11 @@ func (eng *Engine) Serve(app http.Handler) *Engine {
 }
 
 // Close signal<关闭服务操作>
-func (eng *Engine) Close() *Engine {
+func (eng *Engine) Close(f ...func()) *Engine {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	Log().Warn("Shutdown Server")
+	Log().Warn("Exit service")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -126,10 +126,12 @@ func (eng *Engine) Close() *Engine {
 	}
 
 	if err := eng.Srv.Shutdown(ctx); err != nil {
-
 		Log().Error("Server Shutdown:" + err.Error())
 	}
-	Log().Warn("Server exiting")
+
+	if len(f) > 0 {
+		f[0]()
+	}
 	return eng
 }
 

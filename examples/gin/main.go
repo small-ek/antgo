@@ -36,5 +36,5 @@ func main() {
 	//	ant.Log().Info("222121212=============================" + conv.String(i))
 	//}
 
-	eng.Close()
+	defer eng.Close()
 }
