@@ -20,9 +20,17 @@ type ConfigStr struct {
 func New(filePath ...string) *ConfigStr {
 	once.Do(func() {
 		Config = &ConfigStr{Viper: viper.New()}
-		if len(filePath) > 0 && filePath[0] != "" {
+		if len(filePath) == 1 {
 			Config.Viper.SetConfigFile(filePath[0])
 			types := strings.Split(filePath[0], ".")
+
+			if len(types) == 2 {
+				Config.Viper.SetConfigType(types[1])
+			}
+		}
+		if len(filePath) == 3 {
+			Config.Viper.AddRemoteProvider(filePath[0], filePath[1], filePath[2])
+			types := strings.Split(filePath[2], ".")
 
 			if len(types) == 2 {
 				Config.Viper.SetConfigType(types[1])
@@ -73,7 +81,8 @@ func (c *ConfigStr) SetType(in string) *ConfigStr {
 
 // Regiter 注册读取配置
 func (c *ConfigStr) Regiter() error {
-	return c.Viper.ReadInConfig()
+
+	return c.Viper.ReadRemoteConfig()
 }
 
 // SetKey 设置值
