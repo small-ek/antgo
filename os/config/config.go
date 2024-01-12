@@ -28,8 +28,11 @@ func New(filePath ...string) *ConfigStr {
 				Config.Viper.SetConfigType(types[1])
 			}
 		}
+
 		if len(filePath) == 3 {
-			Config.Viper.AddRemoteProvider(filePath[0], filePath[1], filePath[2])
+			if err := Config.Viper.AddRemoteProvider(filePath[0], filePath[1], filePath[2]); err != nil {
+				panic(err)
+			}
 			types := strings.Split(filePath[2], ".")
 
 			if len(types) == 2 {
