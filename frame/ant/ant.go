@@ -83,7 +83,7 @@ func (eng *Engine) Run(srv *http.Server) *Engine {
 func defaultServer(app http.Handler) *http.Server {
 	addr := config.GetString("system.address")
 	if addr == "" {
-		addr = ":8080"
+		addr = ":8081"
 	}
 
 	return &http.Server{
@@ -99,7 +99,7 @@ func (eng *Engine) Serve(app http.Handler) *Engine {
 
 	go func() {
 		if err := eng.Srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			panic(err)
 		}
 	}()
 
@@ -114,7 +114,7 @@ func (eng *Engine) Close(f ...func()) *Engine {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	Log().Warn("Exit service")
+	alog.Warn("Exit service")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -126,7 +126,7 @@ func (eng *Engine) Close(f ...func()) *Engine {
 	}
 
 	if err := eng.Srv.Shutdown(ctx); err != nil {
-		Log().Error("Server Shutdown:" + err.Error())
+		alog.Error("Server Shutdown:" + err.Error())
 	}
 
 	if len(f) > 0 {
@@ -157,7 +157,19 @@ func (eng *Engine) AddRemoteProvider(provider, endpoint, path string) *Engine {
 	if err != nil {
 		panic(err)
 	}
+
 	loadApp()
+	return eng
+}
+
+// SetLog Modify log path.<修改日志路径>
+func (eng *Engine) Etcd(host []string, path, username, pwd string) *Engine {
+	if len(host) > 0 && path != "" {
+		err := config.New().Etcd(host, path, username, pwd)
+		if err != nil {
+			panic(err)
+		}
+	}
 	return eng
 }
 

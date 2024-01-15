@@ -17,7 +17,7 @@ type Str struct {
 func TestLogger(t *testing.T) {
 	log.SetFlags(log.Llongfile | log.LstdFlags)
 	flag.Parse()
-	alog.Default("./log/ek2.log").SetServiceName("api").Register()
+	alog.New("./log/ek2.log").SetServiceName("api").Register()
 
 	alog.Write.Info("22333")
 	data := conv.Bytes(Str{

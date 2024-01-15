@@ -2,11 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/small-ek/antgo/examples/gin/model"
 	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
-	"github.com/small-ek/antgo/os/alog"
-	"go.uber.org/zap"
+	"github.com/small-ek/antgo/os/config"
 	"io/ioutil"
 )
 
@@ -17,19 +15,20 @@ func main() {
 	gin.DefaultWriter = ioutil.Discard
 
 	app.GET("/", func(c *gin.Context) {
-		c.String(200, "Hello, World!")
+
+		c.String(200, config.GetString("casbin.path"))
 	})
 	app.GET("/test", func(c *gin.Context) {
 		c.String(200, "Hello, World!")
 	})
 	//config := *flag.String("config", "./config.toml", "Configuration file path")
-	//eng := ant.New().AddRemoteProvider("etcd3", "http://127.0.0.1:2379", "/test.toml").Serve(app)
-	eng := ant.New("etcd3", "http://127.0.0.1:2379", "/test.toml").Serve(app)
-	result := model.Admin{}
+	eng := ant.New().Etcd([]string{"127.0.0.1:2379"}, "/test.toml", "", "").Serve(app)
+	//eng := ant.New(config).Serve(app)
+	//result := model.Admin{}
 	//ant.Db().Find(&result)
-	ant.Db("mysql2").Table("s_admin").Find(&result)
+	//ant.Db("mysql2").Table("s_admin").Find(&result)
 	//
-	alog.Debug("main", zap.Any("result", result))
+	//alog.Info("main", zap.Any("result", result))
 	//tt := Test{Name: "22121"}
 	//for i := 0; i < 10; i++ {
 	//	ant.Log().Info("222121212=============================" + conv.String(i))

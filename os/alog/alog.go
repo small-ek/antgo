@@ -1,6 +1,7 @@
 package alog
 
 import (
+	"fmt"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -202,11 +203,19 @@ func Debug(msg string, fields ...zap.Field) {
 
 // Error  printing<错误打印>
 func Error(msg string, fields ...zap.Field) {
+	if Write == nil {
+		fmt.Println(msg, fields)
+		return
+	}
 	Write.Error(msg, fields...)
 }
 
 // Warn Warning print<警告打印>
 func Warn(msg string, fields ...zap.Field) {
+	if Write == nil {
+		fmt.Println(msg, fields)
+		return
+	}
 	Write.Warn(msg, fields...)
 }
 
