@@ -1,11 +1,11 @@
 package aredis
 
 import (
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // AddSet value<修改集合>
-func (c *Client) AddZset(key string, value []*redis.Z) int64 {
+func (c *ClientRedis) AddZset(key string, value ...redis.Z) int64 {
 
 	var count int64
 	if c.Mode {
@@ -18,7 +18,7 @@ func (c *Client) AddZset(key string, value []*redis.Z) int64 {
 }
 
 // GetSetLength value<获取集合长度>
-func (c *Client) GetZsetLength(key string) int64 {
+func (c *ClientRedis) GetZsetLength(key string) int64 {
 	var count int64
 
 	if c.Mode {
@@ -31,7 +31,7 @@ func (c *Client) GetZsetLength(key string) int64 {
 }
 
 // GetZsetScore value<获取集合>
-func (c *Client) GetZsetMember(key string, score string) float64 {
+func (c *ClientRedis) GetZsetMember(key string, score string) float64 {
 	var result float64
 
 	if c.Mode {
@@ -44,7 +44,7 @@ func (c *Client) GetZsetMember(key string, score string) float64 {
 }
 
 // GetZsetScore value<获取集合>
-func (c *Client) GetZsetScore(key string, member string) int64 {
+func (c *ClientRedis) GetZsetScore(key string, member string) int64 {
 	var result int64
 
 	if c.Mode {
@@ -57,7 +57,7 @@ func (c *Client) GetZsetScore(key string, member string) int64 {
 }
 
 // GetZsetRange value<获取有序集合>
-func (c *Client) GetZsetRange(key string, start, stop int64) []string {
+func (c *ClientRedis) GetZsetRange(key string, start, stop int64) []string {
 	var result []string
 
 	if c.Mode {
@@ -70,7 +70,7 @@ func (c *Client) GetZsetRange(key string, start, stop int64) []string {
 }
 
 // GetZsetRange value<返回有序集合指定区间内的成员分数从高到低>
-func (c *Client) GetZsetRevRange(key string, start, stop int64) []string {
+func (c *ClientRedis) GetZsetRevRange(key string, start, stop int64) []string {
 	var result []string
 
 	if c.Mode {
@@ -83,7 +83,7 @@ func (c *Client) GetZsetRevRange(key string, start, stop int64) []string {
 }
 
 // GetZsetRange value<返回有序集合指定区间内的成员分数从高到低>
-func (c *Client) GetZsetRangeByScore(key string, opt *redis.ZRangeBy) []string {
+func (c *ClientRedis) GetZsetRangeByScore(key string, opt *redis.ZRangeBy) []string {
 	var result []string
 
 	if c.Mode {
@@ -96,7 +96,7 @@ func (c *Client) GetZsetRangeByScore(key string, opt *redis.ZRangeBy) []string {
 }
 
 // RemoveZset value<获取集合>
-func (c *Client) RemoveZset(key string, members ...interface{}) int64 {
+func (c *ClientRedis) RemoveZset(key string, members ...interface{}) int64 {
 	var result int64
 
 	if c.Mode {

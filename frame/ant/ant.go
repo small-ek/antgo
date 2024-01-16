@@ -165,10 +165,11 @@ func (eng *Engine) AddRemoteProvider(provider, endpoint, path string) *Engine {
 // SetLog Modify log path.<修改日志路径>
 func (eng *Engine) Etcd(host []string, path, username, pwd string) *Engine {
 	if len(host) > 0 && path != "" {
-		err := config.New().Etcd(host, path, username, pwd)
+		err := config.New().Etcd3(host, path, username, pwd)
 		if err != nil {
 			panic(err)
 		}
+		loadApp()
 	}
 	return eng
 }
@@ -185,5 +186,6 @@ func loadApp() {
 		//加载默认配置
 		initLog()
 		adb.InitDb()
+		initRedis()
 	}
 }

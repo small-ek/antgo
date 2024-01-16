@@ -67,8 +67,8 @@ func New(filePath ...string) *ConfigStr {
 	return Config
 }
 
-// AddRemoteProvider 添加远程连接
-func (c *ConfigStr) Etcd(hosts []string, path, username, pwd string) (err error) {
+// Etcd3
+func (c *ConfigStr) Etcd3(hosts []string, path, username, pwd string) (err error) {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints: hosts,
 		DialOptions: []grpc.DialOption{
@@ -87,27 +87,26 @@ func (c *ConfigStr) Etcd(hosts []string, path, username, pwd string) (err error)
 		Config.Viper.SetConfigType(types[1])
 	}
 
-	if err = c.readAllValuesFromEtcd(path, cli); err != nil {
+	if err = c.loadEtcdFormToViper(path, cli); err != nil {
 		return err
 	}
-	go c.watchEtcd(path, cli)
+	go c.watchEtcd3(path, cli)
 	//if err = c.Viper.ReadRemoteConfig(); err != nil {
 	//	panic(err)
 	//}
 	return nil
 }
 
-func (c *ConfigStr) readAllValuesFromEtcd(prefix string, client *clientv3.Client) error {
+// loadEtcdFormToViper
+func (c *ConfigStr) loadEtcdFormToViper(prefix string, client *clientv3.Client) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 使用WithPrefix方法获取以指定前缀开头的所有键值对
 	resp, err := client.Get(ctx, prefix, clientv3.WithPrefix())
 	if err != nil {
 		return err
 	}
 
-	// 遍历获取的键值对，并保存值到map中
 	err = c.Viper.ReadConfig(bytes.NewReader(resp.Kvs[0].Value))
 	if err != nil {
 		return err
@@ -116,8 +115,8 @@ func (c *ConfigStr) readAllValuesFromEtcd(prefix string, client *clientv3.Client
 	return nil
 }
 
-// watchEtcd 监听etcd
-func (c *ConfigStr) watchEtcd(path string, cli *clientv3.Client) {
+// watchEtcd3 监听etcd
+func (c *ConfigStr) watchEtcd3(path string, cli *clientv3.Client) {
 	// 创建一个context
 	watcher := clientv3.NewWatcher(cli)
 	ctx, cancel := context.WithCancel(context.Background())

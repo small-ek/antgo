@@ -1,7 +1,7 @@
 package aredis
 
 // GetList value<获取列表长度>
-func (c *Client) GetListLength(key string) int64 {
+func (c *ClientRedis) GetListLength(key string) int64 {
 	var lens int64
 	if c.Mode {
 		lens = c.Clients.LLen(c.Ctx, key).Val()
@@ -13,7 +13,7 @@ func (c *Client) GetListLength(key string) int64 {
 }
 
 // GetList value<获取列表>
-func (c *Client) GetList(key string) []string {
+func (c *ClientRedis) GetList(key string) []string {
 	lens := c.GetListLength(key)
 	var list []string
 	if c.Mode {
@@ -26,7 +26,7 @@ func (c *Client) GetList(key string) []string {
 }
 
 // GetListIndex value<返回名称为key的list中index位置的元素>
-func (c *Client) GetListIndex(key string, index int64) string {
+func (c *ClientRedis) GetListIndex(key string, index int64) string {
 	var list string
 
 	if c.Mode {
@@ -39,7 +39,7 @@ func (c *Client) GetListIndex(key string, index int64) string {
 }
 
 // SetList value<修改列表>
-func (c *Client) SetList(key string, index int64, value interface{}) error {
+func (c *ClientRedis) SetList(key string, index int64, value interface{}) error {
 	if c.Mode {
 		return c.Clients.LSet(c.Ctx, key, index, value).Err()
 	} else {
@@ -49,7 +49,7 @@ func (c *Client) SetList(key string, index int64, value interface{}) error {
 
 // RemoveList value<删除列表>
 // count 参数表示删除多少个key中的list
-func (c *Client) RemoveList(key string, value interface{}, count ...int64) error {
+func (c *ClientRedis) RemoveList(key string, value interface{}, count ...int64) error {
 	var counts int64 = 0
 	if len(count) > 0 {
 		counts = count[0]
@@ -63,7 +63,7 @@ func (c *Client) RemoveList(key string, value interface{}, count ...int64) error
 }
 
 // RemoveListLeft value<返回并删除名称为key的list中的首元素>
-func (c *Client) RemoveListLeft(key string) error {
+func (c *ClientRedis) RemoveListLeft(key string) error {
 	if c.Mode {
 		return c.Clients.LPop(c.Ctx, key).Err()
 	} else {
@@ -72,7 +72,7 @@ func (c *Client) RemoveListLeft(key string) error {
 }
 
 // RemoveListRight value<返回并删除名称为key的list中的尾元素>
-func (c *Client) RemoveListRight(key string) error {
+func (c *ClientRedis) RemoveListRight(key string) error {
 	if c.Mode {
 		return c.Clients.LPop(c.Ctx, key).Err()
 	} else {
@@ -81,7 +81,7 @@ func (c *Client) RemoveListRight(key string) error {
 }
 
 // PushList value<添加>
-func (c *Client) PushList(key string, value interface{}) error {
+func (c *ClientRedis) PushList(key string, value interface{}) error {
 	if c.Mode {
 		return c.Clients.RPush(c.Ctx, key, value).Err()
 	} else {

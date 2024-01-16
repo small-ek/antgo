@@ -1,7 +1,7 @@
 package aredis
 
 // AddSet value<修改集合>
-func (c *Client) AddSet(key string, members ...interface{}) int64 {
+func (c *ClientRedis) AddSet(key string, members ...interface{}) int64 {
 	var count int64
 
 	if c.Mode {
@@ -14,7 +14,7 @@ func (c *Client) AddSet(key string, members ...interface{}) int64 {
 }
 
 // GetSetLength value<获取集合长度>
-func (c *Client) GetSetLength(key string) int64 {
+func (c *ClientRedis) GetSetLength(key string) int64 {
 	var count int64
 
 	if c.Mode {
@@ -27,7 +27,7 @@ func (c *Client) GetSetLength(key string) int64 {
 }
 
 // GetSet value<获取集合>
-func (c *Client) GetSet(key string) []string {
+func (c *ClientRedis) GetSet(key string) []string {
 	var result []string
 	if c.Mode {
 		result = c.Clients.SMembers(c.Ctx, key).Val()
@@ -39,7 +39,7 @@ func (c *Client) GetSet(key string) []string {
 }
 
 // GetSet value<获取集合>
-func (c *Client) RemoveSet(key string, members ...interface{}) int64 {
+func (c *ClientRedis) RemoveSet(key string, members ...interface{}) int64 {
 	var result int64
 
 	if c.Mode {

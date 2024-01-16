@@ -2,8 +2,6 @@ package test
 
 import (
 	"context"
-	"fmt"
-	"github.com/go-redis/redis/v8"
 	"github.com/small-ek/antgo/db/aredis"
 	"log"
 	"testing"
@@ -13,9 +11,10 @@ var ctx = context.Background()
 
 func TestRedis(t *testing.T) {
 	conn := aredis.New("127.0.0.1:6379", "", 0)
+
 	//conn := aredis.NewClusterClient([]string{"127.0.0.1:6379", "127.0.0.1:6379"}, "")
-	conn.Set("key", "value")
-	log.Println(conn.Get("key"))
+	conn.Set("key:name:aaa", "value22")
+	log.Println(conn.Get("key:name"))
 	log.Println(conn.TTL("key"))
 	//client.PushList("list_test", "message1")
 	conn.PushList("list_test", "message2")
@@ -61,23 +60,23 @@ func TestRedis(t *testing.T) {
 	//log.Println("222")
 
 	//队列
-	IncrByXX := redis.NewScript(`
-        if redis.call("GET", KEYS[1]) ~= false then
-            return redis.call("INCRBY", KEYS[1], ARGV[1])
-        end
-        return false
-    `)
-
-	n, err := IncrByXX.Run(conn.Ctx, conn.Clients, []string{"xx_counter"}, 2).Result()
-	fmt.Println(n, err)
-
-	err = conn.Clients.Set(conn.Ctx, "xx_counter", "40", 0).Err()
-	if err != nil {
-		panic(err)
-	}
-
-	n, err = IncrByXX.Run(conn.Ctx, conn.Clients, []string{"xx_counter"}, 2).Result()
-	fmt.Println(n, err)
+	//IncrByXX := redis.NewScript(`
+	//   if redis.call("GET", KEYS[1]) ~= false then
+	//       return redis.call("INCRBY", KEYS[1], ARGV[1])
+	//   end
+	//   return false
+	//`)
+	//
+	//n, err := IncrByXX.Run(conn.Ctx, conn.Clients, []string{"xx_counter"}, 2).Result()
+	//fmt.Println(n, err)
+	//
+	//err = conn.Clients.Set(conn.Ctx, "xx_counter", "40", 0).Err()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//n, err = IncrByXX.Run(conn.Ctx, conn.Clients, []string{"xx_counter"}, 2).Result()
+	//fmt.Println(n, err)
 }
 
 func TestRedis2(t *testing.T) {
