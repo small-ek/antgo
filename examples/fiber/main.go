@@ -1,27 +1,21 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"github.com/gofiber/fiber/v3"
 	"github.com/small-ek/antgo/frame/ant"
-	_ "github.com/small-ek/antgo/frame/serve/gin"
-	"github.com/small-ek/antgo/os/config"
-	"io/ioutil"
+	_ "github.com/small-ek/antgo/frame/serve/fiber"
+	"log"
 )
 
 func main() {
-	app := gin.New()
-	gin.SetMode(gin.ReleaseMode)
-	gin.ForceConsoleColor()
-	gin.DefaultWriter = ioutil.Discard
+	app := fiber.New()
 
-	app.GET("/", func(c *gin.Context) {
-
-		c.String(200, config.GetString("casbin.path"))
-	})
-	app.GET("/test", func(c *gin.Context) {
-		c.String(200, "Hello, World!")
-	})
-
+	app.Get("/api/*", func(c fiber.Ctx) error {
+		msg := fmt.Sprintf("✋ %s", c.Params("*"))
+		return c.SendString(msg) // => ✋ register
+	}).Name("api")
+	log.Fatal(app.Listen(":3000"))
 	//config := *flag.String("config", "./config.toml", "Configuration file path")
 	eng := ant.New().Etcd([]string{"127.0.0.1:2379"}, "/test.toml", "", "").Serve(app)
 

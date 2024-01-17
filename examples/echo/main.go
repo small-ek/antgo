@@ -19,7 +19,7 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 	config := *flag.String("config", "config.toml", "Configuration file path")
-	eng := ant.Default().SetConfig("./", config).Serve(app)
+	eng := ant.New().SetConfig("./", config).Serve(app)
 
 	//result := model.Admin{}
 	//ant.Db().Find(&result)
