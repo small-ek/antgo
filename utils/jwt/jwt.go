@@ -3,8 +3,7 @@ package jwt
 import (
 	"crypto/rsa"
 	"errors"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/small-ek/antgo/os/aerror"
+	"github.com/golang-jwt/jwt/v5"
 	"sync"
 	"time"
 )
@@ -32,12 +31,12 @@ func New(publicKey, privateKey []byte, exp ...int64) (*Jwt, error) {
 
 	j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
-		return nil, aerror.WithMessage(err, "Private key error")
+		return nil, err
 	}
 
 	j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
 	if err != nil {
-		return nil, aerror.WithMessage(err, "Public key error")
+		return nil, err
 	}
 
 	return j, nil

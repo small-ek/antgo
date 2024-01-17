@@ -134,6 +134,7 @@ func (c *ConfigStr) watchEtcd3(path string, cli *clientv3.Client) {
 						if err != nil {
 							alog.Error("watchEtcd", zap.Error(err))
 						}
+
 						if err = c.Viper.ReadRemoteConfig(); err != nil {
 							alog.Error("watchEtcd", zap.Error(err))
 						}
