@@ -7,6 +7,8 @@ package serve
 type WebFrameWork interface {
 	Name() string
 	SetApp(app interface{}) error
+	Run(addr string)
+	Close()
 }
 
 // BaseAdapter is a base adapter contains some helper functions.

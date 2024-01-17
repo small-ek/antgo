@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
@@ -23,8 +24,9 @@ func main() {
 	})
 
 	//config := *flag.String("config", "./config.toml", "Configuration file path")
-	eng := ant.New().Etcd([]string{"127.0.0.1:2379"}, "/test.toml", "", "").Serve(app)
-
+	//eng := ant.New().Etcd([]string{"127.0.0.1:2379"}, "/test.toml", "", "").Serve(app)
+	config := *flag.String("config", "./config.toml", "Configuration file path")
+	eng := ant.New(config).Serve(app)
 	//eng := ant.New(config).Serve(app)
 	//result := model.Admin{}
 	//ant.Db().Find(&result)

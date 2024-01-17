@@ -16,7 +16,7 @@ func TestHttp(t *testing.T) {
 	var result, err = http.Debug().Get("https://www.baidu.com/")
 	log.Println(result)
 	log.Println(err)
-	var result2, err2 = http.Debug().Get("https://www.baidu2.com/")
+	var result2, err2 = http.Debug().Get("https://www.baidu.com/")
 	log.Println(result2)
 	log.Println(err2)
 	for i := 0; i < 2; i++ {

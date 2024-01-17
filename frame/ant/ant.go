@@ -1,9 +1,7 @@
 package ant
 
 import (
-	"context"
 	"flag"
-	"fmt"
 	"github.com/small-ek/antgo/db/adb"
 	"github.com/small-ek/antgo/frame/serve"
 	"github.com/small-ek/antgo/os/alog"
@@ -11,10 +9,7 @@ import (
 	"github.com/small-ek/antgo/utils/ants"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"time"
 )
 
 // Engine is the core component of antgo.
@@ -54,91 +49,35 @@ func Register(ada serve.WebFrameWork) {
 	defaultAdapter = ada
 }
 
-// Use enable the adapter.<引用组件>
-func (eng *Engine) Use(router interface{}) *Engine {
+// Serve http service<默认服务加载>
+func (eng *Engine) Serve(app interface{}) *Engine {
 	if eng.Adapter == nil {
 		panic("adapter is nil")
 	}
-	if err := eng.Adapter.SetApp(router); err != nil {
-		panic("gin adapter SetApp: wrong parameter")
-	}
-	return eng
-}
 
-// Run http service<不加载配置服务>
-func (eng *Engine) Run(srv *http.Server) *Engine {
-	eng.Srv = srv
-	fmt.Printf("  PID: %d \n", os.Getpid())
-	fmt.Println("  App running at:")
-	fmt.Println("  -Local: http://127.0.0.1" + eng.Srv.Addr)
-	go func() {
-		// 服务连接
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
-	return eng
-}
-
-// defaultServer
-func defaultServer(app http.Handler) *http.Server {
 	addr := config.GetString("system.address")
 	if addr == "" {
 		addr = ":8081"
 	}
-
-	return &http.Server{
-		Addr:    addr,
-		Handler: app,
+	if err := eng.Adapter.SetApp(app); err != nil {
+		panic(err)
 	}
-}
-
-// Serve http service<默认服务加载>
-func (eng *Engine) Serve(app http.Handler) *Engine {
-	eng.Use(app)
-	eng.Srv = defaultServer(app)
-
-	go func() {
-		if err := eng.Srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			panic(err)
-		}
-	}()
-
-	fmt.Printf("  PID: %d \n", os.Getpid())
-	fmt.Println("  App running at:")
-	fmt.Println("  -Local: http://127.0.0.1" + eng.Srv.Addr)
+	eng.Adapter.Run(addr)
 	return eng
 }
 
 // Close signal<关闭服务操作>
 func (eng *Engine) Close(f ...func()) *Engine {
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	alog.Warn("Exit service")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	eng.Adapter.Close()
 	connections := config.GetMaps("connections")
 
 	if len(connections) > 0 {
 		defer adb.Close()
 	}
-
-	if err := eng.Srv.Shutdown(ctx); err != nil {
-		alog.Error("Server Shutdown:" + err.Error())
-	}
-
 	if len(f) > 0 {
 		f[0]()
 	}
 	return eng
-}
-
-// GetServer Get http service<获取http服务>
-func (eng *Engine) GetServer() *http.Server {
-	return eng.Srv
 }
 
 // SetConfig Modify the configuration path<修改配置路径>

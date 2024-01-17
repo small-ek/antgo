@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/serve"
+	"log"
 )
 
 // Fiber structure value is a Gin GoAdmin adapter.
@@ -21,7 +22,7 @@ func init() {
 
 // Name implements the method Adapter.Name.
 func (e *Fiber) Name() string {
-	return "echo"
+	return "fiber"
 }
 
 // SetApp implements the method Adapter.Use.
@@ -35,4 +36,15 @@ func (e *Fiber) SetApp(app interface{}) error {
 	}
 	e.app = eng
 	return nil
+}
+
+// Run http service<加载服务>
+func (f *Fiber) Run(Addr string) {
+	log.Fatal(f.app.Listen(Addr))
+	return
+}
+
+// Close http service<关闭当前服务>
+func (eng *Fiber) Close() {
+	return
 }
