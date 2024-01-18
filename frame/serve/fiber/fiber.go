@@ -2,7 +2,7 @@ package gin
 
 import (
 	"errors"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/serve"
 	"log"

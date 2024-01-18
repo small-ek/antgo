@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/antgo/examples/gin/model"
 	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
 	"github.com/small-ek/antgo/os/config"
+	"github.com/small-ek/antgo/utils/conv"
+	"go.uber.org/zap"
 	"io/ioutil"
 )
 
@@ -28,10 +31,9 @@ func main() {
 	config := *flag.String("config", "./config.toml", "Configuration file path")
 	eng := ant.New(config).Serve(app)
 	//eng := ant.New(config).Serve(app)
-	//result := model.Admin{}
-	//ant.Db().Find(&result)
-	//ant.Db("mysql2").Table("s_admin").Find(&result)
-	//
+	result := model.Admin{}
+	ant.Db("mysql2").Table("s_admin").Find(&result)
+	ant.Log().Info("result", zap.String("12", conv.String(result)))
 	//alog.Info("main", zap.Any("result", result))
 	//tt := Test{Name: "22121"}
 	//for i := 0; i < 10; i++ {
