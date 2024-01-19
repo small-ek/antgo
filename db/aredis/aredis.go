@@ -44,7 +44,7 @@ func New(list []map[string]any) map[string]*ClientRedis {
 					if err != nil {
 						alog.Panic("NewFailoverClient", zap.Error(err))
 					}
-					
+
 					Client[Name] = &ClientRedis{
 						Mode:    true,
 						Options: options,
