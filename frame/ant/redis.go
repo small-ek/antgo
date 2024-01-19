@@ -7,16 +7,27 @@ import (
 
 // initRedis
 func initRedis() {
-	address := config.GetString("redis.address")
-	db := config.GetInt("redis.db")
+	redis := config.GetMaps("redis")
 
-	if address != "" && db >= 0 {
-		password := config.GetString("redis.password")
-		aredis.New(address, password, db)
+	if len(redis) > 0 {
+		aredis.New(redis)
 	}
 }
 
 // Redis
-func Redis() *aredis.ClientRedis {
-	return aredis.Client
+func Redis(name ...string) *aredis.ClientRedis {
+	key := ""
+
+	if len(name) > 0 {
+		key = name[0]
+	}
+
+	val, ok := aredis.Client[key]
+	if ok {
+		return val
+	} else {
+		key = config.GetString("redis.0.name")
+	}
+
+	return aredis.Client[key]
 }

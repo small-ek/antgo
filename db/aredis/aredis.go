@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/redis/go-redis/v9"
 	"github.com/small-ek/antgo/os/alog"
+	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -19,29 +20,41 @@ type ClientRedis struct {
 }
 
 var once sync.Once
-var Client *ClientRedis
+var Client map[string]*ClientRedis
 
 // New setting redis
-func New(Addr, Password string, DB int) *ClientRedis {
+func New(list []map[string]any) map[string]*ClientRedis {
 	once.Do(func() {
+		if Client == nil {
+			Client = make(map[string]*ClientRedis)
+		}
 		var ctx = context.Background()
-		options := redis.Options{
-			Addr:     Addr,     //Address
-			Password: Password, // no password set
-			DB:       DB,       // use default DB
+		if len(list) > 0 {
+			for i := 0; i < len(list); i++ {
+				row := list[i]
+				Addr, Password, DB, Name := row["address"].(string), row["password"].(string), conv.Int(row["db"]), row["name"].(string)
+				if Addr != "" && DB >= 0 && Name != "" {
+					options := redis.Options{
+						Addr:     Addr,     //Address
+						Password: Password, // no password set
+						DB:       DB,       // use default DB
+					}
+					client := redis.NewClient(&options)
+					_, err := client.Ping(ctx).Result()
+					if err != nil {
+						alog.Panic("NewFailoverClient", zap.Error(err))
+					}
+					
+					Client[Name] = &ClientRedis{
+						Mode:    true,
+						Options: options,
+						Clients: client,
+						Ctx:     ctx,
+					}
+				}
+			}
 		}
-		client := redis.NewClient(&options)
-		_, err := client.Ping(ctx).Result()
 
-		if err != nil {
-			alog.Panic("NewFailoverClient", zap.Error(err))
-		}
-		Client = &ClientRedis{
-			Mode:    true,
-			Options: options,
-			Clients: client,
-			Ctx:     ctx,
-		}
 	})
 	return Client
 }

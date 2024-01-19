@@ -50,59 +50,22 @@ func InitDb() {
 					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
 					Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
 				}
-				//if row.Name == default_connections {
-				//	Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
-				//
-				//} else {
-				//	Resolver = dbresolver.Register(dbresolver.Config{
-				//		Replicas: []gorm.Dialector{Mysql(dsn)},
-				//		// sources/replicas 负载均衡策略
-				//		Policy: dbresolver.RandomPolicy{},
-				//	}, row.Name)
-				//}
 				break
 			case "pgsql":
 				if row.Dsn == "" && row.Name != "" {
 					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
 					Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
 				}
-				//if row.Name == default_connections {
-				//	Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
-				//} else {
-				//	Resolver = dbresolver.Register(dbresolver.Config{
-				//		Replicas: []gorm.Dialector{Postgres(dsn)},
-				//		// sources/replicas 负载均衡策略
-				//		Policy: dbresolver.RandomPolicy{},
-				//	}, row.Name)
-				//}
 				break
 			case "sqlsrv":
 				if row.Dsn == "" && row.Name != "" {
 					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
 					Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
 				}
-				//if row.Name == default_connections {
-				//	Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
-				//} else {
-				//	Resolver = dbresolver.Register(dbresolver.Config{
-				//		Replicas: []gorm.Dialector{Sqlserver(dsn)},
-				//		// sources/replicas 负载均衡策略
-				//		Policy: dbresolver.RandomPolicy{},
-				//	}, row.Name)
-				//}
 				break
 			}
 		}
-
 	}
-
-	//if len(connections) > 1 {
-	//	err := Master[default_connections].Use(Resolver)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//}
-
 }
 
 // getConfig
