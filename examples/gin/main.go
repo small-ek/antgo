@@ -33,7 +33,6 @@ func main() {
 	eng := ant.New(configPath).Serve(app)
 	result := model.Admin{}
 	ant.Db("mysql2").Table("admin").Find(&result)
-	ant.Log().Info("result", zap.String("12", conv.String(result)))
 	alog.Info("result", zap.String("12", conv.String(result)))
 	defer eng.Close()
 }

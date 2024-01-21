@@ -41,6 +41,14 @@ func New(configPath ...string) *Engine {
 	}
 }
 
+// AddFunc
+func (eng *Engine) AddFunc(f ...func()) *Engine {
+	if len(f) > 0 {
+		f[0]()
+	}
+	return eng
+}
+
 // Register the default adapter.<服务注册>
 func Register(ada serve.WebFrameWork) {
 	if ada == nil {
