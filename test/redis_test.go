@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"github.com/small-ek/antgo/db/aredis"
+	"github.com/small-ek/antgo/frame/ant"
 	"log"
 	"testing"
 )
@@ -10,31 +11,33 @@ import (
 var ctx = context.Background()
 
 func TestRedis(t *testing.T) {
-	conn := aredis.New("127.0.0.1:6379", "", 0)
+	conn := aredis.New([]map[string]interface{}{
+		{"name": "redis", "address": "localhost:6379", "db": 0},
+	})
 
 	//conn := aredis.NewClusterClient([]string{"127.0.0.1:6379", "127.0.0.1:6379"}, "")
-	conn.Set("key:name:aaa", "value22")
-	log.Println(conn.Get("key:name"))
-	log.Println(conn.TTL("key"))
+	ant.Redis().Set("key:name:aaa", "value22")
+	log.Println(ant.Redis().Get("key:name"))
+	log.Println(ant.Redis().TTL("key"))
 	//client.PushList("list_test", "message1")
-	conn.PushList("list_test", "message2")
-	conn.SetList("list_test", 2, "message3")
+	ant.Redis().PushList("list_test", "message2")
+	ant.Redis().SetList("list_test", 2, "message3")
 	//client.RemoveList("list_test", "message1", 1)
 	//log.Println(conn.GetListIndex("list_test", 1))
-	log.Println(conn.GetList("list_test"))
+	log.Println(ant.Redis().GetList("list_test"))
 
-	conn.AddSet("set_test", "111", "222", "77")
-	log.Println(conn.GetSet("set_test"))
-	conn.AddSet("set_test2", "111", "222", "3333", "444")
+	ant.Redis().AddSet("set_test", "111", "222", "77")
+	log.Println(ant.Redis().GetSet("set_test"))
+	ant.Redis().AddSet("set_test2", "111", "222", "3333", "444")
 	//交集
 	log.Println("交集")
-	log.Println(conn.Clients.SInter(conn.Ctx, "set_test", "set_test2").Result())
+	log.Println(ant.Redis().Clients.SInter(conn["redis"].Ctx, "set_test", "set_test2").Result())
 	//并集
 	log.Println("并集")
-	log.Println(conn.Clients.SUnion(conn.Ctx, "set_test", "set_test2").Result())
+	log.Println(ant.Redis().Clients.SUnion(conn["redis"].Ctx, "set_test", "set_test2").Result())
 	//差集
 	log.Println("差集")
-	log.Println(conn.Clients.SDiff(conn.Ctx, "set_test", "set_test2").Result())
+	log.Println(ant.Redis().Clients.SDiff(conn["redis"].Ctx, "set_test", "set_test2").Result())
 
 	//订阅
 	//pubsub := conn.Clients.Subscribe(conn.Ctx, "subkey")
@@ -77,9 +80,4 @@ func TestRedis(t *testing.T) {
 	//
 	//n, err = IncrByXX.Run(conn.Ctx, conn.Clients, []string{"xx_counter"}, 2).Result()
 	//fmt.Println(n, err)
-}
-
-func TestRedis2(t *testing.T) {
-	conn := aredis.New("127.0.0.1:6379", "", 0)
-	log.Println(conn.Remove("123"))
 }

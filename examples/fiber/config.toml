@@ -87,7 +87,15 @@ endpoint = ""
 bucket = ""
 
 #Redis配置
-[redis]
+[[redis]]
+name="redis1"
+address = "localhost:6379"
+password = ""
+db = 0
+
+#Redis配置
+[[redis]]
+name="redis2"
 address = "localhost:6379"
 password = ""
 db = 0

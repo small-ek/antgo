@@ -2,18 +2,14 @@ package main
 
 import (
 	"github.com/small-ek/antgo/examples/fiber/boot"
-	"github.com/small-ek/antgo/examples/gin/model"
-	"github.com/small-ek/antgo/frame/ant"
 	_ "github.com/small-ek/antgo/frame/serve/fiber"
-	"github.com/small-ek/antgo/utils/conv"
-	"go.uber.org/zap"
 )
 
 func main() {
 	boot.Serve()
-	result := model.Admin{}
-	ant.Db("mysql2").Table("s_admin").Find(&result)
-	ant.Log().Info("result", zap.String("12", conv.String(result)))
+	//result := model.Admin{}
+	//ant.Db("mysql2").Table("admin").Find(&result)
+	//ant.Log().Info("result", zap.String("12", conv.String(result)))
 
 	//eng := ant.New(config).Serve(app)
 
