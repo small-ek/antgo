@@ -17,6 +17,7 @@ func main() {
 
 	app.Get("/api/*", func(c *fiber.Ctx) error {
 		msg := fmt.Sprintf("✋ %s", c.Params("*"))
+		alog.Info("1212", zap.String("121223", "343434"))
 		return c.SendString(msg) // => ✋ register
 	}).Name("api")
 	config := *flag.String("config", "./config.toml", "Configuration file path")
@@ -26,7 +27,9 @@ func main() {
 		alog.Info("result", zap.String("12", conv.String(result)))
 	}).Serve(app)
 
-	defer eng.Close()
+	defer eng.Close(func() {
+		alog.Info("close", zap.String("121223", "343434"))
+	})
 	//eng := ant.New(config).Serve(app)
 
 	//alog.Info("main", zap.Any("result", result))

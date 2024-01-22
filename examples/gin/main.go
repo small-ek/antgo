@@ -32,7 +32,7 @@ func main() {
 	configPath := *flag.String("config", "./config.toml", "Configuration file path")
 	eng := ant.New(configPath).Serve(app)
 	result := model.Admin{}
-	ant.Db("mysql2").Table("admin").Find(&result)
+	ant.Db().Table("admin").Find(&result)
 	alog.Info("result", zap.String("12", conv.String(result)))
 	defer eng.Close()
 }
