@@ -18,6 +18,17 @@ func TestConv(t *testing.T) {
 	log.Println(conv.Bytes(test))
 }
 
+type JsonStr struct {
+	Name string
+}
+
+func TestConvMap(t *testing.T) {
+	mapStr := `{"name":"Hello"}`
+	log.Println(conv.Map(mapStr))
+	MapJson := []JsonStr{{Name: "Hello2"}}
+	log.Println(conv.Maps(MapJson))
+}
+
 func BenchmarkConv(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) { //并发
 		for pb.Next() {
