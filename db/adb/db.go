@@ -86,7 +86,7 @@ func getConfig(isLog bool) *gorm.Config {
 func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err error) {
 	db, err = gorm.Open(Dialector, opts)
 	if err != nil {
-		alog.Panic("Open", zap.Error(err))
+		alog.Write.Panic("Open", zap.Error(err))
 	}
 	return
 }
@@ -101,7 +101,7 @@ func (d *Db) Use(name string, plugin gorm.Plugin) {
 		conv.Struct(&row, value)
 		if name == row.Name {
 			if err := Master[row.Name].Use(plugin); err != nil {
-				alog.Error("Use", zap.Error(err))
+				alog.Write.Error("Use", zap.Error(err))
 			}
 		}
 
