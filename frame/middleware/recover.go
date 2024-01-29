@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/antgo/os/alog"
 	"go.uber.org/zap"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
 	"strings"
+	"time"
 )
 
 // Recovery Catch the exception and write it to the log(捕获异常并且写入日志)
@@ -44,8 +45,9 @@ func Recovery() gin.HandlerFunc {
 				// 请求IP
 				ip := c.ClientIP()
 
-				alog.Write.Error("错误报错",
+				alog.Write.Error("Recovery from panic",
 					zap.Any("ip", ip),
+					zap.Time("time", time.Now()),
 					zap.Any("path", path),
 					zap.Any("request", requestBody),
 					zap.Any("method", method),
@@ -54,8 +56,6 @@ func Recovery() gin.HandlerFunc {
 					zap.Any("stack", debug.Stack()),
 				)
 				c.AbortWithStatus(http.StatusInternalServerError)
-				log.Println(err)
-				debug.PrintStack()
 			}
 		}()
 
