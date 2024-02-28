@@ -42,7 +42,7 @@ func New(list []map[string]any) map[string]*ClientRedis {
 					client := redis.NewClient(&options)
 					_, err := client.Ping(ctx).Result()
 					if err != nil {
-						alog.Panic("NewFailoverClient", zap.Error(err))
+						alog.Panic("redis error:", zap.Error(err))
 					}
 
 					Client[Name] = &ClientRedis{

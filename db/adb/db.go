@@ -86,7 +86,7 @@ func getConfig(isLog bool) *gorm.Config {
 func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err error) {
 	db, err = gorm.Open(Dialector, opts)
 	if err != nil {
-		alog.Write.Panic("Open", zap.Error(err))
+		alog.Write.Panic("gorm open error:", zap.Error(err))
 	}
 	return
 }
