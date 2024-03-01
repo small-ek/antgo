@@ -76,9 +76,14 @@ func getConfig(isLog bool) *gorm.Config {
 		return &gorm.Config{
 			Logger:                                   zapLog.LogMode(4),
 			DisableForeignKeyConstraintWhenMigrating: true,
+			SkipDefaultTransaction:                   true,
+			PrepareStmt:                              true,
 		}
 	} else {
-		return &gorm.Config{}
+		return &gorm.Config{
+			SkipDefaultTransaction: true,
+			PrepareStmt:            true,
+		}
 	}
 }
 
