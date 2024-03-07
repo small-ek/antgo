@@ -11,4 +11,6 @@ func TestInts(t *testing.T) {
 	log.Println(str)
 	var str2 = conv.Ints("[1,2,3]")
 	log.Println(str2)
+	var str3 = conv.Ints([]int64{1, 2, 3})
+	log.Println(str3)
 }
