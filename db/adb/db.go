@@ -1,6 +1,7 @@
 package adb
 
 import (
+	"fmt"
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/utils/conv"
@@ -30,6 +31,7 @@ type Db struct {
 	Dsn      string `json:"dsn"`
 }
 
+// InitDb
 func InitDb() {
 	if Master == nil {
 		Master = make(map[string]*gorm.DB)
@@ -41,26 +43,32 @@ func InitDb() {
 		row := Db{}
 		conv.Struct(&row, value)
 		dsn := row.Dsn
+		if row.Name != "" {
+			switch row.Type {
+			case "mysql":
+				if dsn == "" {
+					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+				}
 
-		switch row.Type {
-		case "mysql":
-			if row.Dsn == "" && row.Name != "" {
-				dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
 				Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
-			}
-			break
-		case "pgsql":
-			if row.Dsn == "" && row.Name != "" {
-				dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
+
+				break
+			case "pgsql":
+				if dsn == "" {
+					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
+				}
+
 				Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
-			}
-			break
-		case "sqlsrv":
-			if row.Dsn == "" && row.Name != "" {
-				dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
+
+				break
+			case "sqlsrv":
+				if dsn == "" {
+					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
+				}
+
 				Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
+				break
 			}
-			break
 		}
 	}
 
@@ -157,7 +165,7 @@ func Close() {
 		if Master[row.Name] != nil {
 			var db, err = Master[row.Name].DB()
 			if err != nil {
-				alog.Error(err.Error())
+				alog.Write.Error("Close database", zap.Error(fmt.Errorf("failed to close database connection for %s: %s", row.Name, err.Error())))
 			}
 
 			if db != nil {
