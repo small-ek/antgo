@@ -35,37 +35,35 @@ func InitDb() {
 		Master = make(map[string]*gorm.DB)
 	}
 	connections := config.GetMaps("connections")
-	default_connections := conv.String(config.Get("system.default_connections"))
-	if default_connections != "" {
 
-		for i := 0; i < len(connections); i++ {
-			value := connections[i]
-			row := Db{}
-			conv.Struct(&row, value)
-			dsn := row.Dsn
+	for i := 0; i < len(connections); i++ {
+		value := connections[i]
+		row := Db{}
+		conv.Struct(&row, value)
+		dsn := row.Dsn
 
-			switch row.Type {
-			case "mysql":
-				if row.Dsn == "" && row.Name != "" {
-					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
-					Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
-				}
-				break
-			case "pgsql":
-				if row.Dsn == "" && row.Name != "" {
-					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
-					Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
-				}
-				break
-			case "sqlsrv":
-				if row.Dsn == "" && row.Name != "" {
-					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
-					Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
-				}
-				break
+		switch row.Type {
+		case "mysql":
+			if row.Dsn == "" && row.Name != "" {
+				dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+				Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
 			}
+			break
+		case "pgsql":
+			if row.Dsn == "" && row.Name != "" {
+				dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
+				Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
+			}
+			break
+		case "sqlsrv":
+			if row.Dsn == "" && row.Name != "" {
+				dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
+				Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
+			}
+			break
 		}
 	}
+
 }
 
 // getConfig

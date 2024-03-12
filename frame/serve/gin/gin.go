@@ -48,7 +48,7 @@ func (gins *Gin) SetApp(app interface{}) error {
 // Run http service<不加载配置服务>
 func (eng *Gin) Run(addr string) {
 	eng.Srv = &http.Server{
-		Addr:    addr,
+		Addr:    ":" + addr,
 		Handler: eng.app,
 	}
 	fmt.Printf("  PID: %d \n", os.Getpid())

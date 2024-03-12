@@ -40,7 +40,7 @@ func (e *Fiber) SetApp(app interface{}) error {
 
 // Run http service<加载服务>
 func (f *Fiber) Run(Addr string) {
-	log.Fatal(f.app.Listen(Addr))
+	log.Fatal(f.app.Listen(":" + Addr))
 	return
 }
 
