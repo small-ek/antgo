@@ -3,7 +3,6 @@ package adb
 import (
 	"fmt"
 	"github.com/small-ek/antgo/os/alog"
-	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -32,11 +31,10 @@ type Db struct {
 }
 
 // InitDb
-func InitDb() {
+func InitDb(connections []map[string]any) {
 	if Master == nil {
 		Master = make(map[string]*gorm.DB)
 	}
-	connections := config.GetMaps("connections")
 
 	for i := 0; i < len(connections); i++ {
 		value := connections[i]
@@ -104,20 +102,9 @@ func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err 
 
 // Use
 func (d *Db) Use(name string, plugin gorm.Plugin) {
-	connections := config.GetMaps("connections")
-
-	for i := 0; i < len(connections); i++ {
-		value := connections[i]
-		row := Db{}
-		conv.Struct(&row, value)
-		if name == row.Name {
-			if err := Master[row.Name].Use(plugin); err != nil {
-				alog.Write.Error("Use", zap.Error(err))
-			}
-		}
-
+	if err := Master[name].Use(plugin); err != nil {
+		alog.Write.Error("Use", zap.Error(err))
 	}
-
 }
 
 // Mysql connection
@@ -155,9 +142,7 @@ func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbreso
 }
 
 // Close 关闭数据库
-func Close() {
-	connections := config.GetMaps("connections")
-
+func Close(connections []map[string]any) {
 	for i := 0; i < len(connections); i++ {
 		value := connections[i]
 		row := Db{}

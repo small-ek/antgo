@@ -80,7 +80,7 @@ func (eng *Engine) Close(f ...func()) *Engine {
 	connections := config.GetMaps("connections")
 
 	if len(connections) > 0 {
-		defer adb.Close()
+		defer adb.Close(config.GetMaps("connections"))
 	}
 	if len(f) > 0 {
 		f[0]()
@@ -133,7 +133,7 @@ func loadApp() {
 	if config.Config != nil {
 		//加载默认配置
 		initLog()
-		adb.InitDb()
+		adb.InitDb(config.GetMaps("connections"))
 		initRedis()
 
 		var max_pool_count = config.GetInt("system.max_pool_count")
