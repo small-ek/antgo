@@ -68,7 +68,7 @@ func (logs *Logs) Register() *zap.Logger {
 	case "fatal":
 		level = zap.FatalLevel
 	default:
-		level = zap.InfoLevel
+		level = zap.DebugLevel
 	}
 
 	EncodeTime := func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
@@ -100,13 +100,10 @@ func (logs *Logs) Register() *zap.Logger {
 		EncodeTime:    EncodeTime,   // ISO8601 UTC 时间格式
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
-		}, //
+		},                          //
 		EncodeCaller: EncodeCaller, // Full path encoder
 		EncodeName:   zapcore.FullNameEncoder,
 	}
-	// Set log level
-	atomicLevel := zap.NewAtomicLevel()
-	atomicLevel.SetLevel(level)
 
 	var format zapcore.Encoder
 
