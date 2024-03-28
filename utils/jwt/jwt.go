@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// New Jwt parameter
-type Jwt struct {
+// New JwtManager parameter
+type JwtManager struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 	Exp        int64 //Expiration timestamp Default 15 days
@@ -18,46 +18,50 @@ type Jwt struct {
 
 const defaultExp = time.Hour * 168
 
-// New function
-func New(publicKey, privateKey []byte, exp ...int64) (*Jwt, error) {
-	var err error
-	j := &Jwt{}
+var jwtStr *JwtManager
+var once sync.Once
 
+// New function
+func New(publicKey, privateKey []byte) (j *JwtManager, err error) {
+	once.Do(func() {
+		j = &JwtManager{}
+
+		if privateKey != nil && len(privateKey) > 0 {
+			j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+			if err != nil {
+				return
+			}
+		}
+
+		if publicKey != nil && len(publicKey) > 0 {
+			j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
+			if err != nil {
+				return
+			}
+		}
+		jwtStr = j
+	})
+
+	return jwtStr, nil
+
+}
+
+// Encrypt json web token encryption<json web token 加密>
+func (j *JwtManager) Encrypt(row map[string]interface{}, exp ...int64) (string, error) {
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
+	MapClaims := jwt.MapClaims{}
 	if len(exp) > 0 {
 		j.Exp = exp[0]
 	} else {
 		j.Exp = time.Now().Add(defaultExp).Unix()
 	}
-
-	if privateKey != nil && len(privateKey) > 0 {
-		j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if publicKey != nil && len(publicKey) > 0 {
-		j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return j, nil
-
-}
-
-// Encrypt json web token encryption<json web token 加密>
-func (j *Jwt) Encrypt(row map[string]interface{}) (string, error) {
-	j.mutex.Lock()
-	defer j.mutex.Unlock()
-	MapClaims := jwt.MapClaims{}
 	MapClaims = row
 	return jwt.NewWithClaims(jwt.SigningMethodRS256, MapClaims).SignedString(j.privateKey)
 }
 
 // Decode json web token decryption<json web token解密>
-func (j *Jwt) Decode(tokenStr string) (map[string]interface{}, error) {
+func (j *JwtManager) Decode(tokenStr string) (map[string]interface{}, error) {
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 
