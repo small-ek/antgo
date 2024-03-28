@@ -216,6 +216,14 @@ func Get(key string) any {
 	return Config.Viper.Get(key)
 }
 
+// GetByte 获取
+func GetByte(key string) []byte {
+	if Config == nil {
+		return []byte{}
+	}
+	return conv.Bytes(Config.Viper.GetString(key))
+}
+
 // GetString 获取
 func GetString(key string) string {
 	if Config == nil {
