@@ -16,7 +16,7 @@ type JwtManager struct {
 	mutex      sync.Mutex
 }
 
-const defaultExp = time.Hour * 168
+const defaultExp = time.Hour * 144
 
 var jwtStr *JwtManager
 var once sync.Once
@@ -51,10 +51,11 @@ func (j *JwtManager) Encrypt(row map[string]interface{}, exp ...int64) (string, 
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 	MapClaims := jwt.MapClaims{}
+	//设置过期时间
 	if len(exp) > 0 {
-		j.Exp = exp[0]
+		row["exp"] = exp[0]
 	} else {
-		j.Exp = time.Now().Add(defaultExp).Unix()
+		row["exp"] = time.Now().Add(defaultExp).Unix()
 	}
 	MapClaims = row
 	return jwt.NewWithClaims(jwt.SigningMethodRS256, MapClaims).SignedString(j.privateKey)
