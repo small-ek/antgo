@@ -65,7 +65,7 @@ func (eng *Engine) Serve(app interface{}) *Engine {
 
 	addr := config.GetString("system.address")
 	if addr == "" {
-		addr = ":8081"
+		addr = "8081"
 	}
 	if err := eng.Adapter.SetApp(app); err != nil {
 		panic(err)
