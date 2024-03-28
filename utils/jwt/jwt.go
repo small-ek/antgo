@@ -29,14 +29,18 @@ func New(publicKey, privateKey []byte, exp ...int64) (*Jwt, error) {
 		j.Exp = time.Now().Add(defaultExp).Unix()
 	}
 
-	j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
-	if err != nil {
-		return nil, err
+	if privateKey != nil && len(privateKey) > 0 {
+		j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
-	if err != nil {
-		return nil, err
+	if publicKey != nil && len(publicKey) > 0 {
+		j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return j, nil
