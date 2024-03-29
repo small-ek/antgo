@@ -1,8 +1,12 @@
 package test
 
 import (
+	"flag"
 	"github.com/small-ek/antgo/net/ahttp"
+	"github.com/small-ek/antgo/os/alog"
+	"go.uber.org/zap"
 	"log"
+	"sync"
 	"testing"
 )
 
@@ -13,13 +17,33 @@ func TestHttp(t *testing.T) {
 	//
 	//log.Println(string(result))
 	//log.Println(err)
-	var result, err = http.Debug().Get("https://www.baidu.com/")
-	log.Println(result)
-	log.Println(err)
-	var result2, err2 = http.Debug().Get("https://www.baidu.com/")
-	log.Println(result2)
-	log.Println(err2)
-	for i := 0; i < 2; i++ {
+	//var result, err = http.Debug().SetHeader(map[string]string{"Content-Type": "text/html; charset=utf-8"}).Get("https://www.baidu.com/")
+	//fmt.Println(result)
+	//fmt.Println(err)
+	RegisterLog()
+	var wg sync.WaitGroup
+	numWorkers := 1000
+	wg.Add(numWorkers)
 
+	for i := 0; i < numWorkers; i++ {
+		go func() {
+			defer wg.Done()
+			var result, err = http.Debug().SetHeader(map[string]string{"Content-Type": "text/html; charset=utf-8"}).Get("https://www.baidu.com/")
+
+			var result2, err2 = http.Debug().Get("https://www.baidu.com/")
+
+			alog.Write.Info("123", zap.Any("result", result), zap.Any("result2", result2),
+				zap.Error(err), zap.Error(err2))
+			// 在这里执行对 JwtManager 实例的操作
+			// 例如，调用 Encrypt 或 Decode 方法
+		}()
 	}
+
+	wg.Wait()
+}
+
+func RegisterLog() {
+	log.SetFlags(log.Llongfile | log.LstdFlags)
+	flag.Parse()
+	alog.New("./log/ek2.log").SetServiceName("api").Register()
 }

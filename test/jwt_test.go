@@ -1,9 +1,14 @@
 package test
 
 import (
+	"flag"
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/utils/jwt"
+	"go.uber.org/zap"
 	"log"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestJwt(t *testing.T) {
@@ -38,14 +43,45 @@ PEqRQFBDR49ayaxSqwIDAQAB
 	var data = map[string]interface{}{
 		"test": "test",
 	}
-	var j, err = jwt.New(PublicKey, PrivateKey)
-	log.Println(err)
-	var token, err2 = j.Encrypt(data)
-	log.Println(token)
-	log.Println(err2)
-	var j2, err3 = jwt.New(PublicKey, nil)
-	log.Println(err3)
-	var getData, err4 = j2.Decode(token)
-	log.Println(getData)
-	log.Println(err4)
+	//var j, err = jwt.New(PublicKey, PrivateKey)
+	//log.Println(err)
+	//j = j.SetPublicKey(publicKey).SetPrivateKey(privateKey)
+	//var token, err2 = j.Encrypt(data, time.Now().Add(time.Minute*1).Unix())
+	//log.Println(token)
+	//log.Println(err2)
+	//var j2, err3 = jwt.New(PublicKey, nil)
+	//log.Println(err3)
+	//var getData, err4 = j2.Decode(token)
+	//log.Println(getData)
+	//log.Println(err4)
+	//var getData2, err5 = j2.Decode("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTIyMTc3MDQsImlhdCI6MTcxMTY5OTMwNCwibmJmIjoxNzExNjk5MzA0LCJ0ZXN0IjoidGVzdCJ9.nzs_r92fY-Z24GX6LtMeQBdQm2B63tY4gbzufx0Z61nXPoLLXcA9dH5zmQpfQ00ivfJd5SxzxDwF_tHzYagZCcGuSsDnnXNNkyCKfF6e2A4s5jYbQAt39x4frimRMclmckq7ko1uCEkeRiNCsctYm5XHEOT_PTKvecHkiGFXnb8")
+	//log.Println(getData2)
+	//log.Println(err5)
+	log.SetFlags(log.Llongfile | log.LstdFlags)
+	flag.Parse()
+	alog.New("./log/ek2.log").SetServiceName("api").Register()
+
+	//if err != nil {
+	//	t.Fatalf("Failed to create JwtManagerFactory: %v", err)
+	//}
+
+	var wg sync.WaitGroup
+	numWorkers := 10000
+	wg.Add(numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		go func() {
+			defer wg.Done()
+			jwtManagerFactory, err := jwt.New(PublicKey, PrivateKey)
+			jwtManager, err11 := jwtManagerFactory.Encrypt(data, time.Now().Add(time.Minute*1).Unix())
+
+			jwtManager2, err12 := jwtManagerFactory.Decode(jwtManager)
+
+			alog.Write.Info("123", zap.Any("jwtManager2", jwtManager2), zap.Error(err12), zap.Error(err11), zap.Error(err))
+			// 在这里执行对 JwtManager 实例的操作
+			// 例如，调用 Encrypt 或 Decode 方法
+		}()
+	}
+
+	wg.Wait()
 }

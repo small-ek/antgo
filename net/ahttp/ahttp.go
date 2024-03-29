@@ -52,6 +52,8 @@ func Client() *HttpSend {
 	once.Do(func() {
 		singletonHttpSend = &HttpSend{
 			ContentType: "application/json",
+			Req:         &http.Request{},
+			Header:      make(map[string]string),
 			Client: &http.Client{
 				Timeout: 30 * time.Second,
 				Transport: &http.Transport{
@@ -89,8 +91,6 @@ func (h *HttpSend) SetTransport(transport *http.Transport) *HttpSend {
 
 // SetBody Set body<设置请求体>
 func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
-	h.Lock()
-	defer h.Unlock()
 	configData, err := json.Marshal(body)
 	if err != nil {
 		log.Println(err)
@@ -150,6 +150,15 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
 	h.Header = header
+
+	// 设置请求头
+	for k, v := range h.Header {
+		if strings.ToLower(k) == "host" {
+			h.Req.Host = v
+		} else {
+			h.Req.Header.Set(k, v)
+		}
+	}
 	return h
 }
 
@@ -456,19 +465,7 @@ func (h *HttpSend) SendForm() (body []byte, err error) {
 		return nil, err
 	}
 
-	if len(h.Header) == 0 {
-		h.Header = map[string]string{
-			"Content-Type": h.ContentType,
-		}
-	}
-
-	for k, v := range h.Header {
-		if strings.ToLower(k) == "host" {
-			h.Req.Host = v
-		} else {
-			h.Req.Header.Add(k, v)
-		}
-	}
+	h.defaultHeader()
 
 	h.Response, err = h.Client.Do(h.Req)
 	if err != nil {
@@ -501,6 +498,15 @@ func (h *HttpSend) PostFormFile(url, files string) (body []byte, err error) {
 	return
 }
 
+// defaultHeader <默认请求头>
+func (h *HttpSend) defaultHeader() {
+	h.Lock()
+	defer h.Unlock()
+	if len(h.Header) == 0 {
+		h.Req.Header.Add("Content-Type", h.ContentType)
+	}
+}
+
 // Send <扩展一般用于手动请求>
 func (h *HttpSend) Send() (body []byte, err error) {
 	var Transport = &http.Transport{}
@@ -519,19 +525,7 @@ func (h *HttpSend) Send() (body []byte, err error) {
 		return nil, err
 	}
 
-	if len(h.Header) == 0 {
-		h.Header = map[string]string{
-			"Content-Type": h.ContentType,
-		}
-	}
-
-	for k, v := range h.Header {
-		if strings.ToLower(k) == "host" {
-			h.Req.Host = v
-		} else {
-			h.Req.Header.Add(k, v)
-		}
-	}
+	h.defaultHeader()
 
 	h.Response, err = h.Client.Do(h.Req)
 	if err != nil {

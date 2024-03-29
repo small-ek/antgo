@@ -12,13 +12,12 @@ import (
 type JwtManager struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
-	Exp        int64 //Expiration timestamp Default 15 days
-	mutex      sync.Mutex
+	mutex      sync.RWMutex
 }
 
 const defaultExp = time.Hour * 144
 
-var jwtStr *JwtManager
+var jwtManager *JwtManager
 var once sync.Once
 
 // New function
@@ -39,11 +38,27 @@ func New(publicKey, privateKey []byte) (j *JwtManager, err error) {
 				return
 			}
 		}
-		jwtStr = j
+		jwtManager = j
 	})
 
-	return jwtStr, nil
+	return jwtManager, nil
 
+}
+
+// SetPublicKey Set public key<设置公钥Key>
+func (j *JwtManager) SetPublicKey(publicKey []byte) *JwtManager {
+	if publicKey != nil && len(publicKey) > 0 {
+		j.publicKey, _ = jwt.ParseRSAPublicKeyFromPEM(publicKey)
+	}
+	return j
+}
+
+// SetPrivateKey Set private <设置私钥Key>
+func (j *JwtManager) SetPrivateKey(privateKey []byte) *JwtManager {
+	if privateKey != nil && len(privateKey) > 0 {
+		j.privateKey, _ = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+	}
+	return j
 }
 
 // Encrypt json web token encryption<json web token 加密>
@@ -51,21 +66,21 @@ func (j *JwtManager) Encrypt(row map[string]interface{}, exp ...int64) (string, 
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 	MapClaims := jwt.MapClaims{}
+	nowTime := time.Now().Unix()
 	//设置过期时间
 	if len(exp) > 0 {
 		row["exp"] = exp[0]
 	} else {
 		row["exp"] = time.Now().Add(defaultExp).Unix()
 	}
+	row["iat"] = nowTime //签发时间
+	row["nbf"] = nowTime //生效时间
 	MapClaims = row
 	return jwt.NewWithClaims(jwt.SigningMethodRS256, MapClaims).SignedString(j.privateKey)
 }
 
 // Decode json web token decryption<json web token解密>
 func (j *JwtManager) Decode(tokenStr string) (map[string]interface{}, error) {
-	j.mutex.Lock()
-	defer j.mutex.Unlock()
-
 	result := map[string]interface{}{}
 
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
