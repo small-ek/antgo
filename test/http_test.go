@@ -4,42 +4,49 @@ import (
 	"flag"
 	"github.com/small-ek/antgo/net/ahttp"
 	"github.com/small-ek/antgo/os/alog"
+	"github.com/small-ek/antgo/utils/ants"
+	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
 	"log"
-	"sync"
 	"testing"
 )
 
 func TestHttp(t *testing.T) {
-	var http = ahttp.Client()
-	//var result, err = http.Debug().SetFile("test.jpg", "file").SetBody(map[string]interface{}{"name": "123.jpg"}).PostForm("http://127.0.0.1:102/upload_file")
-	//log.Println(http)
-	//
-	//log.Println(string(result))
-	//log.Println(err)
-	//var result, err = http.Debug().SetHeader(map[string]string{"Content-Type": "text/html; charset=utf-8"}).Get("https://www.baidu.com/")
-	//fmt.Println(result)
-	//fmt.Println(err)
+	var (
+		count int
+		//mutex sync.RWMutex
+	)
+	//var wg sync.WaitGroup
 	RegisterLog()
-	var wg sync.WaitGroup
-	numWorkers := 1000
-	wg.Add(numWorkers)
 
-	for i := 0; i < numWorkers; i++ {
-		go func() {
-			defer wg.Done()
-			var result, err = http.Debug().SetHeader(map[string]string{"Content-Type": "text/html; charset=utf-8"}).Get("https://www.baidu.com/")
+	//numWorkers := 1000
 
-			var result2, err2 = http.Debug().Get("https://www.baidu.com/")
+	ants.InitPool(10)
+	defer ants.NewPool.Release()
+	var result, err = ahttp.Client().Debug(true).SetBody(map[string]interface{}{"test": "test"}).SetHeader(map[string]string{"Content-Type": "text/html; charset=utf-8", "test2": "test2"}).SetCookie(map[string]string{"test": "test"}).Get("http://127.0.0.1:3000/user")
 
-			alog.Write.Info("123", zap.Any("result", result), zap.Any("result2", result2),
-				zap.Error(err), zap.Error(err2))
-			// 在这里执行对 JwtManager 实例的操作
-			// 例如，调用 Encrypt 或 Decode 方法
-		}()
-	}
+	var _, _ = ahttp.Client().Debug(true).SetBody(map[string]interface{}{"test": "test"}).SetHeader(map[string]string{"Content-Type": "text/html; charset=utf-8", "test2": "test2"}).SetCookie(map[string]string{"test": "test"}).Post("http://127.0.0.1:3000/user")
+	alog.Write.Info("123", zap.String("result", conv.String(result)), zap.Error(err), zap.Int("num", count))
 
-	wg.Wait()
+	//for i := 0; i < numWorkers; i++ {
+	//	wg.Add(1)
+	//	//time.Sleep(100 * time.Nanosecond)
+	//	_ = ants.NewPool.Submit(func() {
+	//		defer wg.Done()
+	//		mutex.Lock()
+	//		count++
+	//		mutex.Unlock()
+	//
+	//		//alog.Write.Info("123", zap.Int("num", count))
+	//
+	//		var result, err = ahttp.Client().Debug(true).SetBody(map[string]interface{}{"test": "test"}).SetCookie(map[string]string{"test": "test"}).SetHeader(map[string]string{"test": "test", "Content-Type": "application/json"}).Get("http://127.0.0.1:3000/user")
+	//		alog.Write.Info("123", zap.String("result", conv.String(result)), zap.Error(err), zap.Int("num", count))
+	//		time.Sleep(1000)
+	//	})
+	//}
+	//wg.Wait()
+	//
+	//fmt.Println("run go num: ", ants.NewPool.Running())
 }
 
 func RegisterLog() {

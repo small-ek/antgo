@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -41,7 +40,7 @@ type HttpSend struct {
 	FileName    string                                       //Request FileName<文件名称>
 	BodyReader  io.Reader                                    //Request BodyReader<读取器>
 	debug       bool
-	sync.RWMutex
+	sync.Mutex
 }
 
 var singletonHttpSend *HttpSend
@@ -53,27 +52,26 @@ func Client() *HttpSend {
 		singletonHttpSend = &HttpSend{
 			ContentType: "application/json",
 			Req:         &http.Request{},
-			Header:      make(map[string]string),
 			Client: &http.Client{
 				Timeout: 30 * time.Second,
 				Transport: &http.Transport{
-					MaxIdleConns:        10000,
-					MaxIdleConnsPerHost: 0,
-					MaxConnsPerHost:     0,
+					MaxIdleConns:        1000,
+					MaxIdleConnsPerHost: 1000,
+					MaxConnsPerHost:     2000,
 					TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 					DialContext: (&net.Dialer{
 						Timeout:   30 * time.Second,
 						KeepAlive: 30 * time.Second,
 					}).DialContext,
 					ForceAttemptHTTP2:     true,
-					IdleConnTimeout:       300 * time.Second,
+					IdleConnTimeout:       90 * time.Second,
 					TLSHandshakeTimeout:   10 * time.Second,
 					ExpectContinueTimeout: 1 * time.Second,
+					DisableKeepAlives:     false,
 				},
 			},
 		}
 	})
-
 	return singletonHttpSend
 }
 
@@ -91,9 +89,14 @@ func (h *HttpSend) SetTransport(transport *http.Transport) *HttpSend {
 
 // SetBody Set body<设置请求体>
 func (h *HttpSend) SetBody(body map[string]interface{}) *HttpSend {
+	h.Lock()
+	defer h.Unlock()
+	if h.Body == nil {
+		h.Body = make(map[string]interface{})
+	}
 	configData, err := json.Marshal(body)
-	if err != nil {
-		log.Println(err)
+	if err != nil && alog.Write != nil {
+		alog.Write.Error("SetBody", zap.Error(err))
 	}
 	h.BodyReader = bytes.NewBuffer(configData)
 	h.Body = body
@@ -149,8 +152,17 @@ func (h *HttpSend) SetTimeout(timeout time.Duration) *HttpSend {
 func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
+	if h.Header == nil {
+		h.Header = make(map[string]string)
+	}
 	h.Header = header
+	return h
+}
 
+// setHeader set header<设置请求头>
+func (h *HttpSend) setHeader() {
+	//h.Lock()
+	//defer h.Unlock()
 	// 设置请求头
 	for k, v := range h.Header {
 		if strings.ToLower(k) == "host" {
@@ -159,21 +171,39 @@ func (h *HttpSend) SetHeader(header map[string]string) *HttpSend {
 			h.Req.Header.Set(k, v)
 		}
 	}
-	return h
+
+	if len(h.Header) == 0 {
+		h.Req.Header.Add("Content-Type", h.ContentType)
+	}
 }
 
 // SetCookie set cookie<设置cookie>
 func (h *HttpSend) SetCookie(cookies map[string]string) *HttpSend {
 	h.Lock()
 	defer h.Unlock()
-	h.Cookies = cookies
-	for k, v := range cookies {
-		h.Req.AddCookie(&http.Cookie{
-			Name:  k,
-			Value: v,
-		})
+	if h.Cookies == nil {
+		h.Cookies = make(map[string]string)
 	}
+	h.Cookies = cookies
+
 	return h
+}
+
+// setCookie set cookie<设置cookie>
+func (h *HttpSend) setCookie() {
+	//h.Lock()
+	//defer h.Unlock()
+	headerCookie := ""
+	for k, v := range h.Cookies {
+		if len(headerCookie) > 0 {
+			headerCookie += ";"
+		}
+		headerCookie += k + "=" + v
+	}
+
+	if len(headerCookie) > 0 {
+		h.Req.Header.Set("Cookie", headerCookie)
+	}
 }
 
 // SetMethod set method<设置请求类型>
@@ -190,16 +220,6 @@ func (h *HttpSend) SetContentType(ContentType string) *HttpSend {
 	defer h.Unlock()
 	h.ContentType = ContentType
 	return h
-}
-
-// GetHeader Get Response Header<获取请求头>
-func (h *HttpSend) GetHeader() map[string][]string {
-	h.Lock()
-	defer h.Unlock()
-	if h.Response != nil {
-		return h.Response.Header
-	}
-	return nil
 }
 
 // Get request<GET 请求>
@@ -464,17 +484,20 @@ func (h *HttpSend) SendForm() (body []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	h.setCookie()
+	h.setHeader()
 
-	h.defaultHeader()
-
-	h.Response, err = h.Client.Do(h.Req)
+	resp, err := h.Client.Do(h.Req)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err = ioutil.ReadAll(h.Response.Body)
-	h.print(body)
-	defer h.Close()
+	body, err = ioutil.ReadAll(resp.Body)
+	if err == nil {
+		h.print(body)
+		resp.Body.Close()
+	}
+
 	return
 }
 
@@ -488,12 +511,18 @@ func (h *HttpSend) PostFormFile(url, files string) (body []byte, err error) {
 	}
 	defer file.Close()
 
-	h.Response, err = http.Post(url, "binary/octet-stream", file)
-	body, err = ioutil.ReadAll(h.Response.Body)
-	h.print(body)
-	defer h.Close()
+	resp, err := http.Post(url, "binary/octet-stream", file)
 	if err != nil {
 		return nil, err
+	}
+
+	body, err = ioutil.ReadAll(resp.Body)
+	h.print(body)
+
+	if err != nil {
+		return nil, err
+	} else {
+		resp.Body.Close()
 	}
 	return
 }
@@ -502,7 +531,11 @@ func (h *HttpSend) PostFormFile(url, files string) (body []byte, err error) {
 func (h *HttpSend) defaultHeader() {
 	h.Lock()
 	defer h.Unlock()
+	if h.Req.Header == nil {
+		h.Req.Header = http.Header{}
+	}
 	if len(h.Header) == 0 {
+
 		h.Req.Header.Add("Content-Type", h.ContentType)
 	}
 }
@@ -524,16 +557,18 @@ func (h *HttpSend) Send() (body []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	h.setCookie()
+	h.setHeader()
+	resp, err := h.Client.Do(h.Req)
 
-	h.defaultHeader()
-
-	h.Response, err = h.Client.Do(h.Req)
 	if err != nil {
 		return nil, err
+	} else {
+		body, err = ioutil.ReadAll(resp.Body)
+		h.print(body)
+		resp.Body.Close()
 	}
-	body, err = ioutil.ReadAll(h.Response.Body)
-	h.print(body)
-	defer h.Close()
+
 	return
 }
 
@@ -558,13 +593,5 @@ func (h *HttpSend) print(body []byte) {
 			fmt.Printf("Request: %s %s %s\nHeaders: %v\nCookies: %v\nTimeout: %ds\nReqBody: %v\n\n", h.Method, h.Url, conv.String(h.Body),
 				conv.String(h.Header), conv.String(h.Cookies), h.Timeout, string(body))
 		}
-	}
-}
-
-// Close <必须默认关闭>
-func (h *HttpSend) Close() {
-	defer h.Response.Body.Close()
-	if h.Req.Body != nil {
-		defer h.Req.Body.Close()
 	}
 }
