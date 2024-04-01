@@ -2,108 +2,149 @@ package aredis
 
 import (
 	"github.com/redis/go-redis/v9"
+	"time"
 )
 
-// AddSet value<修改集合>
-func (c *ClientRedis) AddZset(key string, value ...redis.Z) int64 {
-
-	var count int64
-	if c.Mode {
-		count = c.Clients.ZAddNX(c.Ctx, key, value...).Val()
+// SetExpiration 设置过期时间
+// SetExpiration<毫秒>
+func (c *ClientRedis) SetExpiration(key string, expiration ...int64) error {
+	var ex time.Duration
+	if len(expiration) > 0 {
+		ex = time.Duration(expiration[0]) * time.Millisecond
 	} else {
-		count = c.ClusterClient.ZAddNX(c.Ctx, key, value...).Val()
+		ex = time.Duration(0)
 	}
 
-	return count
+	if c.Mode {
+		return c.Clients.Expire(c.Ctx, key, ex).Err()
+	}
+	return c.ClusterClient.Expire(c.Ctx, key, ex).Err()
 }
 
-// GetSetLength value<获取集合长度>
-func (c *ClientRedis) GetZsetLength(key string) int64 {
-	var count int64
-
+// ZSet 有序集合add
+func (c *ClientRedis) ZSet(key string, members ...redis.Z) error {
 	if c.Mode {
-		count = c.Clients.SCard(c.Ctx, key).Val()
-	} else {
-		count = c.ClusterClient.SCard(c.Ctx, key).Val()
+		return c.Clients.ZAdd(c.Ctx, key, members...).Err()
 	}
-
-	return count
+	return c.ClusterClient.ZAdd(c.Ctx, key, members...).Err()
 }
 
-// GetZsetScore value<获取集合>
-func (c *ClientRedis) GetZsetMember(key string, score string) float64 {
-	var result float64
-
+// ZIncrBy 增加元素的分数
+func (c *ClientRedis) ZIncrBy(key string, increment float64, member string) (float64, error) {
 	if c.Mode {
-		result = c.Clients.ZScore(c.Ctx, key, score).Val()
-	} else {
-		result = c.ClusterClient.ZScore(c.Ctx, key, score).Val()
+		return c.Clients.ZIncrBy(c.Ctx, key, increment, member).Result()
 	}
-
-	return result
+	return c.ClusterClient.ZIncrBy(c.Ctx, key, increment, member).Result()
 }
 
-// GetZsetScore value<获取集合>
-func (c *ClientRedis) GetZsetScore(key string, member string) int64 {
-	var result int64
-
+// ZIncrBy 获取有序集合中指定排名范围内的成员列表及其分数
+func (c *ClientRedis) ZRevRangeWithScores(key string, start, stop int64) ([]redis.Z, error) {
 	if c.Mode {
-		result = c.Clients.ZRank(c.Ctx, key, member).Val()
-	} else {
-		result = c.ClusterClient.ZRank(c.Ctx, key, member).Val()
+		return c.Clients.ZRevRangeWithScores(c.Ctx, key, start, stop).Result()
 	}
-
-	return result
+	return c.ClusterClient.ZRevRangeWithScores(c.Ctx, key, start, stop).Result()
 }
 
-// GetZsetRange value<获取有序集合>
-func (c *ClientRedis) GetZsetRange(key string, start, stop int64) []string {
-	var result []string
-
+// ZIncrBy 照分数范围删除有序集合中的成员
+func (c *ClientRedis) ZRemRangeByScore(key, min, max string) (int64, error) {
 	if c.Mode {
-		result = c.Clients.ZRange(c.Ctx, key, start, stop).Val()
-	} else {
-		result = c.ClusterClient.ZRange(c.Ctx, key, start, stop).Val()
+		return c.Clients.ZRemRangeByScore(c.Ctx, key, min, max).Result()
 	}
-
-	return result
+	return c.ClusterClient.ZRemRangeByScore(c.Ctx, key, min, max).Result()
 }
 
-// GetZsetRange value<返回有序集合指定区间内的成员分数从高到低>
-func (c *ClientRedis) GetZsetRevRange(key string, start, stop int64) []string {
-	var result []string
-
+// ZRemRangeByRank 按照排名范围删除有序集合中的成员
+func (c *ClientRedis) ZRemRangeByRank(key string, start, stop int64) (int64, error) {
 	if c.Mode {
-		result = c.Clients.ZRevRange(c.Ctx, key, start, stop).Val()
-	} else {
-		result = c.ClusterClient.ZRevRange(c.Ctx, key, start, stop).Val()
+		return c.Clients.ZRemRangeByRank(c.Ctx, key, start, stop).Result()
 	}
-
-	return result
+	return c.ClusterClient.ZRemRangeByRank(c.Ctx, key, start, stop).Result()
 }
 
-// GetZsetRange value<返回有序集合指定区间内的成员分数从高到低>
-func (c *ClientRedis) GetZsetRangeByScore(key string, opt *redis.ZRangeBy) []string {
-	var result []string
-
+// ZRange 返回集合中某个索引范围的元素，根据分数从小到大排序
+func (c *ClientRedis) ZRange(key string, start, stop int64) ([]string, error) {
 	if c.Mode {
-		result = c.Clients.ZRangeByScore(c.Ctx, key, opt).Val()
-	} else {
-		result = c.ClusterClient.ZRangeByScore(c.Ctx, key, opt).Val()
+		return c.Clients.ZRange(c.Ctx, key, start, stop).Result()
 	}
-
-	return result
+	return c.ClusterClient.ZRange(c.Ctx, key, start, stop).Result()
 }
 
-// RemoveZset value<获取集合>
-func (c *ClientRedis) RemoveZset(key string, members ...interface{}) int64 {
-	var result int64
-
+// ZRevRange 返回集合中某个索引范围的元素，根据分数从小到大排序
+func (c *ClientRedis) ZRevRange(key string, start, stop int64) ([]string, error) {
 	if c.Mode {
-		result = c.Clients.SRem(c.Ctx, key, members).Val()
-	} else {
-		result = c.Clients.SRem(c.Ctx, key, members).Val()
+		return c.Clients.ZRevRange(c.Ctx, key, start, stop).Result()
 	}
+	return c.ClusterClient.ZRevRange(c.Ctx, key, start, stop).Result()
+}
 
-	return result
+// ZRevRank 获取有序集合中指定成员的排名（从低到高）
+func (c *ClientRedis) ZRank(key string, member string) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZRank(c.Ctx, key, member).Result()
+	}
+	return c.ClusterClient.ZRank(c.Ctx, key, member).Result()
+}
+
+// ZRevRank 获取有序集合中指定成员的排名（从高到低）
+func (c *ClientRedis) ZRevRank(key string, member string) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZRevRank(c.Ctx, key, member).Result()
+	}
+	return c.ClusterClient.ZRevRank(c.Ctx, key, member).Result()
+}
+
+// ZCard 获取有序集合的元素数量
+func (c *ClientRedis) ZCard(key string) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZCard(c.Ctx, key).Result()
+	}
+	return c.ClusterClient.ZCard(c.Ctx, key).Result()
+}
+
+// ZCard 获取有序集合指定成员的分数
+func (c *ClientRedis) ZScore(key, member string) (float64, error) {
+	if c.Mode {
+		return c.Clients.ZScore(c.Ctx, key, member).Result()
+	}
+	return c.ClusterClient.ZScore(c.Ctx, key, member).Result()
+}
+
+// ZCount 获取有序集合指定分数范围内的成员数量
+func (c *ClientRedis) ZCount(key, min, max string) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZCount(c.Ctx, key, min, max).Result()
+	}
+	return c.ClusterClient.ZCount(c.Ctx, key, min, max).Result()
+}
+
+// ZRem 删除有序集合中的指定成
+func (c *ClientRedis) ZRem(key string, members ...interface{}) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZRem(c.Ctx, key, members).Result()
+	}
+	return c.ClusterClient.ZRem(c.Ctx, key, members).Result()
+}
+
+// ZRangeWithScores 获取有序集合指定排名范围内的成员及其分数
+func (c *ClientRedis) ZRangeWithScores(key string, start, stop int64) ([]redis.Z, error) {
+	if c.Mode {
+		return c.Clients.ZRangeWithScores(c.Ctx, key, start, stop).Result()
+	}
+	return c.ClusterClient.ZRangeWithScores(c.Ctx, key, start, stop).Result()
+}
+
+// ZInterStore 计算多个有序集合的交集，并存储到新的有序集合中
+func (c *ClientRedis) ZInterStore(destination string, store *redis.ZStore) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZInterStore(c.Ctx, destination, store).Result()
+	}
+	return c.ClusterClient.ZInterStore(c.Ctx, destination, store).Result()
+}
+
+// ZUnionStore 计算多个有序集合的并集，并存储到新的有序集合中
+func (c *ClientRedis) ZUnionStore(destination string, store *redis.ZStore) (int64, error) {
+	if c.Mode {
+		return c.Clients.ZUnionStore(c.Ctx, destination, store).Result()
+	}
+	return c.ClusterClient.ZUnionStore(c.Ctx, destination, store).Result()
 }

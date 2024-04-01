@@ -44,7 +44,9 @@ func New(configPath ...string) *Engine {
 // AddFunc
 func (eng *Engine) AddFunc(f ...func()) *Engine {
 	if len(f) > 0 {
-		f[0]()
+		for i := 0; i < len(f); i++ {
+			f[i]()
+		}
 	}
 	return eng
 }
