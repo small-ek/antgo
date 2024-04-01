@@ -148,3 +148,19 @@ func (c *ClientRedis) ZUnionStore(destination string, store *redis.ZStore) (int6
 	}
 	return c.ClusterClient.ZUnionStore(c.Ctx, destination, store).Result()
 }
+
+// ZRangeByScoreWithScores 根据opt条件升序查询
+func (c *ClientRedis) ZRangeByScoreWithScores(key string, opt *redis.ZRangeBy) ([]redis.Z, error) {
+	if c.Mode {
+		return c.Clients.ZRangeByScoreWithScores(c.Ctx, key, opt).Result()
+	}
+	return c.ClusterClient.ZRangeByScoreWithScores(c.Ctx, key, opt).Result()
+}
+
+// ZRevRangeByScoreWithScores 根据opt条件降序查询
+func (c *ClientRedis) ZRevRangeByScoreWithScores(key string, opt *redis.ZRangeBy) ([]redis.Z, error) {
+	if c.Mode {
+		return c.Clients.ZRevRangeByScoreWithScores(c.Ctx, key, opt).Result()
+	}
+	return c.ClusterClient.ZRevRangeByScoreWithScores(c.Ctx, key, opt).Result()
+}
