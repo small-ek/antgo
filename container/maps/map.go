@@ -10,7 +10,7 @@ type Map struct {
 	lock sync.RWMutex                // 加锁
 }
 
-// NewMap
+// NewMap Create a map object
 func NewMap() *Map {
 	return &Map{Map: make(map[interface{}]interface{})}
 }

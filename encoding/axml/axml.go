@@ -58,7 +58,7 @@ func Encode(data map[string]string) ([]byte, error) {
 	return result, nil
 }
 
-// Encode
+// Decode
 func Decode(data []byte) (map[string]string, error) {
 	result := make(map[string]string)
 	if err := xml.Unmarshal(data, (*StringMap)(&result)); err != nil {

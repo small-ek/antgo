@@ -208,25 +208,25 @@ func (j *Json) Uint() uint {
 	return conv.Uint(j.Child)
 }
 
-// Uint Data type conversion.
+// Uint8 Data type conversion.
 func (j *Json) Uint8() uint8 {
 	defer j.End()
 	return conv.Uint8(j.Child)
 }
 
-// Uint Data type conversion.
+// Uint16 Data type conversion.
 func (j *Json) Uint16() uint16 {
 	defer j.End()
 	return conv.Uint16(j.Child)
 }
 
-// Uint Data type conversion.
+// Uint32 Data type conversion.
 func (j *Json) Uint32() uint32 {
 	defer j.End()
 	return conv.Uint32(j.Child)
 }
 
-// Uint Data type conversion.
+// Uint64 Data type conversion.
 func (j *Json) Uint64() uint64 {
 	defer j.End()
 	return conv.Uint64(j.Child)

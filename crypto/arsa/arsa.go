@@ -9,7 +9,7 @@ import (
 	"errors"
 )
 
-// New ...
+// Rsa rsa encryption algorithm
 type Rsa struct {
 	PrivateKey []byte
 	PublicKey  []byte
