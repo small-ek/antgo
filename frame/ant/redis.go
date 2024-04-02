@@ -14,7 +14,7 @@ func initRedis() {
 	}
 }
 
-// Redis
+// Redis Select a different redis
 func Redis(name ...string) *aredis.ClientRedis {
 	key := ""
 

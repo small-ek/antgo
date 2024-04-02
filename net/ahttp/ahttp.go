@@ -503,7 +503,7 @@ func (h *HttpSend) print(body []byte) {
 	if h.debug == true {
 		if alog.Write != nil {
 			if h.Err != nil || h.StatusCode != 200 {
-				h.error_print(body)
+				h.errorPrint(body)
 			} else {
 				alog.Write.Info(h.Url, zap.String("Method:", h.Method), zap.String("Timeout", h.Timeout.String()), zap.String("Headers", conv.String(h.Header)), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)), zap.Int("statusCode", h.StatusCode))
 			}
@@ -520,8 +520,8 @@ func (h *HttpSend) print(body []byte) {
 	}
 }
 
-// error_print<错误打印>
-func (h *HttpSend) error_print(body []byte) {
+// errorPrint<错误打印>
+func (h *HttpSend) errorPrint(body []byte) {
 	if h.debug == true && alog.Write != nil {
 		alog.Write.Error(h.Url, zap.String("Method:", h.Method), zap.String("Timeout", h.Timeout.String()), zap.String("Headers", conv.String(h.Header)), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body[0])), zap.Int("statusCode", h.StatusCode), zap.Error(h.Err))
 	}

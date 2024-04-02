@@ -5,7 +5,8 @@ import (
 	"github.com/small-ek/antgo/os/config"
 )
 
-// NewPool
+// NewPool accepts the tasks and process them concurrently,
+// it limits the total of goroutines to a given number by recycling goroutines.
 var NewPool *ants.Pool
 
 func InitPool(count ...int) {

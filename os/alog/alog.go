@@ -12,7 +12,7 @@ import (
 // Write Inherit zap log
 var Write *zap.Logger
 
-// Log parameter structure
+// Logs parameter structure
 type Logs struct {
 	Path        string //Save Path
 	Level       string //Set log level,info debug warn
@@ -20,12 +20,12 @@ type Logs struct {
 	MaxSize     int    //Each log file saves 10M, the default is 10M
 	MaxAge      int    //7 days reserved, 180 days by default
 	Compress    bool   //Whether to compress, no compression by default
-	ServiceName string //Log service name, default Ginp
+	ServiceName string //Log service name, default antgo
 	Format      string //Log format default console
 	Console     bool   //Whether to output the console display
 }
 
-// Default setting log
+// New Default setting log
 func New(path string) *Logs {
 	return &Logs{
 		Path:        path,
@@ -100,7 +100,7 @@ func (logs *Logs) Register() *zap.Logger {
 		EncodeTime:    EncodeTime,   // ISO8601 UTC 时间格式
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
-		},                          //
+		}, //
 		EncodeCaller: EncodeCaller, // Full path encoder
 		EncodeName:   zapcore.FullNameEncoder,
 	}
@@ -221,7 +221,7 @@ func Panic(msg string, fields ...zap.Field) {
 	Write.Panic(msg, fields...)
 }
 
-// DPanic passed at the log site, as well as any fields accumulated on the logger.<如果记录器处于开发模式，则会恐慌（DPANIC表示 “发展恐慌”）。 这对于捕获错误很有用>
+// DPanic passed at the log site, as well as any fields accumulated on the logger.<如果记录器处于开发模式，则会恐慌（DPanic表示 “发展恐慌”）。 这对于捕获错误很有用>
 func DPanic(msg string, fields ...zap.Field) {
 	Write.DPanic(msg, fields...)
 }

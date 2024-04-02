@@ -29,7 +29,7 @@ func New(configPath ...string) *Engine {
 	flag.Parse()
 
 	if len(configPath) > 0 {
-		err := config.New(configPath...).Regiter()
+		err := config.New(configPath...).Register()
 		if err != nil {
 			panic(err)
 		}
@@ -41,7 +41,7 @@ func New(configPath ...string) *Engine {
 	}
 }
 
-// AddFunc
+// AddFunc Add function execution
 func (eng *Engine) AddFunc(f ...func()) *Engine {
 	if len(f) > 0 {
 		for i := 0; i < len(f); i++ {
@@ -92,7 +92,7 @@ func (eng *Engine) Close(f ...func()) *Engine {
 
 // SetConfig Modify the configuration path<修改配置路径>
 func (eng *Engine) SetConfig(filePath ...string) *Engine {
-	err := config.New(filePath...).Regiter()
+	err := config.New(filePath...).Register()
 	if err != nil {
 		panic(err)
 	}

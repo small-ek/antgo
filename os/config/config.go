@@ -67,7 +67,7 @@ func New(filePath ...string) *ConfigStr {
 	return Config
 }
 
-// Etcd3
+// Etcd3 ETCD3 configuration link
 func (c *ConfigStr) Etcd3(hosts []string, path, username, pwd string) (err error) {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints: hosts,
@@ -91,9 +91,6 @@ func (c *ConfigStr) Etcd3(hosts []string, path, username, pwd string) (err error
 		return err
 	}
 	go c.watchEtcd3(path, cli)
-	//if err = c.Viper.ReadRemoteConfig(); err != nil {
-	//	panic(err)
-	//}
 	return nil
 }
 
@@ -161,8 +158,8 @@ func (c *ConfigStr) AddRemoteProvider(provider, endpoint, path string) error {
 }
 
 // AddSecureRemoteProvider 添加远程连接
-func (c *ConfigStr) AddSecureRemoteProvider(provider, endpoint, path, secretkeyring string) error {
-	err := c.Viper.AddSecureRemoteProvider(provider, endpoint, path, secretkeyring)
+func (c *ConfigStr) AddSecureRemoteProvider(provider, endpoint, path, secretKeyRing string) error {
+	err := c.Viper.AddSecureRemoteProvider(provider, endpoint, path, secretKeyRing)
 	if err != nil {
 		return err
 	}
@@ -187,8 +184,8 @@ func (c *ConfigStr) SetType(in string) *ConfigStr {
 	return c
 }
 
-// Regiter 注册读取配置
-func (c *ConfigStr) Regiter() (err error) {
+// Register 注册读取配置
+func (c *ConfigStr) Register() (err error) {
 	if len(c.filePath) == 1 {
 		return c.Viper.ReadInConfig()
 	}

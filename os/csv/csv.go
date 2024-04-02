@@ -3,7 +3,7 @@ package csv
 import (
 	"bufio"
 	"encoding/csv"
-	"fmt"
+	"errors"
 	"os"
 	"sync"
 )
@@ -106,7 +106,7 @@ func (c *CSV) DeleteRow(index int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if index < 0 || index >= len(c.Data) {
-		return fmt.Errorf("Index out of range")
+		return errors.New("index out of range")
 	}
 	c.Data = append(c.Data[:index], c.Data[index+1:]...)
 	return nil

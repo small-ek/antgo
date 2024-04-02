@@ -31,24 +31,24 @@ func (t *Times) Nanosecond() int64 {
 	return t.Time.UnixNano()
 }
 
-// Adds returns the time t+d.
+// Add returns the time t+d.
 func (t *Times) Add(d time.Duration) *Times {
 	timeStr := t.Time.Add(d)
 	return WithTime(timeStr)
 }
 
-// Months 返回 t 指定的年份中的月份。
+// Month 返回 t 指定的年份中的月份。
 func (t *Times) Month() int {
 	return int(t.Time.Month())
 }
 
-// Seconds 指定的分钟内的第二个偏移量
+// Second 指定的分钟内的第二个偏移量
 // 在 [0, 59] 范围内。
 func (t *Times) Second() int {
 	return t.Time.Second()
 }
 
-// IsZeros reports whether t represents the zero time instant,
+// IsZero reports whether t represents the zero time instant,
 // January 1, year 1, 00:00:00 UTC.
 func (t *Times) IsZero() bool {
 	if t == nil {
@@ -68,7 +68,7 @@ func (t *Times) String() string {
 	return t.Format("yyyy-MM-dd HH:mm:ss")
 }
 
-// AddDates adds year, month and day to the time.
+// AddDate adds year, month and day to the time.
 func (t *Times) AddDate(years int, months int, days int) *Times {
 	return WithTime(t.Time.AddDate(years, months, days))
 }
@@ -89,7 +89,7 @@ func SetTimeZone(zone string) error {
 	return os.Setenv("TZ", location.String())
 }
 
-// Truncates returns the result of rounding t down to a multiple of d (since the zero time).
+// Truncate returns the result of rounding t down to a multiple of d (since the zero time).
 // If d <= 0, Truncate returns t stripped of any monotonic clock reading but otherwise unchanged.
 //
 // Truncate operates on the time as an absolute duration since the
@@ -100,7 +100,7 @@ func (t *Times) Truncate(d time.Duration) *Times {
 	return WithTime(t.Time.Truncate(d))
 }
 
-// Equals reports whether t and u represent the same time instant.
+// Equal reports whether t and u represent the same time instant.
 // Two times can be equal even if they are in different locations.
 // For example, 6:00 +0200 CEST and 4:00 UTC are Equal.
 // See the documentation on the Time type for the pitfalls of using == with
@@ -109,17 +109,17 @@ func (t *Times) Equal(u *Times) bool {
 	return t.Time.Equal(u.Time)
 }
 
-// Befores reports whether the time instant t is before u.
+// Before reports whether the time instant t is before u.
 func (t *Times) Before(u *Times) bool {
 	return t.Time.Before(u.Time)
 }
 
-// Afters reports whether the time instant t is after u.
+// After reports whether the time instant t is after u.
 func (t *Times) After(u *Times) bool {
 	return t.Time.After(u.Time)
 }
 
-// Subs returns the duration t-u. If the result exceeds the maximum (or minimum)
+// Sub returns the duration t-u. If the result exceeds the maximum (or minimum)
 // value that can be stored in a Duration, the maximum (or minimum) duration
 // will be returned.
 // To compute t-d for a duration d, use t.Add(-d).
