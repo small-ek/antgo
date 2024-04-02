@@ -55,7 +55,7 @@ func SetPath(filePath string) {
 
 }
 
-// Result ...
+// Config ...
 type Config struct {
 	Child interface{}
 }

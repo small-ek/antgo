@@ -102,13 +102,13 @@ func NewFromTimeStamp(timestamp int64) *Times {
 	return WithTime(time.Unix(sec, nano))
 }
 
-// Now
+// Now Initialization time
 func Now() *Times {
 	timeNow := time.Now()
 	return WithTime(timeNow)
 }
 
-// WithTime
+// WithTime Include time
 func WithTime(t time.Time) *Times {
 	return &Times{Time: t}
 }

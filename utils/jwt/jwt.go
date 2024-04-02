@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// New JwtManager parameter
+//JwtManager New JwtManager parameter
 type JwtManager struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
