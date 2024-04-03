@@ -21,34 +21,23 @@ var jwtManager *JwtManager
 var once sync.Once
 
 // New function
-func New(publicKey, privateKey []byte) (j *JwtManager, err error) {
+func New() (j *JwtManager) {
 	once.Do(func() {
-		j = &JwtManager{}
-
-		if privateKey != nil && len(privateKey) > 0 {
-			j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
-			if err != nil {
-				return
-			}
-		}
-
-		if publicKey != nil && len(publicKey) > 0 {
-			j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
-			if err != nil {
-				return
-			}
-		}
-		jwtManager = j
+		jwtManager = &JwtManager{}
 	})
 
-	return jwtManager, nil
+	return jwtManager
 
 }
 
 // SetPublicKey Set public key<设置公钥Key>
 func (j *JwtManager) SetPublicKey(publicKey []byte) *JwtManager {
 	if publicKey != nil && len(publicKey) > 0 {
-		j.publicKey, _ = jwt.ParseRSAPublicKeyFromPEM(publicKey)
+		var err error
+		j.publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKey)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return j
 }
@@ -56,7 +45,11 @@ func (j *JwtManager) SetPublicKey(publicKey []byte) *JwtManager {
 // SetPrivateKey Set private <设置私钥Key>
 func (j *JwtManager) SetPrivateKey(privateKey []byte) *JwtManager {
 	if privateKey != nil && len(privateKey) > 0 {
-		j.privateKey, _ = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+		var err error
+		j.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return j
 }
