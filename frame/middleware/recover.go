@@ -24,7 +24,15 @@ func Recovery() gin.HandlerFunc {
 				requestBody := make(map[string]interface{})
 
 				if request.Body != nil {
-					body, _ = ioutil.ReadAll(request.Body)
+					body, err = ioutil.ReadAll(request.Body)
+					if err != nil {
+						alog.Write.Error("ioutil.ReadAll error",
+							zap.Any("err", err),
+							zap.Any("stack", debug.Stack()),
+						)
+						c.AbortWithStatus(http.StatusInternalServerError)
+						return
+					}
 					// 把刚刚读出来的再写进去其他地方使用没有
 					c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 					//解析Body
@@ -34,7 +42,10 @@ func Recovery() gin.HandlerFunc {
 						bodyList := strings.Split(string(body), "&")
 						for i := 0; i < len(bodyList); i++ {
 							value := strings.Split(bodyList[i], "=")
-							requestBody[value[0]] = value[1]
+							if len(value) >= 2 {
+								requestBody[value[0]] = value[1]
+							}
+
 						}
 					}
 				}
