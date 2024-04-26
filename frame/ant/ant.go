@@ -138,9 +138,6 @@ func loadApp() {
 		adb.InitDb(config.GetMaps("connections"))
 		initRedis()
 
-		var max_pool_count = config.GetInt("system.max_pool_count")
-		if 0 < max_pool_count {
-			ants.InitPool(max_pool_count)
-		}
+		ants.InitPool(config.GetInt("system.max_pool_count"))
 	}
 }
