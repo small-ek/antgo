@@ -5,11 +5,13 @@ import (
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
+	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
+	"time"
 )
 
 var Master map[string]*gorm.DB
@@ -18,16 +20,19 @@ var Master map[string]*gorm.DB
 var datetimePrecision = 2
 
 type Db struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Hostname string `json:"hostname"`
-	Port     string `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Database string `json:"database"`
-	Params   string `json:"params"`
-	Log      bool   `json:"log"`
-	Dsn      string `json:"dsn"`
+	Name            string `json:"name"`
+	Type            string `json:"type"`
+	Hostname        string `json:"hostname"`
+	Port            string `json:"port"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	Database        string `json:"database"`
+	Params          string `json:"params"`
+	Log             bool   `json:"log"`
+	Dsn             string `json:"dsn"`
+	MaxIdleConns    int    `json:"max_idle_conns"`
+	MaxOpenConns    int    `json:"max_open_conns"`
+	ConnMaxLifetime int    `json:"conn_max_lifetime"`
 }
 
 // InitDb
@@ -41,6 +46,7 @@ func InitDb(connections []map[string]any) {
 		row := Db{}
 		conv.Struct(&row, value)
 		dsn := row.Dsn
+		var err error
 		if row.Name != "" {
 			switch row.Type {
 			case "mysql":
@@ -48,7 +54,7 @@ func InitDb(connections []map[string]any) {
 					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
 				}
 
-				Master[row.Name], _ = row.Open(Mysql(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(Mysql(dsn), getConfig(row.Log))
 
 				break
 			case "pgsql":
@@ -56,7 +62,7 @@ func InitDb(connections []map[string]any) {
 					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
 				}
 
-				Master[row.Name], _ = row.Open(Postgres(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(Postgres(dsn), getConfig(row.Log))
 
 				break
 			case "sqlsrv":
@@ -64,9 +70,39 @@ func InitDb(connections []map[string]any) {
 					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
 				}
 
-				Master[row.Name], _ = row.Open(Sqlserver(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(Sqlserver(dsn), getConfig(row.Log))
+				break
+			case "clickhouse":
+				if dsn == "" {
+					dsn = "clickhouse://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "/" + row.Database + row.Params
+				}
+
+				Master[row.Name], err = row.Open(clickhouse.Open(dsn), getConfig(row.Log))
 				break
 			}
+		}
+
+		if err != nil {
+			alog.Write.Panic("gorm open error:", zap.Error(err))
+		}
+
+		sqlDB, err := Master[row.Name].DB()
+		if err != nil {
+			alog.Write.Panic("gorm db error:", zap.Error(err))
+		}
+		//SetMaxIdleConns设置空闲连接池中的最大连接数。
+		if row.MaxIdleConns > 0 {
+			sqlDB.SetMaxIdleConns(row.MaxIdleConns)
+		}
+
+		// SetMaxOpenConns设置数据库的最大打开连接数。
+		if row.MaxOpenConns > 0 {
+			sqlDB.SetMaxOpenConns(row.MaxOpenConns)
+		}
+
+		// SetConnMaxLifetime设置连接可能被重用的最大时间。
+		if row.ConnMaxLifetime > 0 {
+			sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Second)
 		}
 	}
 
@@ -155,6 +191,7 @@ func Close(connections []map[string]any) {
 
 			if db != nil {
 				if err2 := db.Close(); err2 != nil {
+					alog.Write.Error("Close database", zap.Error(fmt.Errorf("failed to close database connection for %s: %s", row.Name, err2.Error())))
 					return
 				}
 			}

@@ -10,13 +10,12 @@ var NewPool *ants.Pool
 
 func InitPool(count int) {
 	var err error
-	if count == 0 {
-		count = 10000
+	if count > 0 {
+		NewPool, err = ants.NewPool(count, ants.WithPreAlloc(true))
+		if err != nil {
+			panic(err)
+		}
 	}
-	NewPool, err = ants.NewPool(count, ants.WithPreAlloc(true))
 
-	if err != nil {
-		panic(err)
-	}
 	return
 }
