@@ -78,7 +78,7 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 // Where Where to search when there is value
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if key != "" && conditions != "" && value != "" {
+		if key != "" && conditions != "" && value != "" && value != nil && value != 0 {
 			return db.Where(""+key+" "+conditions+" ?", value)
 		}
 		return db
