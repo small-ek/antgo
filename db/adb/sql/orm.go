@@ -94,10 +94,10 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 // Order Sort
 func Order(str, sort string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if str == "" && sort == "" {
-			return db
+		if sort != "" && (sort == "desc" || sort == "DESC" || sort == "asc" || sort == "ASC") && str != "" {
+			return db.Order(str + " " + sort)
 		}
-		return db.Order(str + " " + sort)
+		return db
 	}
 }
 

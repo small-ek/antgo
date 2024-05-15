@@ -38,7 +38,7 @@ func main() {
 	//page.Filter=[]string{}{""}
 	ant.Db().Table("admin").Scopes(
 		sql.Filters(page.Filter),
-		sql.Order("id", "desc"),
+		sql.Order("id", "asc"),
 		sql.Where("id", "not in", []int64{1, 2, 3}),
 	).Find(&result)
 
