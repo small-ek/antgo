@@ -1,4 +1,134 @@
-[zh]
-hello = "你好s"
-[en]
-hello = "Hellos"
+#系统配置
+[system]
+#启动地址
+address = "9002"
+#权限配置路径
+rbac_path = "./config/rbac.conf"
+#是否开启跨域
+cors = true
+#是否开发调试模式
+debug = true
+#默认连接
+default_connections = "mysql1"
+#权限配置文件目录
+[casbin]
+path = "rbac.conf"
+
+#接口请求日志
+[log]
+#路径
+path = "./log/ant.log"
+#格式 json、console
+format = "console"
+#日志服务名称
+service_name = "antgo"
+#日志输出等级 all、info、warn、error、debug、dpanic、panic、fatal
+level = "all"
+#是否输出控制台
+console = true
+#是否开启日志
+switch = true
+#文件最长保存时间(天)
+max_age = 30
+#分割大小(MB)
+max_size = 1
+#保留30个备份(个)
+max_backups = 300
+#是否需要压缩
+compress = false
+
+#数据库设置1
+[[connections]]
+#数据库名称
+name = "mysql1"
+#数据库类型
+type = "mysql"
+#服务器地址
+hostname = "127.0.0.1"
+#服务器端口
+port = "3306"
+#数据库用户名
+username = "root"
+#数据库密码
+password = "root"
+#数据库名
+database = "test"
+#数据库连接参数
+params = "charset=utf8mb4&parseTime=True&loc=Local"
+#是否开启日志
+log = true
+
+#数据库设置1
+[[connections]]
+#数据库名称
+name = "mysql2"
+#数据库类型
+type = "mysql"
+#服务器地址
+hostname = "127.0.0.1"
+#服务器端口
+port = "3306"
+#数据库用户名
+username = "root"
+#数据库密码
+password = "root"
+#数据库名
+database = "test"
+#数据库连接参数
+params = "charset=utf8mb4&parseTime=True&loc=Local"
+#是否开启日志
+log = true
+
+#阿里云配置
+[oss]
+key_id = ""
+key_secret = ""
+endpoint = ""
+bucket = ""
+
+#Redis配置
+[[redis]]
+name="redis1"
+address = "localhost:6379"
+password = ""
+db = 0
+
+#Redis配置
+[[redis]]
+name="redis2"
+address = "localhost:6379"
+password = ""
+db = 0
+
+#邮箱警报发送
+[emaill]
+switch = true
+to = ['56494565@qq.com']
+from = '56494565@qq.com'
+host = 'smtp.qq.com:25'
+secret = 'fdtshicbbvybbiic'
+
+#Json web token
+[jwt]
+private_key = """-----BEGIN PRIVATE KEY-----
+MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAMMBf8hUaDk+oCsQ
+ecIJDrRt+EktQaGE+11Un1YWgjelgJR68JcS+2HsSTjkd+aUYFuy7uo7Jc0ugQqN
+xTwPzyJXfIX0J3niM0MM4SNLiqGD+UYGJ3bbBiw33NPT4CQ0/ATKk7Y4kdGXWl9z
+OMqV6YqWau88SpFAUENHj1rJrFKrAgMBAAECgYBEFSTo61dMDSpcfq8T6JeitPZH
+ji5o1wXvqtjKdKdYCEdhD58qD62GnblezJ1z+n+95DX3v1jOTxssdRzUgGx/Ys13
+Ukso6hzNgMOw46zwd8qoWuFuytWWc953FGsr+atWFrvfU8aEjBjWzhlTtFVRPaiS
+42zS7OZzYdmCw/PJaQJBAPu9R23SePtKIufwkg9ejWKyfIwJfLfdrfPL3RSTryGy
+ph6CahWcr19/fMRTJaTYQtfxnXc1quFow3X+IBgfMr0CQQDGTmibUOJGyVrjSNMe
+dTntWaBjMdFRwNdl7EzgUuLePUFs0gbZ6SW5dMsK/3JfzyxYF3XRki7Lupju3Ano
+RGWHAkAN/lCJJ0j4Vv+nuvSzjAL5+If51NEs+1KfGbb5XNhAXEjlq0QwXVxWR6Ts
+2N5f0nGsxU6GgOI103gCCBVKoflVAkBvBzVwSE/4XAJEIOD7O50MM9Ml1p2gjTzM
+Nwovyph0340C9XCajvvtIuQPq0gJNoBYbgIsLRGARWAc1BvD7I9/AkEAgQEnpQEI
+isXUlyKSsakm+M+hzkoJxlizUiM3tN9cIfsIBXdWv9LNGRp2gl8Sa69ri3EdqQXv
+0PcStMOn2IX1kw==
+-----END PRIVATE KEY-----"""
+public_key = """-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDAX/IVGg5PqArEHnCCQ60bfhJ
+LUGhhPtdVJ9WFoI3pYCUevCXEvth7Ek45HfmlGBbsu7qOyXNLoEKjcU8D88iV3yF
+9Cd54jNDDOEjS4qhg/lGBid22wYsN9zT0+AkNPwEypO2OJHRl1pfczjKlemKlmrv
+PEqRQFBDR49ayaxSqwIDAQAB
+-----END PUBLIC KEY-----"""

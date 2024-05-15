@@ -7,6 +7,7 @@ type PageParam struct {
 	Total       int64                  `form:"total" json:"total" bson:"total" xml:"total" yaml:"total"`
 	Filter      []string               `form:"filter[]" json:"filter[]" bson:"filter[]" xml:"filter[]" yaml:"filter[]"`
 	Order       string                 `form:"order" json:"order" bson:"order" xml:"order" yaml:"order"`
+	Sort        string                 `form:"sort" json:"sort" bson:"sort" xml:"sort" yaml:"sort"`
 	Select      []string               `form:"select[]" json:"select[]" bson:"select[]" xml:"select[]" yaml:"select[]"`
 	Group       string                 `form:"group" json:"group" bson:"group" xml:"group" yaml:"group"`
 	Omit        string                 `form:"omit" json:"omit" bson:"omit" xml:"omit" yaml:"omit"`
