@@ -44,11 +44,7 @@ func Bytes(any interface{}) []byte {
 		return []byte(value)
 	case []byte:
 		return value
-	case int:
-		return intToBytes(value)
-	case int32:
-		return intToBytes(value)
-	case int64:
+	case int, int32, int64:
 		return intToBytes(value)
 	case float32:
 		return float32ToBytes(value)

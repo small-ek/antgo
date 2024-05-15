@@ -153,86 +153,13 @@ func Interfaces(any interface{}) []interface{} {
 	}
 	var array []interface{}
 	switch value := any.(type) {
-	case []int:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
+	case []int, []int8, []int16, []int32, []int64, []uint, []uint8, []uint16, []uint32, []uint64, []bool, []float32, []float64, []interface{}, []string, [][]byte:
+		if err := json.Unmarshal(Bytes(value), &array); err != nil {
+			panic(err)
 		}
-	case []int8:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []int16:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []int32:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []int64:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []uint:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []uint8:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []uint16:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []uint32:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []uint64:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []bool:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []float32:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []float64:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case []interface{}:
-		array = value
-	case []string:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
-	case [][]byte:
-		array = make([]interface{}, len(value))
-		for i := 0; i < len(value); i++ {
-			array[i] = value[i]
-		}
+
 	case string:
-		err := json.Unmarshal([]byte(value), &array)
-		if err != nil {
+		if err := json.Unmarshal([]byte(value), &array); err != nil {
 			panic(err)
 		}
 	}

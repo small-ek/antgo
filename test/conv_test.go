@@ -29,6 +29,13 @@ func TestConvMap(t *testing.T) {
 	log.Println(conv.Maps(MapJson))
 }
 
+func TestInterfaces(t *testing.T) {
+	mapStr := `[1,2,3,4]`
+	log.Println(conv.Interfaces(mapStr))
+	MapJson := []string{"1", "2", "3", "4"}
+	log.Println(conv.Interfaces(MapJson))
+}
+
 func BenchmarkConv(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) { //并发
 		for pb.Next() {

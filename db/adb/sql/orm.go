@@ -30,46 +30,34 @@ func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 // WhereIn WhereIn search when there is value
 func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		switch value := value.(type) {
-		case []int:
-			if len(value) == 0 {
-				return db
-			}
-		case []int16:
-			if len(value) == 0 {
-				return db
-			}
-		case []int32:
-			if len(value) == 0 {
-				return db
-			}
-		case []int64:
-			if len(value) == 0 {
-				return db
-			}
-		case []uint16:
-			if len(value) == 0 {
-				return db
-			}
-		case []uint32:
-			if len(value) == 0 {
-				return db
-			}
-		case []uint64:
-			if len(value) == 0 {
-				return db
-			}
-		case []string:
-			if len(value) == 0 {
-				return db
-			}
-		case []interface{}:
-			if len(value) == 0 {
+		switch v := value.(type) {
+		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
+			newValue := conv.Interfaces(v)
+			if len(newValue) == 0 {
 				return db
 			}
 		}
+
 		if key != "" && value != nil && value != "" {
 			return db.Where(""+key+" IN (?)", value)
+		}
+		return db
+	}
+}
+
+// WhereNotIn WhereNotIn search when there is value
+func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		switch v := value.(type) {
+		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
+			newValue := conv.Interfaces(v)
+			if len(newValue) == 0 {
+				return db
+			}
+		}
+
+		if key != "" && value != nil && value != "" {
+			return db.Where(""+key+" NOT IN (?)", value)
 		}
 		return db
 	}
@@ -79,7 +67,25 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && conditions != "" && value != "" && value != nil && value != 0 {
-			return db.Where(""+key+" "+conditions+" ?", value)
+			switch v := value.(type) {
+			case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
+				newValue := conv.Interfaces(v)
+				if (conditions == "BETWEEN" || conditions == "between") && len(newValue) == 2 {
+					return db.Where(""+key+" "+conditions+" ? AND ?", newValue[0], newValue[1])
+				}
+				if (conditions == "NOT BETWEEN" || conditions == "not between") && len(newValue) == 2 {
+					return db.Where(""+key+" "+conditions+" ? AND ?", newValue[0], newValue[1])
+				}
+				if (conditions == "IN" || conditions == "in") && len(newValue) > 0 {
+					return db.Where(""+key+" IN (?)", value)
+				}
+				if (conditions == "NOT IN" || conditions == "not in") && len(newValue) > 0 {
+					return db.Where(""+key+" NOT IN (?)", value)
+				}
+			default:
+				return db.Where(""+key+" "+conditions+" ?", value)
+			}
+
 		}
 		return db
 	}
