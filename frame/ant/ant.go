@@ -9,15 +9,14 @@ import (
 	"github.com/small-ek/antgo/utils/ants"
 	"log"
 	"net/http"
-	"sync"
 )
 
 // Engine is the core component of antgo.
 type Engine struct {
-	Adapter      serve.WebFrameWork
-	Srv          *http.Server
-	Config       config.ConfigStr
-	announceLock sync.Once
+	Adapter serve.WebFrameWork
+	Srv     *http.Server
+	Config  config.ConfigStr
+	port    string
 }
 
 // defaultAdapter is the default adapter.
@@ -51,6 +50,12 @@ func (eng *Engine) AddFunc(f ...func()) *Engine {
 	return eng
 }
 
+// SetPort Set Port
+func (eng *Engine) SetPort(port string) *Engine {
+	eng.port = port
+	return eng
+}
+
 // Register the default adapter.<服务注册>
 func Register(ada serve.WebFrameWork) {
 	if ada == nil {
@@ -68,6 +73,9 @@ func (eng *Engine) Serve(app interface{}) *Engine {
 	addr := config.GetString("system.address")
 	if addr == "" {
 		addr = "8081"
+	}
+	if eng.port != "" {
+		addr = eng.port
 	}
 	if err := eng.Adapter.SetApp(app); err != nil {
 		panic(err)
