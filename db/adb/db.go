@@ -80,30 +80,31 @@ func InitDb(connections []map[string]any) {
 				Master[row.Name], err = row.Open(clickhouse.Open(dsn), getConfig(row.Log))
 				break
 			}
+
+			if err != nil {
+				alog.Write.Panic("gorm open error:", zap.Error(err))
+			}
+
+			sqlDB, err := Master[row.Name].DB()
+			if err != nil {
+				alog.Write.Panic("gorm db error:", zap.Error(err))
+			}
+			//SetMaxIdleConns设置空闲连接池中的最大连接数。
+			if row.MaxIdleConns > 0 {
+				sqlDB.SetMaxIdleConns(row.MaxIdleConns)
+			}
+
+			// SetMaxOpenConns设置数据库的最大打开连接数。
+			if row.MaxOpenConns > 0 {
+				sqlDB.SetMaxOpenConns(row.MaxOpenConns)
+			}
+
+			// SetConnMaxLifetime设置连接可能被重用的最大时间。
+			if row.ConnMaxLifetime > 0 {
+				sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Second)
+			}
 		}
 
-		if err != nil {
-			alog.Write.Panic("gorm open error:", zap.Error(err))
-		}
-
-		sqlDB, err := Master[row.Name].DB()
-		if err != nil {
-			alog.Write.Panic("gorm db error:", zap.Error(err))
-		}
-		//SetMaxIdleConns设置空闲连接池中的最大连接数。
-		if row.MaxIdleConns > 0 {
-			sqlDB.SetMaxIdleConns(row.MaxIdleConns)
-		}
-
-		// SetMaxOpenConns设置数据库的最大打开连接数。
-		if row.MaxOpenConns > 0 {
-			sqlDB.SetMaxOpenConns(row.MaxOpenConns)
-		}
-
-		// SetConnMaxLifetime设置连接可能被重用的最大时间。
-		if row.ConnMaxLifetime > 0 {
-			sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Second)
-		}
 	}
 
 }
