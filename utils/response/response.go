@@ -1,10 +1,5 @@
 package response
 
-import (
-	"github.com/small-ek/antgo/os/alog"
-	"go.uber.org/zap"
-)
-
 const (
 	//ERROR Default error code returned
 	ERROR = 422
@@ -41,10 +36,7 @@ func Success(msg string, data ...interface{}) *Write {
 // Fail Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...string) *Write {
 	var lenErr = len(err)
-	if lenErr > 0 {
-		alog.Write.Error("Return error", zap.Any("error", err))
-	}
-
+	
 	if lenErr == 1 {
 		return &Write{Status: ERROR, Msg: msg, Error: err[0]}
 	} else if lenErr > 1 {
