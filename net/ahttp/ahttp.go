@@ -505,7 +505,7 @@ func (h *HttpSend) print(body []byte) {
 			if h.Err != nil || h.StatusCode != 200 {
 				h.errorPrint(body)
 			} else {
-				alog.Write.Info(h.Url, zap.String("Method:", h.Method), zap.String("Timeout", h.Timeout.String()), zap.String("Headers", conv.String(h.Header)), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)), zap.Int("statusCode", h.StatusCode))
+				alog.Write.Debug(h.Url, zap.String("Method:", h.Method), zap.String("Timeout", h.Timeout.String()), zap.String("Headers", conv.String(h.Header)), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)), zap.Int("statusCode", h.StatusCode))
 			}
 
 		} else {
