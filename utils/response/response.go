@@ -9,10 +9,10 @@ const (
 
 // Write Return parameter
 type Write struct {
-	Status int         `json:"status"` //Status Code
-	Msg    string      `json:"msg"`    //Msg Prompt message
-	Result interface{} `json:"result"` //Data
-	Error  interface{} `json:"error"`  //Error message
+	Status int         `json:"status"`           //Status Code
+	Msg    string      `json:"msg"`              //Msg Prompt message
+	Result interface{} `json:"result,omitempty"` //Data
+	Error  interface{} `json:"error,omitempty"`  //Error message
 }
 
 // Page Pagination return
@@ -36,7 +36,7 @@ func Success(msg string, data ...interface{}) *Write {
 // Fail Error return, the second parameter is passed back to the front end and printed
 func Fail(msg string, err ...string) *Write {
 	var lenErr = len(err)
-	
+
 	if lenErr == 1 {
 		return &Write{Status: ERROR, Msg: msg, Error: err[0]}
 	} else if lenErr > 1 {
