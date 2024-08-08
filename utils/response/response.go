@@ -1,12 +1,5 @@
 package response
 
-const (
-	//ERROR Default error code returned
-	ERROR = 422
-	//SUCCESS Default success code return
-	SUCCESS = 200
-)
-
 // Write Return parameter
 type Write struct {
 	Status int         `json:"status"`           //Status Code
@@ -22,26 +15,26 @@ type Page struct {
 }
 
 // Success Successfully returned
-func Success(msg string, data ...interface{}) *Write {
+func Success(msg string, status int, data ...interface{}) *Write {
 	var lenData = len(data)
 	if lenData == 1 {
-		return &Write{Status: SUCCESS, Msg: msg, Result: data[0]}
+		return &Write{Status: status, Msg: msg, Result: data[0]}
 	} else if lenData > 1 {
-		return &Write{Status: SUCCESS, Msg: msg, Result: data}
+		return &Write{Status: status, Msg: msg, Result: data}
 	}
 
-	return &Write{Status: SUCCESS, Msg: msg}
+	return &Write{Status: status, Msg: msg}
 }
 
 // Fail Error return, the second parameter is passed back to the front end and printed
-func Fail(msg string, err ...string) *Write {
+func Fail(msg string, status int, err ...string) *Write {
 	var lenErr = len(err)
 
 	if lenErr == 1 {
-		return &Write{Status: ERROR, Msg: msg, Error: err[0]}
+		return &Write{Status: status, Msg: msg, Error: err[0]}
 	} else if lenErr > 1 {
-		return &Write{Status: ERROR, Msg: msg, Error: err}
+		return &Write{Status: status, Msg: msg, Error: err}
 	}
 
-	return &Write{Status: ERROR, Msg: msg}
+	return &Write{Status: status, Msg: msg}
 }
