@@ -33,6 +33,7 @@ type Db struct {
 	MaxIdleConns    int    `json:"max_idle_conns"`
 	MaxOpenConns    int    `json:"max_open_conns"`
 	ConnMaxLifetime int    `json:"conn_max_lifetime"`
+	ConnMaxIdleTime int    `json:"conn_max_idleTime"`
 }
 
 // InitDb
@@ -99,9 +100,13 @@ func InitDb(connections []map[string]any) {
 				sqlDB.SetMaxOpenConns(row.MaxOpenConns)
 			}
 
-			// SetConnMaxLifetime设置连接可能被重用的最大时间。
+			// SetConnMaxLifetime设置连接最大生命周期。默认值为 0，表示不限制。
 			if row.ConnMaxLifetime > 0 {
 				sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Second)
+			}
+			// SetConnMaxLifetime设置连接最大空闲时间。默认值为 0，表示不限制
+			if row.ConnMaxIdleTime > 0 {
+				sqlDB.SetConnMaxIdleTime(time.Duration(row.ConnMaxIdleTime) * time.Hour)
 			}
 		}
 
@@ -184,6 +189,7 @@ func Close(connections []map[string]any) {
 		value := connections[i]
 		row := Db{}
 		conv.Struct(&row, value)
+
 		if Master[row.Name] != nil {
 			var db, err = Master[row.Name].DB()
 			if err != nil {

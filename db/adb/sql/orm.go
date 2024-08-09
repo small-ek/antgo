@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/small-ek/antgo/utils/conv"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"strings"
 )
 
@@ -91,11 +92,13 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 	}
 }
 
-// Order Sort
-func Order(str, sort string) func(db *gorm.DB) *gorm.DB {
+// Order Sort Can prevent injection sorting
+func Order(str []string, desc []bool) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if sort != "" && (sort == "desc" || sort == "DESC" || sort == "asc" || sort == "ASC") && str != "" {
-			return db.Order(str + " " + sort)
+		if len(str) > 0 && len(desc) > 0 && len(str) == len(desc) {
+			for i := 0; i < len(str); i++ {
+				db = db.Order(clause.OrderByColumn{Column: clause.Column{Name: str[i]}, Desc: desc[i]})
+			}
 		}
 		return db
 	}

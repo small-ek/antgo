@@ -8,6 +8,8 @@ type PageParam struct {
 	Select      []string               `form:"select[]" json:"select[]" bson:"select[]" xml:"select[]" yaml:"select[]"`                     //选择字段
 	Omit        string                 `form:"omit" json:"omit" bson:"omit" xml:"omit" yaml:"omit"`                                         //忽略字段
 	Extra       map[string]interface{} `form:"extra" json:"extra" bson:"extra" xml:"extra" yaml:"extra"`                                    //额外参数
+	Order       []string               `form:"order" json:"order" bson:"order" xml:"order" yaml:"order"`                                    //排序字段
+	Desc        []bool                 `form:"desc" json:"desc" bson:"desc" xml:"desc" yaml:"desc"`                                         //排序方式 true 降序 false 升序
 }
 
 // New Default pagination
