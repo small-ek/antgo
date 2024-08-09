@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
 	"time"
 )
@@ -20,20 +21,21 @@ var Master map[string]*gorm.DB
 var datetimePrecision = 2
 
 type Db struct {
-	Name            string `json:"name"`
-	Type            string `json:"type"`
-	Hostname        string `json:"hostname"`
-	Port            string `json:"port"`
-	Username        string `json:"username"`
-	Password        string `json:"password"`
-	Database        string `json:"database"`
-	Params          string `json:"params"`
-	Log             bool   `json:"log"`
-	Dsn             string `json:"dsn"`
-	MaxIdleConns    int    `json:"max_idle_conns"`
-	MaxOpenConns    int    `json:"max_open_conns"`
-	ConnMaxLifetime int    `json:"conn_max_lifetime"`
-	ConnMaxIdleTime int    `json:"conn_max_idleTime"`
+	Name            string              `json:"name"`
+	Type            string              `json:"type"`
+	Hostname        string              `json:"hostname"`
+	Port            string              `json:"port"`
+	Username        string              `json:"username"`
+	Password        string              `json:"password"`
+	Database        string              `json:"database"`
+	Params          string              `json:"params"`
+	Log             bool                `json:"log"`
+	Dsn             string              `json:"dsn"`
+	MaxIdleConns    int                 `json:"max_idle_conns"`
+	MaxOpenConns    int                 `json:"max_open_conns"`
+	ConnMaxLifetime int                 `json:"conn_max_lifetime"`
+	ConnMaxIdleTime int                 `json:"conn_max_idleTime"`
+	Level           gormlogger.LogLevel `json:"level"`
 }
 
 // InitDb
@@ -55,7 +57,7 @@ func InitDb(connections []map[string]any) {
 					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
 				}
 
-				Master[row.Name], err = row.Open(Mysql(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(Mysql(dsn), getConfig(row.Log, row.Level))
 
 				break
 			case "pgsql":
@@ -63,7 +65,7 @@ func InitDb(connections []map[string]any) {
 					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
 				}
 
-				Master[row.Name], err = row.Open(Postgres(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(Postgres(dsn), getConfig(row.Log, row.Level))
 
 				break
 			case "sqlsrv":
@@ -71,14 +73,14 @@ func InitDb(connections []map[string]any) {
 					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
 				}
 
-				Master[row.Name], err = row.Open(Sqlserver(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(Sqlserver(dsn), getConfig(row.Log, row.Level))
 				break
 			case "clickhouse":
 				if dsn == "" {
 					dsn = "clickhouse://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "/" + row.Database + row.Params
 				}
 
-				Master[row.Name], err = row.Open(clickhouse.Open(dsn), getConfig(row.Log))
+				Master[row.Name], err = row.Open(clickhouse.Open(dsn), getConfig(row.Log, row.Level))
 				break
 			}
 
@@ -115,12 +117,12 @@ func InitDb(connections []map[string]any) {
 }
 
 // getConfig
-func getConfig(isLog bool) *gorm.Config {
+func getConfig(isLog bool, level gormlogger.LogLevel) *gorm.Config {
 	if isLog {
 		zapLog := New(zap.L())
 		zapLog.SetAsDefault()
 		return &gorm.Config{
-			Logger:                                   zapLog.LogMode(4),
+			Logger:                                   zapLog.LogMode(level),
 			DisableForeignKeyConstraintWhenMigrating: true,
 			SkipDefaultTransaction:                   true,
 			PrepareStmt:                              true,

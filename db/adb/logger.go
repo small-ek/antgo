@@ -3,7 +3,6 @@ package adb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/small-ek/antgo/os/alog"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -24,7 +23,7 @@ func New(zapLogger *zap.Logger) Logger {
 	return Logger{
 		ZapLogger:                 zapLogger,
 		LogLevel:                  gormlogger.Info,
-		SlowThreshold:             100 * time.Millisecond,
+		SlowThreshold:             200 * time.Millisecond,
 		SkipCallerLookup:          false,
 		IgnoreRecordNotFoundError: false,
 	}
@@ -70,20 +69,22 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 	if l.LogLevel <= 0 {
 		return
 	}
+	
 	elapsed := time.Since(begin)
-	switch {
+	sql, rows := fc()
+	logFields := []zap.Field{
+		zap.String("line number", utils.FileWithLineNum()),
+		zap.String("sql", sql),
+		zap.Float64("time", float64(elapsed.Nanoseconds())/1e6),
+		zap.Int64("rows", rows),
+	}
 
+	switch {
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
-		sql, rows := fc()
-		out := fmt.Sprintf("%s [%s] [%s] [%.3fms] [rows:%v]", utils.FileWithLineNum(), err, sql, float64(elapsed.Nanoseconds())/1e6, rows)
-		alog.Write.Error(out)
+		alog.Write.Error("sql error", logFields...)
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
-		sql, rows := fc()
-		out := fmt.Sprintf("%s [%s] [%.3fms] [rows:%v]", utils.FileWithLineNum(), sql, float64(elapsed.Nanoseconds())/1e6, rows)
-		alog.Write.Warn(out)
+		alog.Write.Warn("sql warn", logFields...)
 	case l.LogLevel >= gormlogger.Info:
-		sql, rows := fc()
-		out := fmt.Sprintf("%s [%s] [%.3fms] [rows:%v]", utils.FileWithLineNum(), sql, float64(elapsed.Nanoseconds())/1e6, rows)
-		alog.Write.Info(out)
+		alog.Write.Info("sql info", logFields...)
 	}
 }

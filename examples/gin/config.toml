@@ -57,6 +57,8 @@ database = "test"
 params = "charset=utf8mb4&parseTime=True&loc=Local"
 #是否开启日志
 log = true
+#日志等级,1=静默;2=错误;3=警告;4=信息
+level = 4
 
 #数据库设置1
 [[connections]]
@@ -81,9 +83,9 @@ log = true
 #设置空闲连接池中的最大连接数
 max_idle_conns = 100
 #设置数据库的最大打开连接数。
-max_open_conns= 200
+max_open_conns = 200
 #设置连接可能被重用的最大时间(秒)。
-conn_max_lifetime=300
+conn_max_lifetime = 300
 
 #阿里云配置
 [oss]
@@ -94,14 +96,14 @@ bucket = ""
 
 #Redis配置
 [[redis]]
-name="redis1"
+name = "redis1"
 address = "localhost:6379"
 password = ""
 db = 0
 
 #Redis配置
 [[redis]]
-name="redis2"
+name = "redis2"
 address = "localhost:6379"
 password = ""
 db = 0
