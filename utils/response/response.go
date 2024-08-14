@@ -1,40 +1,40 @@
 package response
 
-// Write Return parameter
+// Write Return parameter 返回参数
 type Write struct {
-	Status int         `json:"status"`           //Status Code
-	Msg    string      `json:"msg"`              //Msg Prompt message
-	Result interface{} `json:"result,omitempty"` //Data
-	Error  interface{} `json:"error,omitempty"`  //Error message
+	Code    int         `json:"code"`            //Status Code 业务逻辑的状态码
+	Message string      `json:"message"`         //Msg Prompt message 简短描述
+	Data    interface{} `json:"data,omitempty"`  //Data 实际数据
+	Error   interface{} `json:"error,omitempty"` //Error message 错误相关的信息
 }
 
-// Page Pagination return
+// Page Pagination return 分页返回
 type Page struct {
-	Total int64       `json:"total"` //Total total pages
-	List  interface{} `json:"list"`  //List json data
+	Total int64       `json:"total"` //Total pages 总数量
+	Items interface{} `json:"items"` //Data set of the current page 数据集合
 }
 
-// Success Successfully returned
-func Success(msg string, status int, data ...interface{}) *Write {
+// Success Successfully returned 成功返回
+func Success(msg string, code int, data ...interface{}) *Write {
 	var lenData = len(data)
 	if lenData == 1 {
-		return &Write{Status: status, Msg: msg, Result: data[0]}
+		return &Write{Code: code, Message: msg, Data: data[0]}
 	} else if lenData > 1 {
-		return &Write{Status: status, Msg: msg, Result: data}
+		return &Write{Code: code, Message: msg, Data: data}
 	}
 
-	return &Write{Status: status, Msg: msg}
+	return &Write{Code: code, Message: msg}
 }
 
-// Fail Error return, the second parameter is passed back to the front end and printed
-func Fail(msg string, status int, err ...string) *Write {
+// Fail Error return 错误返回
+func Fail(msg string, code int, err ...string) *Write {
 	var lenErr = len(err)
 
 	if lenErr == 1 {
-		return &Write{Status: status, Msg: msg, Error: err[0]}
+		return &Write{Code: code, Message: msg, Error: err[0]}
 	} else if lenErr > 1 {
-		return &Write{Status: status, Msg: msg, Error: err}
+		return &Write{Code: code, Message: msg, Error: err}
 	}
 
-	return &Write{Status: status, Msg: msg}
+	return &Write{Code: code, Message: msg}
 }

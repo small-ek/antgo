@@ -1,6 +1,6 @@
 package page
 
-// PageParam Paging parameters
+// PageParam Paging parameters 分页参数
 type PageParam struct {
 	CurrentPage int                    `form:"current_page" json:"current_page" bson:"current_page" xml:"current_page" yaml:"current_page"` //当前页
 	PageSize    int                    `form:"page_size" json:"page_size" bson:"page_size" xml:"page_size" yaml:"page_size"`                //每页显示数量
@@ -12,7 +12,7 @@ type PageParam struct {
 	Desc        []bool                 `form:"desc" json:"desc" bson:"desc" xml:"desc" yaml:"desc"`                                         //排序方式 true 降序 false 升序
 }
 
-// New Default pagination
+// New Default pagination 默认分页参数
 func New() PageParam {
 	return PageParam{
 		CurrentPage: 1,
