@@ -69,11 +69,11 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 	if l.LogLevel <= 0 {
 		return
 	}
-	
+
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	logFields := []zap.Field{
-		zap.String("line number", utils.FileWithLineNum()),
+		zap.String("line", utils.FileWithLineNum()),
 		zap.String("sql", sql),
 		zap.Float64("time", float64(elapsed.Nanoseconds())/1e6),
 		zap.Int64("rows", rows),
@@ -81,10 +81,10 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 
 	switch {
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
-		alog.Write.Error("sql error", logFields...)
+		alog.Write.Error("sql_error", logFields...)
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
-		alog.Write.Warn("sql warn", logFields...)
+		alog.Write.Warn("sql_warn", logFields...)
 	case l.LogLevel >= gormlogger.Info:
-		alog.Write.Info("sql info", logFields...)
+		alog.Write.Info("sql_info", logFields...)
 	}
 }
