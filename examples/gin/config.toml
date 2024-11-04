@@ -2,26 +2,22 @@
 [system]
 #启动地址
 address = "9002"
-#权限配置路径
-rbac_path = "./config/rbac.conf"
 #是否开启跨域
 cors = true
 #是否开发调试模式
 debug = true
-#默认连接
-default_connections = "mysql1"
-#权限配置文件目录
-[casbin]
-path = "rbac.conf"
+#项目名称
+app_name = "antgo"
+
 
 #接口请求日志
 [log]
 #路径
-path = "./log/ant.log"
-#格式 json、console
-format = "console"
+path = "./log/app.log"
+#输出格式 支持(json、console)
+format = "json"
 #日志服务名称
-service_name = "antgo"
+service_name = "admin"
 #日志输出等级 all、info、warn、error、debug、dpanic、panic、fatal
 level = "all"
 #是否输出控制台
@@ -29,19 +25,21 @@ console = true
 #是否开启日志
 switch = true
 #文件最长保存时间(天)
-max_age = 30
+max_age = 180
 #分割大小(MB)
-max_size = 1
+max_size = 10
 #保留30个备份(个)
-max_backups = 300
+max_backups = 5000
 #是否需要压缩
 compress = false
+#header 白名单
+header_whitelist = []
 
-#数据库设置1
+#数据库设置
 [[connections]]
-#数据库名称
-name = "mysql1"
-#数据库类型
+#数据库名称(必须唯一)
+name = "mysql"
+#数据库类型支持mysql、pgsql、sqlsrv、clickhouse
 type = "mysql"
 #服务器地址
 hostname = "127.0.0.1"
@@ -52,30 +50,7 @@ username = "root"
 #数据库密码
 password = "root"
 #数据库名
-database = "test"
-#数据库连接参数
-params = "charset=utf8mb4&parseTime=True&loc=Local"
-#是否开启日志
-log = true
-#日志等级,1=静默;2=错误;3=警告;4=信息
-level = 4
-
-#数据库设置1
-[[connections]]
-#数据库名称
-name = "mysql2"
-#数据库类型
-type = "mysql"
-#服务器地址
-hostname = "127.0.0.1"
-#服务器端口
-port = "3306"
-#数据库用户名
-username = "root"
-#数据库密码
-password = "root"
-#数据库名
-database = "test"
+database = "antgo"
 #数据库连接参数
 params = "charset=utf8mb4&parseTime=True&loc=Local"
 #是否开启日志
@@ -86,6 +61,41 @@ max_idle_conns = 100
 max_open_conns = 200
 #设置连接可能被重用的最大时间(秒)。
 conn_max_lifetime = 300
+#设置连接最大生命周期(小时)。
+conn_max_idleTime = 2
+#日志等级,1=静默;2=错误;3=警告;4=信息
+level = 4
+
+#数据库设置
+[[connections]]
+#数据库名称(必须唯一)
+name = "mysql2"
+#数据库类型支持mysql、pgsql、sqlsrv、clickhouse
+type = "mysql"
+#服务器地址
+hostname = "127.0.0.1"
+#服务器端口
+port = "3306"
+#数据库用户名
+username = "root"
+#数据库密码
+password = "root"
+#数据库名
+database = "antgo"
+#数据库连接参数
+params = "charset=utf8mb4&parseTime=True&loc=Local"
+#是否开启日志
+log = true
+#设置空闲连接池中的最大连接数
+max_idle_conns = 100
+#设置数据库的最大打开连接数。
+max_open_conns = 200
+#设置连接可能被重用的最大时间(秒)。
+conn_max_lifetime = 300
+#设置连接最大生命周期(小时)。
+conn_max_idleTime = 2
+#日志等级,1=静默;2=错误;3=警告;4=信息
+level = 4
 
 #阿里云配置
 [oss]
@@ -134,6 +144,7 @@ Nwovyph0340C9XCajvvtIuQPq0gJNoBYbgIsLRGARWAc1BvD7I9/AkEAgQEnpQEI
 isXUlyKSsakm+M+hzkoJxlizUiM3tN9cIfsIBXdWv9LNGRp2gl8Sa69ri3EdqQXv
 0PcStMOn2IX1kw==
 -----END PRIVATE KEY-----"""
+
 public_key = """-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDAX/IVGg5PqArEHnCCQ60bfhJ
 LUGhhPtdVJ9WFoI3pYCUevCXEvth7Ek45HfmlGBbsu7qOyXNLoEKjcU8D88iV3yF
