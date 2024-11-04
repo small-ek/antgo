@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,11 @@ func main() {
 		c.String(200, config.GetString("casbin.path"))
 	})
 
+	app.GET("/test2", func(c *gin.Context) {
+		var test = []string{"11", "22"}
+		fmt.Println(test[3])
+		c.String(200, config.GetString("casbin.path"))
+	})
 	app.GET("/test", func(c *gin.Context) {
 		c.String(200, "Hello, World!")
 	})

@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"runtime/debug"
 	"strings"
-	"time"
 )
 
 // Recovery Catch the exception and write it to the log(捕获异常并且写入日志)
@@ -26,8 +25,8 @@ func Recovery() gin.HandlerFunc {
 				if request.Body != nil {
 					body, err = ioutil.ReadAll(request.Body)
 					if err != nil {
-						alog.Write.Error("ioutil.ReadAll error",
-							zap.Any("err", err),
+						alog.Write.Error("ReadAll error",
+							zap.Error(err.(error)), // 类型断言
 							zap.Any("stack", debug.Stack()),
 						)
 						c.AbortWithStatus(http.StatusInternalServerError)
@@ -39,32 +38,32 @@ func Recovery() gin.HandlerFunc {
 					if request.Header["Content-Type"] != nil && request.Header["Content-Type"][0] == "application/json" {
 						json.Unmarshal(body, &requestBody)
 					} else if len(body) > 0 {
-						bodyList := strings.Split(string(body), "&")
-						for i := 0; i < len(bodyList); i++ {
-							value := strings.Split(bodyList[i], "=")
-							if len(value) >= 2 {
-								requestBody[value[0]] = value[1]
+						for _, pair := range strings.Split(string(body), "&") {
+							if kv := strings.SplitN(pair, "=", 2); len(kv) == 2 {
+								requestBody[kv[0]] = kv[1]
 							}
-
 						}
 					}
 				}
 				// 请求URL
 				path, _ := url.QueryUnescape(c.Request.URL.RequestURI())
-				// 请求类型
-				method := request.Method
-				// 请求IP
-				ip := c.ClientIP()
 
-				alog.Write.Error("Recovery from panic",
-					zap.Any("ip", ip),
-					zap.Time("time", time.Now()),
+				logFields := []zap.Field{
+					zap.Any("ip", c.ClientIP()),
 					zap.Any("path", path),
 					zap.Any("request", requestBody),
-					zap.Any("method", method),
+					zap.Any("method", request.Method),
 					zap.Any("header", request.Header),
 					zap.Any("err", err),
 					zap.Any("stack", debug.Stack()),
+				}
+
+				// Always log X-Request-Id separately to ensure it's unique each time
+				if values, ok := c.Request.Header["X-Request-Id"]; ok {
+					logFields = append(logFields, zap.Strings("X-Request-Id", values))
+				}
+				alog.Write.Error("Recovery from panic",
+					logFields...,
 				)
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}
