@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/gin_middleware"
@@ -19,14 +17,7 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 		gin.DefaultWriter = ioutil.Discard
 	}
-	app.Use(requestid.New()).Use(gin_middleware.Recovery()).Use(gin_middleware.Logger())
-
-	if config.GetBool("system.cors") == true {
-		corsConfig := cors.DefaultConfig()
-		corsConfig.AllowOrigins = []string{"*"}
-		corsConfig.AllowHeaders = []string{"*"}
-		app.Use(cors.New(corsConfig))
-	}
+	app.Use(gin_middleware.Recovery()).Use(gin_middleware.Logger())
 
 	app.GET("/", func(c *gin.Context) {
 		c.String(200, config.GetString("casbin.path"))
