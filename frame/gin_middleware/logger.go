@@ -82,7 +82,7 @@ func prepareLogFields(c *gin.Context, status int, path string, startTime, endTim
 
 	// Always log X-Request-Id separately to ensure it's unique each time
 	if values, ok := c.Request.Header["X-Request-Id"]; ok {
-		logFields = append(logFields, zap.Strings("X-Request-Id", values))
+		logFields = append(logFields, zap.Strings("x_request_id", values))
 	}
 
 	// 请求头白名单
