@@ -77,7 +77,7 @@ func prepareLogFields(c *gin.Context, status int, path string, startTime, endTim
 		zap.String("method", c.Request.Method),
 		zap.String("ip", c.ClientIP()),
 		zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
-		zap.String("duration_ms", endTime.Sub(startTime).String()),
+		zap.String("response_time", endTime.Sub(startTime).String()),
 	}
 
 	// Always log X-Request-Id separately to ensure it's unique each time

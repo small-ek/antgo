@@ -75,7 +75,7 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 	logFields := []zap.Field{
 		zap.String("line", utils.FileWithLineNum()),
 		zap.String("sql", sql),
-		zap.Float64("time", float64(elapsed.Nanoseconds())/1e6),
+		zap.Float64("duration", float64(elapsed.Nanoseconds())/1e6),
 		zap.Int64("rows", rows),
 	}
 
