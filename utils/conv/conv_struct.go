@@ -1,61 +1,48 @@
 package conv
 
 import (
-	"bytes"
-	"encoding/gob"
-	"encoding/json"
-	"reflect"
-	"strings"
+	"errors"
+	jsoniter "github.com/json-iterator/go"
 )
 
-// Struct conversion binding
-// model Bound model
-// data Data
-func Struct(model interface{}, data interface{}) {
+// ToStruct converts data from one struct to another using JSON serialization/deserialization. 使用 JSON 序列化-反序列化将数据从一个结构转换为另一个结构
+// model: Target struct to bind data into.
+// data: Source data to convert. Can be a struct, map, or slice.
+// Returns an error if the conversion fails.
+func ToStruct(data any, model any) error {
+	if model == nil || data == nil {
+		return errors.New("model and data cannot be nil")
+	}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	// JSON serialization/deserialization for conversion
 	result, err := json.Marshal(data)
-	err = json.Unmarshal(result, model)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return json.Unmarshal(result, model)
 }
 
-// StructToBytes Use gob encoding generally used for "similar" two structure transmission binding or RPC communication
-func StructToBytes(data interface{}) []byte {
-	buf := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(buf)
-	err := enc.Encode(data)
-	if err != nil {
-		panic(err)
+// UnmarshalJSON Using JSON deserialization. 使用 JSON反序列化
+// model: Target struct to bind data into.
+// data: Source data to convert. Can be a struct, map, or slice.
+// Returns an error if the conversion fails.
+func UnmarshalJSON(data []byte, model any) error {
+	if model == nil || data == nil {
+		return errors.New("data and model cannot be nil")
 	}
-	return buf.Bytes()
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+	return json.Unmarshal(data, model)
 }
 
-// BytesToStruct Using gob encoding is generally used for "similar" two structure transmission binding or RPC communication
-func BytesToStruct(data []byte, to interface{}) error {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	return dec.Decode(to)
-}
-
-// InterfaceToStruct interface conversion Struct
-func InterfaceToStruct(data interface{}) interface{} {
+// ToJSON Using JSON deserialization. 使用 JSON序列化字符串
+// model: Target struct to bind data into.
+// data: Source data to convert. Can be a struct, map, or slice.
+func ToJSON(data any) ([]byte, error) {
 	if data == nil {
-		return nil
+		return nil, errors.New("data cannot be nil")
 	}
-	var result = reflect.New(Indirect(reflect.ValueOf(data)).Type()).Interface()
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-	jsonStr, err := json.Marshal(data)
-	if err != nil {
-		panic(err)
-	}
-	json.NewDecoder(strings.NewReader(string(jsonStr))).Decode(result)
-	return result
-}
-
-// Indirect returns last value that v points to
-func Indirect(v reflect.Value) reflect.Value {
-	for v.Kind() == reflect.Ptr {
-		v = reflect.Indirect(v)
-	}
-	return v
+	return json.Marshal(data)
 }

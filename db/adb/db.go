@@ -47,7 +47,7 @@ func InitDb(connections []map[string]any) {
 	for i := 0; i < len(connections); i++ {
 		value := connections[i]
 		row := Db{}
-		conv.Struct(&row, value)
+		conv.ToStruct(value, &row)
 		dsn := row.Dsn
 		var err error
 		if row.Name != "" {
@@ -190,7 +190,7 @@ func Close(connections []map[string]any) {
 	for i := 0; i < len(connections); i++ {
 		value := connections[i]
 		row := Db{}
-		conv.Struct(&row, value)
+		conv.ToStruct(value, &row)
 
 		if Master[row.Name] != nil {
 			var db, err = Master[row.Name].DB()
