@@ -6,14 +6,9 @@ import (
 	"strconv"
 )
 
-// Wrap
-func Wrap(err error, message string) error {
+// Wrap 堆栈跟踪
+func Wrap(message string, err error) error {
 	return errors.Wrap(err, "==> "+printCallerNameAndLine()+message)
-}
-
-// WithMessage
-func WithMessage(err error, message string) error {
-	return errors.WithMessage(err, "==> "+printCallerNameAndLine()+message)
 }
 
 // printCallerNameAndLine
