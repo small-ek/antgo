@@ -92,23 +92,23 @@ func InitDb(connections []map[string]any) {
 			if err != nil {
 				alog.Write.Panic("gorm db error:", zap.Error(err))
 			}
-			//SetMaxIdleConns设置空闲连接池中的最大连接数。
+			//SetMaxIdleConns设置空闲连接池中的最大连接数，一般设置500。
 			if row.MaxIdleConns > 0 {
 				sqlDB.SetMaxIdleConns(row.MaxIdleConns)
 			}
 
-			// SetMaxOpenConns设置数据库的最大打开连接数。
+			// SetMaxOpenConns设置数据库的最大打开连接数，一般设置5000。
 			if row.MaxOpenConns > 0 {
 				sqlDB.SetMaxOpenConns(row.MaxOpenConns)
 			}
 
-			// SetConnMaxLifetime设置连接最大生命周期。默认值为 0，表示不限制。
+			// SetConnMaxLifetime设置连接最大生命周期,一般设置12小时。默认值为 0，表示不限制。
 			if row.ConnMaxLifetime > 0 {
-				sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Second)
+				sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Hour)
 			}
-			// SetConnMaxLifetime设置连接最大空闲时间。默认值为 0，表示不限制
+			// SetConnMaxIdleTime 设置连接最大空闲时间，一般设置 10 分钟之间是一个合理的选择。默认值为 0，表示不限制
 			if row.ConnMaxIdleTime > 0 {
-				sqlDB.SetConnMaxIdleTime(time.Duration(row.ConnMaxIdleTime) * time.Hour)
+				sqlDB.SetConnMaxIdleTime(time.Duration(row.ConnMaxIdleTime) * time.Minute)
 			}
 		}
 
