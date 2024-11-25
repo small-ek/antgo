@@ -15,7 +15,7 @@ app_name = "antgo"
 #路径
 path = "./log/app.log"
 #输出格式 支持(json、console)
-format = "json"
+format = "console"
 #日志服务名称
 service_name = "admin"
 #日志输出等级 all、info、warn、error、debug、dpanic、panic、fatal

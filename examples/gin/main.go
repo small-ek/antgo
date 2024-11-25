@@ -20,7 +20,9 @@ func main() {
 	app.Use(gin_middleware.Recovery()).Use(gin_middleware.Logger())
 
 	app.GET("/", func(c *gin.Context) {
-		c.String(200, config.GetString("casbin.path"))
+		var list = make([]map[string]interface{}, 0)
+		ant.Db().Table("sys_admin_users").Find(&list)
+		c.JSON(200, list)
 	})
 
 	app.GET("/test2", func(c *gin.Context) {

@@ -1,6 +1,7 @@
 package adb
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/utils/conv"
@@ -12,108 +13,127 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
+	"sync"
 	"time"
 )
 
-var Master map[string]*gorm.DB
+var (
+	Master map[string]*gorm.DB
+	once   sync.Once
+)
 
-// var Resolver *dbresolver.DBResolver
-var datetimePrecision = 2
-
-type Db struct {
+type DatabaseConfig struct {
 	Name            string              `json:"name"`
 	Type            string              `json:"type"`
 	Hostname        string              `json:"hostname"`
 	Port            string              `json:"port"`
 	Username        string              `json:"username"`
 	Password        string              `json:"password"`
-	Database        string              `json:"database"`
+	DatabaseName    string              `json:"database"`
 	Params          string              `json:"params"`
-	Log             bool                `json:"log"`
-	Dsn             string              `json:"dsn"`
+	LogEnabled      bool                `json:"log"`
+	DSN             string              `json:"dsn"`
 	MaxIdleConns    int                 `json:"max_idle_conns"`
 	MaxOpenConns    int                 `json:"max_open_conns"`
 	ConnMaxLifetime int                 `json:"conn_max_lifetime"`
 	ConnMaxIdleTime int                 `json:"conn_max_idleTime"`
-	Level           gormlogger.LogLevel `json:"level"`
+	LogLevel        gormlogger.LogLevel `json:"level"`
 }
 
-// InitDb
+// InitDb initializes the database connections based on the configuration 初始化基于配置的数据库连接
 func InitDb(connections []map[string]any) {
-	if Master == nil {
+	once.Do(func() {
 		Master = make(map[string]*gorm.DB)
-	}
 
-	for i := 0; i < len(connections); i++ {
-		value := connections[i]
-		row := Db{}
-		conv.ToStruct(value, &row)
-		dsn := row.Dsn
-		var err error
-		if row.Name != "" {
-			switch row.Type {
-			case "mysql":
-				if dsn == "" {
-					dsn = row.Username + ":" + row.Password + "@tcp(" + row.Hostname + ":" + row.Port + ")/" + row.Database + "?" + row.Params
+		for i := 0; i < len(connections); i++ {
+			value := connections[i]
+			config := DatabaseConfig{}
+			conv.ToStruct(value, &config)
+
+			if value["name"] != "" {
+				db, err := CreateConnection(config)
+				if err != nil {
+					alog.Write.Panic("Failed to initialize database connection "+config.Name+" :", zap.Error(err))
 				}
-
-				Master[row.Name], err = row.Open(Mysql(dsn), getConfig(row.Log, row.Level))
-
-				break
-			case "pgsql":
-				if dsn == "" {
-					dsn = "host=" + row.Hostname + " port=" + row.Port + " user=" + row.Username + " dbname=" + row.Database + " " + row.Params + " password=" + row.Password + row.Params
-				}
-
-				Master[row.Name], err = row.Open(Postgres(dsn), getConfig(row.Log, row.Level))
-
-				break
-			case "sqlsrv":
-				if dsn == "" {
-					dsn = "sqlserver://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "?database=" + row.Database + row.Params
-				}
-
-				Master[row.Name], err = row.Open(Sqlserver(dsn), getConfig(row.Log, row.Level))
-				break
-			case "clickhouse":
-				if dsn == "" {
-					dsn = "clickhouse://" + row.Username + ":" + row.Password + "@" + row.Hostname + ":" + row.Port + "/" + row.Database + row.Params
-				}
-
-				Master[row.Name], err = row.Open(clickhouse.Open(dsn), getConfig(row.Log, row.Level))
-				break
+				Master[config.Name] = db
 			}
 
-			if err != nil {
-				alog.Write.Panic("gorm open error:", zap.Error(err))
-			}
-
-			sqlDB, err := Master[row.Name].DB()
-			if err != nil {
-				alog.Write.Panic("gorm db error:", zap.Error(err))
-			}
-			//SetMaxIdleConns设置空闲连接池中的最大连接数，一般设置500。
-			if row.MaxIdleConns > 0 {
-				sqlDB.SetMaxIdleConns(row.MaxIdleConns)
-			}
-
-			// SetMaxOpenConns设置数据库的最大打开连接数，一般设置5000。
-			if row.MaxOpenConns > 0 {
-				sqlDB.SetMaxOpenConns(row.MaxOpenConns)
-			}
-
-			// SetConnMaxLifetime设置连接最大生命周期,一般设置12小时。默认值为 0，表示不限制。
-			if row.ConnMaxLifetime > 0 {
-				sqlDB.SetConnMaxLifetime(time.Duration(row.ConnMaxLifetime) * time.Hour)
-			}
-			// SetConnMaxIdleTime 设置连接最大空闲时间，一般设置 10 分钟之间是一个合理的选择。默认值为 0，表示不限制
-			if row.ConnMaxIdleTime > 0 {
-				sqlDB.SetConnMaxIdleTime(time.Duration(row.ConnMaxIdleTime) * time.Minute)
-			}
 		}
+	})
 
+}
+
+// GetDatabase retrieves a database connection by name 通过名称检索数据库连接
+func GetDatabase(name string) *gorm.DB {
+	db, exists := Master[name]
+	if !exists {
+		alog.Write.Error("Database connection not found:", zap.String("name", name))
+	}
+	return db
+}
+
+// generateDSN generates a DSN string based on the database config 生成基于数据库配置的DSN字符串
+func generateDSN(config DatabaseConfig) string {
+	switch config.Type {
+	case "mysql":
+		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s",
+			config.Username, config.Password, config.Hostname, config.Port, config.DatabaseName, config.Params)
+	case "pgsql":
+		return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s %s",
+			config.Hostname, config.Port, config.Username, config.DatabaseName, config.Password, config.Params)
+	case "sqlsrv":
+		return fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s&%s",
+			config.Username, config.Password, config.Hostname, config.Port, config.DatabaseName, config.Params)
+	case "clickhouse":
+		return fmt.Sprintf("clickhouse://%s:%s@%s:%s/%s?%s",
+			config.Username, config.Password, config.Hostname, config.Port, config.DatabaseName, config.Params)
+	default:
+		return ""
+	}
+}
+
+// configureConnectionPool sets up the connection pool parameters for the database connection 设置数据库连接的连接池参数
+func configureConnectionPool(sqlDB *sql.DB, config DatabaseConfig) {
+	if config.MaxIdleConns > 0 {
+		sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+	}
+	if config.MaxOpenConns > 0 {
+		sqlDB.SetMaxOpenConns(config.MaxOpenConns)
+	}
+	if config.ConnMaxLifetime > 0 {
+		sqlDB.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Second)
+	}
+	if config.ConnMaxIdleTime > 0 {
+		sqlDB.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime) * time.Hour)
+	}
+}
+
+// CreateConnection creates a single database connection based on the configuration 创建基于配置的单个数据库连接
+func CreateConnection(config DatabaseConfig) (db *gorm.DB, err error) {
+	if config.DSN == "" {
+		config.DSN = generateDSN(config)
 	}
 
+	switch config.Type {
+	case "mysql":
+		db, err = config.Open(Mysql(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+	case "pgsql":
+		db, err = config.Open(Postgres(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+	case "sqlsrv":
+		db, err = config.Open(Sqlserver(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+	case "clickhouse":
+		db, err = config.Open(clickhouse.Open(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+	default:
+		return nil, fmt.Errorf("unsupported database type: %s", config.Type)
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	configureConnectionPool(sqlDB, config)
+	return db, nil
 }
 
 // getConfig
@@ -126,17 +146,20 @@ func getConfig(isLog bool, level gormlogger.LogLevel) *gorm.Config {
 			DisableForeignKeyConstraintWhenMigrating: true,
 			SkipDefaultTransaction:                   true,
 			PrepareStmt:                              true,
+			AllowGlobalUpdate:                        false,
 		}
 	} else {
 		return &gorm.Config{
-			SkipDefaultTransaction: true,
-			PrepareStmt:            true,
+			DisableForeignKeyConstraintWhenMigrating: true,
+			SkipDefaultTransaction:                   true,
+			PrepareStmt:                              true,
+			AllowGlobalUpdate:                        false,
 		}
 	}
 }
 
 // Open connection
-func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err error) {
+func (d *DatabaseConfig) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err error) {
 	db, err = gorm.Open(Dialector, opts)
 	if err != nil {
 		alog.Write.Panic("gorm open error:", zap.Error(err))
@@ -145,66 +168,61 @@ func (d *Db) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err 
 }
 
 // Use
-func (d *Db) Use(name string, plugin gorm.Plugin) {
+func (d *DatabaseConfig) Use(name string, plugin gorm.Plugin) {
 	if err := Master[name].Use(plugin); err != nil {
 		alog.Write.Error("Use", zap.Error(err))
 	}
 }
 
-// Mysql connection
+// Mysql connection Mysql连接
 func Mysql(dsn string) gorm.Dialector {
+	defaultPrecision := 3 // 设置默认的时间精度为 3（毫秒）
 	return mysql.New(mysql.Config{
 		DSN:                       dsn, // DSN data source name
 		DefaultStringSize:         256, // string 类型字段的默认长度
-		DefaultDatetimePrecision:  &datetimePrecision,
-		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
-		DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
-		DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
-		SkipInitializeWithVersion: false, // 根据当前 MySQL 版本自动配置
+		DefaultDatetimePrecision:  &defaultPrecision,
+		DisableDatetimePrecision:  false, // 支持 datetime 精度
+		DontSupportRenameIndex:    false, // 支持直接重命名索引（适用于 MySQL 8.0+）
+		DontSupportRenameColumn:   false, // 支持直接重命名列（适用于 MySQL 8.0+）
+		SkipInitializeWithVersion: false, // 自动初始化版本特性
 	})
 }
 
-// Postgres connection
+// Postgres connection Postgres连接
 func Postgres(dsn string) gorm.Dialector {
 	return postgres.New(postgres.Config{
-		DriverName:           "",
 		DSN:                  dsn,
 		PreferSimpleProtocol: true,
 		WithoutReturning:     false,
-		Conn:                 nil,
 	})
 }
 
-// Sqlserver connection
+// Sqlserver connection Sqlserver连接
 func Sqlserver(dsn string) gorm.Dialector {
 	return sqlserver.Open(dsn)
 }
 
-// Distributed
-func (d *Db) Distributed(config dbresolver.Config, datas ...interface{}) *dbresolver.DBResolver {
+// Distributed 分布式
+func (d *DatabaseConfig) Distributed(config dbresolver.Config, datas ...interface{}) *dbresolver.DBResolver {
 	return dbresolver.Register(config, datas)
 }
 
 // Close 关闭数据库
-func Close(connections []map[string]any) {
-	for i := 0; i < len(connections); i++ {
-		value := connections[i]
-		row := Db{}
-		conv.ToStruct(value, &row)
-
-		if Master[row.Name] != nil {
-			var db, err = Master[row.Name].DB()
+func Close() {
+	for name, db := range Master {
+		if name != "default" {
+			sqlDB, err := db.DB()
 			if err != nil {
-				alog.Write.Error("Close database", zap.Error(fmt.Errorf("failed to close database connection for %s: %s", row.Name, err.Error())))
+				alog.Write.Error("Error retrieving DB instance for "+name+":", zap.Error(err))
+				continue
 			}
-
-			if db != nil {
-				if err2 := db.Close(); err2 != nil {
-					alog.Write.Error("Close database", zap.Error(fmt.Errorf("failed to close database connection for %s: %s", row.Name, err2.Error())))
-					return
-				}
+			if err := sqlDB.Close(); err != nil {
+				alog.Write.Error("Error closing DB connection for "+name+":", zap.Error(err))
+			} else {
+				alog.Write.Warn("Database connection '" + name + "' closed successfully")
 			}
 		}
+
 	}
 
 }

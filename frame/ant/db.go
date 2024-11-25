@@ -26,5 +26,5 @@ func Db(name ...string) *gorm.DB {
 
 // CloseDb Close database connection
 func CloseDb() {
-	adb.Close(config.GetMaps("connections"))
+	adb.Close()
 }

@@ -90,7 +90,7 @@ func (eng *Engine) Close(f ...func()) *Engine {
 	connections := config.GetMaps("connections")
 
 	if len(connections) > 0 {
-		defer adb.Close(config.GetMaps("connections"))
+		defer adb.Close()
 	}
 	if len(f) > 0 {
 		f[0]()
