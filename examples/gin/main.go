@@ -4,10 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/small-ek/antgo/db/adb/sql"
+	models "github.com/small-ek/antgo/examples/gin/model"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/gin_middleware"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
 	"github.com/small-ek/antgo/os/config"
+	"github.com/small-ek/antgo/utils/page"
 	"io/ioutil"
 )
 
@@ -20,8 +23,18 @@ func main() {
 	app.Use(gin_middleware.Recovery()).Use(gin_middleware.Logger())
 
 	app.GET("/", func(c *gin.Context) {
-		var list = make([]map[string]interface{}, 0)
-		ant.Db().Table("sys_admin_users").Find(&list)
+		var list = []models.SysAdminUsers{}
+		filters := []page.Filter{
+			{Field: "username", Operator: "=", Value: "admin"},
+			{Field: "username", Operator: "=", Value: ""},
+		}
+		err := ant.Db().Model(&models.SysAdminUsers{}).Scopes(
+			sql.Filters(filters),
+		).Find(&list).Error
+
+		if err != nil {
+			fmt.Println(err)
+		}
 		c.JSON(200, list)
 	})
 
@@ -34,7 +47,7 @@ func main() {
 		c.String(200, "Hello, World!")
 	})
 
-	configPath := flag.String("config", "./config.toml", "Configuration file path")
+	configPath := flag.String("config", "./examples/gin/config.toml", "Configuration file path")
 	eng := ant.New(*configPath).Serve(app)
 
 	defer eng.Close()

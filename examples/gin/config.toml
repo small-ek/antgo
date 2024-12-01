@@ -29,11 +29,12 @@ max_age = 180
 #分割大小(MB)
 max_size = 10
 #保留30个备份(个)
-max_backups = 5000
+max_backups = 2000
 #是否需要压缩
 compress = false
 #header 白名单
-header_whitelist = []
+#header_whitelist = ["Device-Id", "Authorization", "Accept", "Accept-Language", "Origin", "Referer", "User-Agent"]
+header_whitelist = ["Device-Id"]
 
 #数据库设置
 [[connections]]

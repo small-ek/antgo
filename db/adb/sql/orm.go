@@ -1,8 +1,9 @@
 package sql
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/small-ek/antgo/utils/conv"
+	"github.com/small-ek/antgo/utils/page"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"strings"
@@ -122,77 +123,95 @@ func OnlyTrashed(res bool) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// Filters ...
-func Filters(where interface{}) func(db *gorm.DB) *gorm.DB {
+// Filters constructs query filters
+func Filters(filters []page.Filter) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if where == nil {
+		if filters == nil || len(filters) == 0 {
 			return db
 		}
-		whereArray := where.([]string)
-		for _, v := range whereArray {
-			var arr []interface{}
-			json.Unmarshal([]byte(v), &arr)
-			db = buildWhere(arr, db)
-		}
-		return db
+		// Build WHERE conditions and arguments
+		query, args := buildWhere(filters, "AND")
+		return db.Where(query, args...)
 	}
 }
 
-// buildWhere
-func buildWhere(arr []interface{}, db *gorm.DB) *gorm.DB {
-	if len(arr) == 3 && arr[2] != "" && arr[2] != nil {
-		db = and(arr[0].(string), arr[1].(string), arr[2], db)
+// buildWhere recursively constructs WHERE clause with AND/OR conditions
+func buildWhere(filters []page.Filter, joinType string) (string, []interface{}) {
+	var conditions []string
+	var values []interface{}
+	// Estimate the number of conditions to optimize slice allocation
+	conditions = make([]string, 0, len(filters)*2) // Allocate space for conditions and subqueries
+
+	for _, filter := range filters {
+		// Handle OR conditions recursively
+		if len(filter.Or) > 0 {
+			subQuery, subValues := buildWhere(filter.Or, "OR")
+			conditions = append(conditions, fmt.Sprintf("(%s)", subQuery))
+			values = append(values, subValues...)
+		}
+
+		// Handle AND conditions recursively
+		if len(filter.And) > 0 {
+			subQuery, subValues := buildWhere(filter.And, "AND")
+			conditions = append(conditions, fmt.Sprintf("(%s)", subQuery))
+			values = append(values, subValues...)
+		}
+
+		// Handle basic filter conditions
+		if filter.Field != "" && filter.Operator != "" && filter.Value != nil && isValidOperator(filter.Operator) {
+			operator := strings.ToUpper(filter.Operator)
+			condition, value := handleOperator(filter, operator)
+			if condition != "" {
+				conditions = append(conditions, condition)
+				values = append(values, value...)
+			}
+		}
 	}
-	if len(arr) == 4 && arr[3] != "" && arr[3] != nil && arr[0] == "or" {
-		db = or(arr[1].(string), arr[2].(string), arr[3], db)
-	}
-	return db
+
+	query := strings.Join(conditions, " "+joinType+" ")
+	return query, values
 }
 
-// and
-func and(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
-	switch condition {
-	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":
-		db = db.Where(key+" "+condition+" ?", conv.String(value)+"%")
-	case "in", "IN", "In", "not in", "NOT IN", "Not in", "notin", "NOTIN", "NotIn", "Notin":
-		db = db.Where(key+" "+condition+" (?)", value)
-	case "between", "BETWEEN":
-		var betweenStr []string
-		json.Unmarshal(conv.Bytes(value), &betweenStr)
-		if len(betweenStr) > 1 {
-			db = db.Where(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
+// handleOperator handles different operator types to generate query conditions
+func handleOperator(filter page.Filter, operator string) (string, []interface{}) {
+	var condition string
+	var values []interface{}
+
+	switch operator {
+	case "BETWEEN":
+		// Handle BETWEEN operator
+		value := conv.Strings(filter.Value)
+		if len(value) == 2 {
+			condition = fmt.Sprintf("%s BETWEEN ? AND ?", filter.Field)
+			values = append(values, value[0], value[1])
 		}
-	case "<", "<=", ">", ">=", "=", "<>":
-		var values = conv.String(value)
-		if strings.Index("is null is not null", values) > -1 {
-			db = db.Where(key + " " + values)
-		} else {
-			db = db.Where(key+" "+condition+" ?", values)
-		}
+	case "IS NULL", "IS NOT NULL":
+		// Handle IS NULL or IS NOT NULL
+		condition = fmt.Sprintf("%s %s", filter.Field, operator)
+	case "LIKE", "NOT LIKE":
+		// Handle LIKE or NOT LIKE with escaping
+		condition = fmt.Sprintf("%s %s ?", filter.Field, operator)
+		values = append(values, fmt.Sprintf("%s%%", filter.Value))
+	case "IN", "NOT IN":
+		// Handle IN or NOT IN with values
+		condition = fmt.Sprintf("%s %s (?)", filter.Field, operator)
+		values = append(values, conv.Strings(filter.Value))
+	default:
+		// Handle other operators
+		condition = fmt.Sprintf("%s %s ?", filter.Field, operator)
+		values = append(values, filter.Value)
 	}
-	return db
+
+	return condition, values
 }
 
-// or
-func or(key, condition string, value interface{}, db *gorm.DB) *gorm.DB {
-	switch condition {
-	case "like", "LIKE", "Like", "notlike", "NOTLIKE", "Notlike", "ilike", "ILIKE", "Ilike", "rlike", "RLIKE", "Rlike":
-		db = db.Or(key+" "+condition+" ?", conv.String(value)+"%")
-	case "in", "IN", "In", "not in", "NOT IN", "Not in", "notin", "NOTIN", "NotIn", "Notin":
-		db = db.Or(key+" "+condition+" (?)", value.([]interface{}))
-	case "between", "BETWEEN", "Between":
-		var betweenStr []string
-		json.Unmarshal(conv.Bytes(value), &betweenStr)
-		if len(betweenStr) > 1 {
-			db = db.Or(key+" "+condition+" ? and ?", betweenStr[0], betweenStr[1])
-		}
-	case "<", "<=", ">", ">=", "=", "<>":
-		var values = conv.String(value)
-		if strings.Index("is null is not null", values) > -1 {
-			db = db.Or(key + " " + values)
-		} else {
-			db = db.Or(key+" "+condition+" ?", values)
-		}
+// isValidOperator checks if the operator is valid
+func isValidOperator(operator string) bool {
+	// Direct lookup for valid operators using map
+	validOperators := map[string]bool{
+		"=": true, ">": true, ">=": true, "<": true, "<=": true, "!=": true,
+		"<>": true, "IN": true, "NOT IN": true, "LIKE": true, "NOT LIKE": true,
+		"ILIKE": true, "RLIKE": true, "BETWEEN": true, "IS NULL": true, "IS NOT NULL": true,
 	}
-	return db
+	return validOperators[strings.ToUpper(operator)]
 }
