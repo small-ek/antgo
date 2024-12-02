@@ -79,6 +79,10 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 				if (conditions == "IN" || conditions == "NOT IN") && len(newValue) > 0 {
 					return db.Where(""+key+" IN ?", value)
 				}
+			case string:
+				if (conditions == "LIKE" || conditions == "ILIKE") && v != "" {
+					return db.Where(""+key+" "+conditions+" ?", v+"%")
+				}
 			default:
 				return db.Where(""+key+" "+conditions+" ?", value)
 			}
@@ -100,7 +104,7 @@ func Order(str []string, desc []bool) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-// Paginate ...
+// Paginate 分页查询,默认最大10000，最大值可自定义
 func Paginate(pageSize, currentPage int, maxSize ...int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if len(maxSize) > 0 && pageSize > maxSize[0] {
@@ -113,7 +117,7 @@ func Paginate(pageSize, currentPage int, maxSize ...int) func(db *gorm.DB) *gorm
 	}
 }
 
-// OnlyTrashed ...
+// OnlyTrashed 显示软删除数据
 func OnlyTrashed(res bool) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if res == true {
@@ -125,13 +129,27 @@ func OnlyTrashed(res bool) func(db *gorm.DB) *gorm.DB {
 }
 
 // Filters constructs query filters
-func Filters(filters []page.Filter) func(db *gorm.DB) *gorm.DB {
+func Filters(filters interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if filters == nil || len(filters) == 0 {
+		var newFilter []page.Filter
+
+		switch filter := filters.(type) {
+		case string:
+			if err := conv.UnmarshalJSON([]byte(filter), &newFilter); err != nil {
+				return db
+			}
+		case []page.Filter:
+			newFilter = filter
+		default:
 			return db
 		}
+
+		if len(newFilter) == 0 {
+			return db
+		}
+
 		// Build WHERE conditions and arguments
-		query, args := buildWhere(filters, "AND")
+		query, args := buildWhere(newFilter, "AND")
 		return db.Where(query, args...)
 	}
 }

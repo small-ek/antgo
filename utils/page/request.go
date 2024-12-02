@@ -1,15 +1,26 @@
 package page
 
-// PageParam Paging parameters 分页参数
+// PageParam Paging parameters 分页参数,查询的时候可以直接使用,一般用于GET请求
 type PageParam struct {
+	CurrentPage int            `form:"current_page" json:"current_page"` //当前页
+	PageSize    int            `form:"page_size" json:"page_size"`       //每页显示数量
+	Filter      string         `form:"filter" json:"filter"`             //复杂过滤条件
+	FilterMap   map[string]any `form:"filter_map" json:"filter_map"`     //过滤条件形式2
+	Omit        string         `form:"omit" json:"omit"`                 //忽略字段
+	Extra       map[string]any `form:"extra" json:"extra"`               //额外参数
+	Order       []string       `form:"order[]" json:"order[]"`           //排序字段
+	Desc        []bool         `form:"desc[]" json:"desc[]"`             //排序方式 true 降序 false 升序
+}
+
+// PageJson Paging parameters 分页参数2,查询的时候可以直接使用,一般用于POST请求,适用于复杂查询
+type PageJson struct {
 	CurrentPage int            `form:"current_page" json:"current_page" bson:"current_page" xml:"current_page" yaml:"current_page"` //当前页
 	PageSize    int            `form:"page_size" json:"page_size" bson:"page_size" xml:"page_size" yaml:"page_size"`                //每页显示数量
-	Filter      []Filter       `form:"filter[]" json:"filter[]" bson:"filter[]" xml:"filter[]" yaml:"filter[]"`                     //过滤条件
-	FilterMap   map[string]any `form:"filter_map" json:"filter_map" bson:"filter_map" xml:"filter_map" yaml:"filter_map"`           //过滤条件形式2
+	Filter      []Filter       `form:"filter" json:"filter" bson:"filter" xml:"filter" yaml:"filter"`                               //复杂过滤条件
 	Omit        string         `form:"omit" json:"omit" bson:"omit" xml:"omit" yaml:"omit"`                                         //忽略字段
 	Extra       map[string]any `form:"extra" json:"extra" bson:"extra" xml:"extra" yaml:"extra"`                                    //额外参数
-	Order       []string       `form:"order[]" json:"order[]" bson:"order[]" xml:"order[]" yaml:"order[]"`                          //排序字段
-	Desc        []bool         `form:"desc[]" json:"desc[]" bson:"desc[]" xml:"desc[]" yaml:"desc[]"`                               //排序方式 true 降序 false 升序
+	Order       []string       `form:"order" json:"order" bson:"order" xml:"order" yaml:"order"`                                    //排序字段
+	Desc        []bool         `form:"desc" json:"desc" bson:"desc" xml:"desc" yaml:"desc"`                                         //排序方式 true 降序 false 升序
 }
 
 // Filter 过滤条件
@@ -24,6 +35,14 @@ type Filter struct {
 // New Default pagination 默认分页参数,查询的时候可以直接使用
 func New() PageParam {
 	return PageParam{
+		CurrentPage: 1,
+		PageSize:    10,
+	}
+}
+
+// New Default pagination 默认分页参数,查询的时候可以直接使用
+func NewJson() PageJson {
+	return PageJson{
 		CurrentPage: 1,
 		PageSize:    10,
 	}
