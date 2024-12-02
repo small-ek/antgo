@@ -28,8 +28,12 @@ func main() {
 			{Field: "username", Operator: "=", Value: "admin"},
 			{Field: "username", Operator: "=", Value: ""},
 		}
+		pageParam := page.PageParam{
+			FilterMap: map[string]any{"username": "admin"},
+		}
 		err := ant.Db().Model(&models.SysAdminUsers{}).Scopes(
 			sql.Filters(filters),
+			sql.Where("username", "=", pageParam.FilterMap["username"]),
 		).Find(&list).Error
 
 		if err != nil {

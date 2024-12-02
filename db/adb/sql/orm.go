@@ -41,7 +41,7 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 		}
 
 		if key != "" && value != nil && value != "" {
-			return db.Where(""+key+" IN (?)", value)
+			return db.Where(""+key+" IN ?", value)
 		}
 		return db
 	}
@@ -59,7 +59,7 @@ func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 		}
 
 		if key != "" && value != nil && value != "" {
-			return db.Where(""+key+" NOT IN (?)", value)
+			return db.Where(""+key+" NOT IN ?", value)
 		}
 		return db
 	}
@@ -68,21 +68,16 @@ func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 // Where Where to search when there is value
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		conditions = strings.ToUpper(conditions)
 		if key != "" && conditions != "" && value != "" && value != nil && value != 0 {
 			switch v := value.(type) {
 			case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
 				newValue := conv.Interfaces(v)
-				if (conditions == "BETWEEN" || conditions == "between") && len(newValue) == 2 {
+				if (conditions == "BETWEEN" || conditions == "NOT BETWEEN") && len(newValue) == 2 {
 					return db.Where(""+key+" "+conditions+" ? AND ?", newValue[0], newValue[1])
 				}
-				if (conditions == "NOT BETWEEN" || conditions == "not between") && len(newValue) == 2 {
-					return db.Where(""+key+" "+conditions+" ? AND ?", newValue[0], newValue[1])
-				}
-				if (conditions == "IN" || conditions == "in") && len(newValue) > 0 {
-					return db.Where(""+key+" IN (?)", value)
-				}
-				if (conditions == "NOT IN" || conditions == "not in") && len(newValue) > 0 {
-					return db.Where(""+key+" NOT IN (?)", value)
+				if (conditions == "IN" || conditions == "NOT IN") && len(newValue) > 0 {
+					return db.Where(""+key+" IN ?", value)
 				}
 			default:
 				return db.Where(""+key+" "+conditions+" ?", value)
@@ -106,8 +101,14 @@ func Order(str []string, desc []bool) func(db *gorm.DB) *gorm.DB {
 }
 
 // Paginate ...
-func Paginate(pageSize, currentPage int) func(db *gorm.DB) *gorm.DB {
+func Paginate(pageSize, currentPage int, maxSize ...int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		if len(maxSize) > 0 && pageSize > maxSize[0] {
+			pageSize = maxSize[0]
+		} else if pageSize > 10000 {
+			pageSize = 10000
+		}
+
 		return db.Limit(pageSize).Offset((currentPage - 1) * pageSize)
 	}
 }

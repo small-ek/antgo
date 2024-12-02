@@ -5,6 +5,7 @@ type PageParam struct {
 	CurrentPage int            `form:"current_page" json:"current_page" bson:"current_page" xml:"current_page" yaml:"current_page"` //当前页
 	PageSize    int            `form:"page_size" json:"page_size" bson:"page_size" xml:"page_size" yaml:"page_size"`                //每页显示数量
 	Filter      []Filter       `form:"filter[]" json:"filter[]" bson:"filter[]" xml:"filter[]" yaml:"filter[]"`                     //过滤条件
+	FilterMap   map[string]any `form:"filter_map[]" json:"filter_map[]" bson:"filter_map[]" xml:"filter_map[]" yaml:"filter_map[]"` //过滤条件形式2
 	Omit        string         `form:"omit" json:"omit" bson:"omit" xml:"omit" yaml:"omit"`                                         //忽略字段
 	Extra       map[string]any `form:"extra" json:"extra" bson:"extra" xml:"extra" yaml:"extra"`                                    //额外参数
 	Order       []string       `form:"order[]" json:"order[]" bson:"order[]" xml:"order[]" yaml:"order[]"`                          //排序字段
