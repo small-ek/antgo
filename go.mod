@@ -1,8 +1,6 @@
 module github.com/small-ek/antgo
 
-go 1.23.2
-
-replace github.com/ugorji/go v1.1.4 => github.com/ugorji/go v1.2.12
+go 1.23.1
 
 require (
 	github.com/BurntSushi/toml v1.4.0

@@ -41,7 +41,7 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 		}
 
 		if key != "" && value != nil && value != "" {
-			return db.Where(""+key+" IN ?", value)
+			return db.Where(fmt.Sprintf("%s IN ?", key), value)
 		}
 		return db
 	}
@@ -69,25 +69,27 @@ func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		conditions = strings.ToUpper(conditions)
-		if key != "" && conditions != "" && value != "" && value != nil && value != 0 {
-			switch v := value.(type) {
-			case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
-				newValue := conv.Interfaces(v)
-				if (conditions == "BETWEEN" || conditions == "NOT BETWEEN") && len(newValue) == 2 {
-					return db.Where(""+key+" "+conditions+" ? AND ?", newValue[0], newValue[1])
-				}
-				if (conditions == "IN" || conditions == "NOT IN") && len(newValue) > 0 {
-					return db.Where(""+key+" IN ?", value)
-				}
-			case string:
-				if (conditions == "LIKE" || conditions == "ILIKE") && v != "" {
-					return db.Where(""+key+" "+conditions+" ?", v+"%")
-				}
-			default:
-				return db.Where(""+key+" "+conditions+" ?", value)
-			}
-
+		if key == "" || conditions == "" || value == nil || value == "" || value == 0 {
+			return db
 		}
+
+		switch v := value.(type) {
+		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
+			newValue := conv.Interfaces(v)
+			if (conditions == "BETWEEN" || conditions == "NOT BETWEEN") && len(newValue) == 2 {
+				return db.Where(fmt.Sprintf("%s %s ? AND ?", key, conditions), newValue[0], newValue[1])
+			}
+			if (conditions == "IN" || conditions == "NOT IN") && len(newValue) > 0 {
+				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), newValue)
+			}
+		case string:
+			if (conditions == "LIKE" || conditions == "ILIKE") && v != "" {
+				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), v+"%")
+			}
+		default:
+			return db.Where(fmt.Sprintf("%s %s ?", key, conditions), value)
+		}
+
 		return db
 	}
 }
