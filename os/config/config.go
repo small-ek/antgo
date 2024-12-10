@@ -11,6 +11,7 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -68,7 +69,7 @@ func New(filePath ...string) *ConfigStr {
 }
 
 // Etcd3 ETCD3 configuration link
-func (c *ConfigStr) Etcd3(hosts []string, path, username, pwd string) (err error) {
+func (c *ConfigStr) Etcd3(hosts, path []string, username, pwd string) (err error) {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints: hosts,
 		DialOptions: []grpc.DialOption{
@@ -82,10 +83,6 @@ func (c *ConfigStr) Etcd3(hosts []string, path, username, pwd string) (err error
 	if err != nil {
 		return
 	}
-	if path != "" {
-		types := strings.Split(path, ".")
-		Config.Viper.SetConfigType(types[1])
-	}
 
 	if err = c.loadEtcdFormToViper(path, cli); err != nil {
 		return err
@@ -95,25 +92,45 @@ func (c *ConfigStr) Etcd3(hosts []string, path, username, pwd string) (err error
 }
 
 // loadEtcdFormToViper
-func (c *ConfigStr) loadEtcdFormToViper(prefix string, client *clientv3.Client) error {
+func (c *ConfigStr) loadEtcdFormToViper(prefix []string, client *clientv3.Client) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	for i := 0; i < len(prefix); i++ {
+		types := strings.Split(prefix[i], ".")
+		if len(types) == 2 {
+			Config.Viper.SetConfigType(types[1])
+		} else {
+			Config.Viper.SetConfigType("toml")
+		}
 
-	resp, err := client.Get(ctx, prefix, clientv3.WithPrefix())
-	if err != nil {
-		return err
-	}
+		resp, err := client.Get(ctx, prefix[i], clientv3.WithPrefix())
+		if err != nil {
+			return err
+		}
 
-	err = c.Viper.ReadConfig(bytes.NewReader(resp.Kvs[0].Value))
-	if err != nil {
-		return err
+		err = c.Viper.ReadConfig(bytes.NewReader(resp.Kvs[0].Value))
+		if err != nil {
+			return err
+		}
+		if i == 0 {
+			for key, value := range c.Viper.AllSettings() {
+				c.Viper.Set(fmt.Sprintf("%s", key), value)
+			}
+		}
+
+		filenameWithExt := filepath.Base(prefix[i])
+		filename := strings.TrimSuffix(filenameWithExt, filepath.Ext(filenameWithExt))
+		for key, value := range c.Viper.AllSettings() {
+			c.Viper.Set(fmt.Sprintf("%s.%s", filename, key), value)
+		}
+
 	}
 
 	return nil
 }
 
 // watchEtcd3 监听etcd
-func (c *ConfigStr) watchEtcd3(path string, cli *clientv3.Client) {
+func (c *ConfigStr) watchEtcd3(path []string, cli *clientv3.Client) {
 	// 创建一个context
 	watcher := clientv3.NewWatcher(cli)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -121,22 +138,23 @@ func (c *ConfigStr) watchEtcd3(path string, cli *clientv3.Client) {
 
 	go func() {
 		for {
-			watchChan := watcher.Watch(ctx, path)
+			for i := 0; i < len(path); i++ {
+				watchChan := watcher.Watch(ctx, path[i])
+				for resp := range watchChan {
+					for _, event := range resp.Events {
+						switch event.Type {
+						case clientv3.EventTypePut:
+							err := c.Viper.ReadConfig(bytes.NewReader(event.Kv.Value))
+							if err != nil {
+								alog.Error("watchEtcd", zap.Error(err))
+							}
 
-			for resp := range watchChan {
-				for _, event := range resp.Events {
-					switch event.Type {
-					case clientv3.EventTypePut:
-						err := c.Viper.ReadConfig(bytes.NewReader(event.Kv.Value))
-						if err != nil {
-							alog.Error("watchEtcd", zap.Error(err))
+							if err = c.Viper.ReadRemoteConfig(); err != nil {
+								alog.Error("watchEtcd", zap.Error(err))
+							}
+						case clientv3.EventTypeDelete:
+							fmt.Printf("Key %s deleted.\n", event.Kv.Key)
 						}
-
-						if err = c.Viper.ReadRemoteConfig(); err != nil {
-							alog.Error("watchEtcd", zap.Error(err))
-						}
-					case clientv3.EventTypeDelete:
-						fmt.Printf("Key %s deleted.\n", event.Kv.Key)
 					}
 				}
 			}
