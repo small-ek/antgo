@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/utils/conv"
 	"github.com/spf13/viper"
@@ -28,44 +29,61 @@ type ConfigStr struct {
 }
 
 // New<初始化配置>
-func New(filePath ...string) *ConfigStr {
+func New(path ...string) *ConfigStr {
 	once.Do(func() {
-		Config = &ConfigStr{Viper: viper.New(), filePath: filePath}
+		Config = &ConfigStr{Viper: viper.New(), filePath: path}
 
-		if len(filePath) == 1 {
-			Config.Viper.SetConfigFile(filePath[0])
-			types := strings.Split(filePath[0], ".")
-
-			if len(types) == 2 {
-				Config.Viper.SetConfigType(types[1])
-			}
-		}
-
-		if len(filePath) == 3 {
-			if err := Config.Viper.AddRemoteProvider(filePath[0], filePath[1], filePath[2]); err != nil {
-				panic(err)
-			}
-			types := strings.Split(filePath[2], ".")
-
-			if len(types) == 2 {
-				Config.Viper.SetConfigType(types[1])
-			}
-		}
-
-		//加密链接
-		if len(filePath) == 4 {
-			if err := Config.Viper.AddSecureRemoteProvider(filePath[0], filePath[1], filePath[2], filePath[3]); err != nil {
-				panic(err)
-			}
-			types := strings.Split(filePath[2], ".")
-
-			if len(types) == 2 {
-				Config.Viper.SetConfigType(types[1])
-			}
+		if len(path) > 0 {
+			Config.setupConfigFile(path)
 		}
 	})
 
 	return Config
+}
+
+// AddConfigFile<加载一个新的配置并且合并>
+func AddConfigFile(path string) error {
+	newViper := viper.New()
+	newViper.SetConfigType(filepath.Ext(path)[1:])
+	newViper.SetConfigFile(path)
+	if err := newViper.ReadInConfig(); err != nil {
+		return err
+	}
+	newViper.WatchConfig()
+	//合并配置
+	Config.Viper.MergeConfigMap(newViper.AllSettings())
+
+	// 当文件发生修改时触发回调
+	newViper.OnConfigChange(func(e fsnotify.Event) {
+		if err := newViper.ReadInConfig(); err == nil {
+			// 合并最新的配置到主配置
+			Config.Viper.MergeConfigMap(newViper.AllSettings())
+		} else {
+			alog.Error("Viper ReadInConfig error", zap.Error(err))
+		}
+	})
+	return nil
+}
+
+func (c *ConfigStr) setupConfigFile(path []string) {
+	if len(path) == 1 {
+		c.Viper.SetConfigFile(path[0])
+		c.Viper.WatchConfig()
+	}
+	if len(path) >= 2 {
+		c.Viper.SetConfigType(filepath.Ext(path[len(path)-1])[1:])
+	}
+
+	if len(path) == 3 {
+		if err := c.Viper.AddRemoteProvider(path[0], path[1], path[2]); err != nil {
+			panic(err)
+		}
+	}
+	if len(path) == 4 {
+		if err := c.Viper.AddSecureRemoteProvider(path[0], path[1], path[2], path[3]); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // Etcd3 ETCD3 configuration link
@@ -92,35 +110,34 @@ func (c *ConfigStr) Etcd3(hosts, path []string, username, pwd string) (err error
 }
 
 // loadEtcdFormToViper
-func (c *ConfigStr) loadEtcdFormToViper(prefix []string, client *clientv3.Client) error {
+func (c *ConfigStr) loadEtcdFormToViper(path []string, client *clientv3.Client) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	for i := 0; i < len(prefix); i++ {
-		types := strings.Split(prefix[i], ".")
+	for i := 0; i < len(path); i++ {
+		newViper := viper.New()
+		types := strings.Split(path[i], ".")
 		if len(types) == 2 {
-			Config.Viper.SetConfigType(types[1])
+			newViper.SetConfigType(types[1])
 		} else {
-			Config.Viper.SetConfigType("toml")
+			newViper.SetConfigType("toml")
 		}
 
-		resp, err := client.Get(ctx, prefix[i], clientv3.WithPrefix())
+		resp, err := client.Get(ctx, path[i], clientv3.WithPrefix())
 		if err != nil {
 			return err
 		}
 
-		err = c.Viper.ReadConfig(bytes.NewReader(resp.Kvs[0].Value))
+		err = newViper.ReadConfig(bytes.NewReader(resp.Kvs[0].Value))
 		if err != nil {
 			return err
 		}
-		if i == 0 {
-			for key, value := range c.Viper.AllSettings() {
+
+		filenameWithExt := filepath.Base(path[i])
+		filename := strings.TrimSuffix(filenameWithExt, filepath.Ext(filenameWithExt))
+		for key, value := range newViper.AllSettings() {
+			if i == 0 {
 				c.Viper.Set(fmt.Sprintf("%s", key), value)
 			}
-		}
-
-		filenameWithExt := filepath.Base(prefix[i])
-		filename := strings.TrimSuffix(filenameWithExt, filepath.Ext(filenameWithExt))
-		for key, value := range c.Viper.AllSettings() {
 			c.Viper.Set(fmt.Sprintf("%s.%s", filename, key), value)
 		}
 
@@ -131,36 +148,45 @@ func (c *ConfigStr) loadEtcdFormToViper(prefix []string, client *clientv3.Client
 
 // watchEtcd3 监听etcd
 func (c *ConfigStr) watchEtcd3(path []string, cli *clientv3.Client) {
-	// 创建一个context
-	watcher := clientv3.NewWatcher(cli)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	for i := 0; i < len(path); i++ {
+		newViper := viper.New()
+		go func(p []string) {
 
-	go func() {
-		for {
-			for i := 0; i < len(path); i++ {
-				watchChan := watcher.Watch(ctx, path[i])
+			watcher := clientv3.NewWatcher(cli)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			for {
+				watchChan := watcher.Watch(ctx, p[i])
 				for resp := range watchChan {
 					for _, event := range resp.Events {
 						switch event.Type {
 						case clientv3.EventTypePut:
-							err := c.Viper.ReadConfig(bytes.NewReader(event.Kv.Value))
+							types := strings.Split(p[i], ".")
+							if len(types) == 2 {
+								newViper.SetConfigType(types[1])
+							} else {
+								newViper.SetConfigType("toml")
+							}
+							err := newViper.ReadConfig(bytes.NewReader(event.Kv.Value))
 							if err != nil {
-								alog.Error("watchEtcd", zap.Error(err))
+								alog.Error("Viper ReadConfig error", zap.Error(err))
 							}
 
-							if err = c.Viper.ReadRemoteConfig(); err != nil {
-								alog.Error("watchEtcd", zap.Error(err))
+							filenameWithExt := filepath.Base(p[i])
+							filename := strings.TrimSuffix(filenameWithExt, filepath.Ext(filenameWithExt))
+							for key, value := range newViper.AllSettings() {
+								if i == 0 {
+									c.Viper.Set(fmt.Sprintf("%s", key), value)
+								}
+								c.Viper.Set(fmt.Sprintf("%s.%s", filename, key), value)
 							}
-						case clientv3.EventTypeDelete:
-							fmt.Printf("Key %s deleted.\n", event.Kv.Key)
 						}
 					}
 				}
 			}
-		}
-	}()
 
+		}(path)
+	}
 	select {}
 }
 
