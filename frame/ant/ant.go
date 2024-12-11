@@ -40,13 +40,14 @@ func New(configPath ...string) *Engine {
 	}
 }
 
-func (eng *Engine) AddConfig(configPath string) {
+func (eng *Engine) AddConfig(configPath string) *Engine {
 	if len(configPath) > 0 {
 		err := config.AddConfigFile(configPath)
 		if err != nil {
 			panic(err)
 		}
 	}
+	return eng
 }
 
 // AddFunc Add function execution
