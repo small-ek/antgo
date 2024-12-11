@@ -48,12 +48,15 @@ func InitDb(connections []map[string]any) {
 		for i := 0; i < len(connections); i++ {
 			value := connections[i]
 			config := DatabaseConfig{}
-			conv.ToStruct(value, &config)
+			err := conv.ToStruct(value, &config)
+			if err != nil {
+				alog.Write.Panic("Failed to convert database config to struct:", zap.Error(err))
+			}
 
 			if value["name"] != "" {
-				db, err := CreateConnection(config)
-				if err != nil {
-					alog.Write.Panic("Failed to initialize database connection "+config.Name+" :", zap.Error(err))
+				db, err2 := CreateConnection(config)
+				if err2 != nil {
+					alog.Write.Panic("Failed to initialize database connection "+config.Name+" :", zap.Error(err2))
 				}
 				Master[config.Name] = db
 			}
@@ -216,7 +219,7 @@ func Close() {
 				alog.Write.Error("Error retrieving DB instance for "+name+":", zap.Error(err))
 				continue
 			}
-			if err := sqlDB.Close(); err != nil {
+			if err = sqlDB.Close(); err != nil {
 				alog.Write.Error("Error closing DB connection for "+name+":", zap.Error(err))
 			} else {
 				alog.Write.Warn("Database connection '" + name + "' closed successfully")

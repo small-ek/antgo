@@ -113,9 +113,19 @@ func (c *ClientRedis) SetOptions(Options *redis.Options) *ClientRedis {
 // Close <关闭>
 func (c *ClientRedis) Close() {
 	if c.Mode {
-		defer c.Clients.Close()
+		defer func(Clients *redis.Client) {
+			err := Clients.Close()
+			if err != nil {
+				alog.Write.Error("Clients Close", zap.Error(err))
+			}
+		}(c.Clients)
 	} else {
-		defer c.ClusterClient.Close()
+		defer func(ClusterClient *redis.ClusterClient) {
+			err := ClusterClient.Close()
+			if err != nil {
+				alog.Write.Error("ClusterClient Close", zap.Error(err))
+			}
+		}(c.ClusterClient)
 	}
 }
 

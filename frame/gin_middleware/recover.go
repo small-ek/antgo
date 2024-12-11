@@ -36,7 +36,9 @@ func Recovery() gin.HandlerFunc {
 					c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 					//解析Body
 					if request.Header["Content-Type"] != nil && request.Header["Content-Type"][0] == "application/json" {
-						json.Unmarshal(body, &requestBody)
+						if err2 := json.Unmarshal(body, &requestBody); err != nil {
+							alog.Write.Error("json.Unmarshal", zap.Error(err2))
+						}
 					} else if len(body) > 0 {
 						for _, pair := range strings.Split(string(body), "&") {
 							if kv := strings.SplitN(pair, "=", 2); len(kv) == 2 {

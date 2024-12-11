@@ -488,7 +488,7 @@ func (h *HttpSend) request(method, url string, readerBody io.Reader) (body []byt
 	return
 }
 
-// Debug<用于最后打印>
+// Debug <用于最后打印>
 func (h *HttpSend) Debug(debug ...bool) *HttpSend {
 	if len(debug) > 0 {
 		h.debug = debug[0]
@@ -514,7 +514,7 @@ func (h *HttpSend) print(body []byte) {
 			fmt.Printf("Request: %s %s %s\nHeaders: %v\nCookies: %v\nTimeout: %ds\nResponse: %v\nstatusCode: %v\n", h.Method, h.Url, conv.String(h.Body),
 				conv.String(h.Header), conv.String(h.Cookies), h.Timeout, string(body), h.StatusCode)
 			if h.Err != nil {
-				fmt.Printf("error: %d\n", h.Err.Error())
+				fmt.Printf("error: %s\n", h.Err.Error())
 			}
 		}
 	}

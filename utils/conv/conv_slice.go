@@ -141,6 +141,8 @@ func convertToString(v reflect.Value) string {
 		if v.Type().Elem().Kind() == reflect.Uint8 {
 			return string(v.Bytes())
 		}
+	default:
+		return ""
 	}
 
 	panic("Unwilling type")

@@ -40,7 +40,12 @@ func New(prefixPath, language string, defaultType ...string) *I18n {
 		break
 	case "yml", "yaml":
 		file, _ := os.Open(filePath)
-		defer file.Close()
+		defer func(file *os.File) {
+			err := file.Close()
+			if err != nil {
+				panic(err.Error())
+			}
+		}(file)
 		yamlDecode := yaml.NewDecoder(file)
 		if err := yamlDecode.Decode(&data); err != nil {
 			panic(err.Error())
