@@ -85,6 +85,8 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 		case string:
 			if (conditions == "LIKE" || conditions == "ILIKE") && v != "" {
 				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), v+"%")
+			} else {
+				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), value)
 			}
 		default:
 			return db.Where(fmt.Sprintf("%s %s ?", key, conditions), value)
