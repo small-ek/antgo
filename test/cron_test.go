@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/os/cron"
 	"log"
 	"os"
 	"testing"
@@ -15,7 +14,7 @@ func (t *testTask) Run() {
 
 }
 func TestCron(t *testing.T) {
-	crontab := cron.New()
+	crontab := acron.New()
 	// 实现接口的方式添加定时任务
 	task := &testTask{}
 	log.Println(111)

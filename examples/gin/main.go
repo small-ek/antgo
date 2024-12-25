@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/small-ek/antgo/db/adb/sql"
+	"github.com/small-ek/antgo/db/adb/asql"
 	models "github.com/small-ek/antgo/examples/gin/model"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/gin_middleware"
@@ -32,8 +32,8 @@ func main() {
 			FilterMap: map[string]any{"username": "admin"},
 		}
 		err := ant.Db().Model(&models.SysAdminUsers{}).Scopes(
-			sql.Filters(filters),
-			sql.Where("username", "=", pageParam.FilterMap["username"]),
+			asql.Filters(filters),
+			asql.Where("username", "=", pageParam.FilterMap["username"]),
 		).Find(&list).Error
 
 		if err != nil {

@@ -39,6 +39,7 @@ type HttpSend struct {
 	Err         error
 	StatusCode  int
 	debug       bool
+	curl        bool
 }
 
 var singletonHttpSend *HttpSend
@@ -484,7 +485,7 @@ func (h *HttpSend) request(method, url string, readerBody io.Reader) (body []byt
 	h.StatusCode = resp.StatusCode
 	h.Err = err
 	defer h.print(body)
-
+	defer h.curlPrint()
 	return
 }
 
@@ -493,29 +494,86 @@ func (h *HttpSend) Debug(debug ...bool) *HttpSend {
 	if len(debug) > 0 {
 		h.debug = debug[0]
 	} else {
-		h.debug = false
+		h.debug = true
 	}
 	return h
 }
 
+// Debug <用于最后打印>
+func (h *HttpSend) Curl(curl ...bool) *HttpSend {
+	if len(curl) > 0 {
+		h.curl = curl[0]
+	} else {
+		h.curl = true
+	}
+	return h
+}
+
+func (h *HttpSend) curlPrint() {
+	if !h.curl {
+		return // 如果 debug 模式关闭，直接返回
+	}
+	fmt.Printf("[HttpRequest]\n")
+	fmt.Printf("-------------------------------------------------------------------\n")
+	fmt.Printf("curl -X %s '%s' \\\n", h.Method, h.Url)
+
+	// 打印 Headers
+	for k, v := range h.Header {
+		fmt.Printf("  -H '%s: %s' \\\n", k, v)
+	}
+
+	// 打印 Body
+	if h.Body != nil {
+		bodyBytes, err := json.Marshal(h.Body)
+		if err != nil {
+			fmt.Printf("  -d 'serialization error: %s'\n", err.Error())
+		} else {
+			fmt.Printf("  -d '%s'\n", string(bodyBytes))
+		}
+	}
+
+	// 打印 Error
+	if h.Err != nil {
+		fmt.Printf("[ERROR] %s\n", h.Err.Error())
+	}
+	fmt.Printf("-------------------------------------------------------------------\n")
+}
+
 // print<打印>
 func (h *HttpSend) print(body []byte) {
-	if h.debug == true {
-		if alog.Write != nil {
-			if h.Err != nil || h.StatusCode != 200 {
-				h.errorPrint(body)
-			} else {
-				alog.Write.Debug(h.Url, zap.String("Method:", h.Method), zap.String("Timeout", h.Timeout.String()), zap.String("Headers", conv.String(h.Header)), zap.String("Cookies", conv.String(h.Cookies)), zap.String("Body:", conv.String(h.Body)), zap.String("Response:", string(body)), zap.Int("statusCode", h.StatusCode))
-			}
+	if !h.debug {
+		return // 如果 debug 模式关闭，直接返回
+	}
 
+	// 准备日志数据
+	logData := map[string]interface{}{
+		"URL":          h.Url,
+		"Method":       h.Method,
+		"Timeout":      h.Timeout.String(),
+		"Headers":      conv.String(h.Header),
+		"Cookies":      conv.String(h.Cookies),
+		"RequestBody":  conv.String(h.Body),
+		"ResponseBody": string(body),
+		"StatusCode":   h.StatusCode,
+	}
+
+	// 日志输出
+	if alog.Write != nil {
+		// 使用 zap 记录日志
+		if h.Err != nil || h.StatusCode != 200 {
+			alog.Write.Error("HTTP Request Error", zap.Any("LogData", logData))
 		} else {
-			fmt.Printf("[HttpRequest]\n")
-			fmt.Printf("-------------------------------------------------------------------\n")
-			fmt.Printf("Request: %s %s %s\nHeaders: %v\nCookies: %v\nTimeout: %ds\nResponse: %v\nstatusCode: %v\n", h.Method, h.Url, conv.String(h.Body),
-				conv.String(h.Header), conv.String(h.Cookies), h.Timeout, string(body), h.StatusCode)
-			if h.Err != nil {
-				fmt.Printf("error: %s\n", h.Err.Error())
-			}
+			alog.Write.Debug("HTTP Request Success", zap.Any("LogData", logData))
+		}
+	} else {
+		// 控制台打印
+		fmt.Printf("[HttpRequest]\n")
+		fmt.Printf("-------------------------------------------------------------------\n")
+		for key, value := range logData {
+			fmt.Printf("%s: %v\n", key, value)
+		}
+		if h.Err != nil {
+			fmt.Printf("Error: %s\n", h.Err.Error())
 		}
 	}
 }

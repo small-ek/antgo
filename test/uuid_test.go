@@ -1,20 +1,19 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/crypto/uuid"
 	"log"
 	"testing"
 )
 
 func TestUuid(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		uuid1 := uuid.Create()
+		uuid1 := auuid.Create()
 		log.Println(uuid1)
-		uuid2 := uuid.NewDCEGroup()
+		uuid2 := auuid.NewDCEGroup()
 		log.Println(uuid2)
-		uuid3 := uuid.NewDCEPerson()
+		uuid3 := auuid.NewDCEPerson()
 		log.Println(uuid3)
-		uuid4 := uuid.NewRandom()
+		uuid4 := auuid.NewRandom()
 		log.Println(uuid4)
 	}
 }

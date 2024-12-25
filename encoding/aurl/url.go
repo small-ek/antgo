@@ -1,4 +1,4 @@
-package url
+package aurl
 
 import (
 	"net/url"

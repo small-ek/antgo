@@ -1,4 +1,4 @@
-package html
+package ahtml
 
 import (
 	strip "github.com/grokify/html-strip-tags-go"
