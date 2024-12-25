@@ -13,7 +13,7 @@ import (
 func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
-			return db.Where(key+" LIKE ?", value+"%")
+			return db.Where(fmt.Sprintf("`%s` LIKE ?", key), value+"%")
 		}
 		return db
 	}
@@ -23,7 +23,7 @@ func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
-			return db.Where(key+" ILIKE ?", value+"%")
+			return db.Where(fmt.Sprintf("`%s` ILIKE ?", key), value+"%")
 		}
 		return db
 	}
@@ -41,7 +41,7 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 		}
 
 		if key != "" && value != nil && value != "" {
-			return db.Where(fmt.Sprintf("%s IN ?", key), value)
+			return db.Where(fmt.Sprintf("`%s` IN ?", key), value)
 		}
 		return db
 	}
@@ -59,7 +59,7 @@ func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 		}
 
 		if key != "" && value != nil && value != "" {
-			return db.Where(""+key+" NOT IN ?", value)
+			return db.Where(fmt.Sprintf("`%s` NOT IN ?", key), value)
 		}
 		return db
 	}
@@ -77,19 +77,19 @@ func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB
 		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
 			newValue := conv.Interfaces(v)
 			if (conditions == "BETWEEN" || conditions == "NOT BETWEEN") && len(newValue) == 2 {
-				return db.Where(fmt.Sprintf("%s %s ? AND ?", key, conditions), newValue[0], newValue[1])
+				return db.Where(fmt.Sprintf("`%s` %s ? AND ?", key, conditions), newValue[0], newValue[1])
 			}
 			if (conditions == "IN" || conditions == "NOT IN") && len(newValue) > 0 {
-				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), newValue)
+				return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), newValue)
 			}
 		case string:
 			if (conditions == "LIKE" || conditions == "ILIKE") && v != "" {
-				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), v+"%")
+				return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), v+"%")
 			} else {
-				return db.Where(fmt.Sprintf("%s %s ?", key, conditions), value)
+				return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), value)
 			}
 		default:
-			return db.Where(fmt.Sprintf("%s %s ?", key, conditions), value)
+			return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), value)
 		}
 
 		return db
@@ -205,23 +205,23 @@ func handleOperator(filter page.Filter, operator string) (string, []interface{})
 		// Handle BETWEEN operator
 		value := conv.Strings(filter.Value)
 		if len(value) == 2 {
-			condition = fmt.Sprintf("%s BETWEEN ? AND ?", filter.Field)
+			condition = fmt.Sprintf("`%s` BETWEEN ? AND ?", filter.Field)
 			values = append(values, value[0], value[1])
 		}
 	case "IS NULL", "IS NOT NULL":
 		// Handle IS NULL or IS NOT NULL
-		condition = fmt.Sprintf("%s %s", filter.Field, operator)
+		condition = fmt.Sprintf("`%s` %s", filter.Field, operator)
 	case "LIKE", "NOT LIKE":
 		// Handle LIKE or NOT LIKE with escaping
-		condition = fmt.Sprintf("%s %s ?", filter.Field, operator)
+		condition = fmt.Sprintf("`%s` %s ?", filter.Field, operator)
 		values = append(values, fmt.Sprintf("%s%%", filter.Value))
 	case "IN", "NOT IN":
 		// Handle IN or NOT IN with values
-		condition = fmt.Sprintf("%s %s (?)", filter.Field, operator)
+		condition = fmt.Sprintf("`%s` %s (?)", filter.Field, operator)
 		values = append(values, conv.Strings(filter.Value))
 	default:
 		// Handle other operators
-		condition = fmt.Sprintf("%s %s ?", filter.Field, operator)
+		condition = fmt.Sprintf("`%s` %s ?", filter.Field, operator)
 		values = append(values, filter.Value)
 	}
 
