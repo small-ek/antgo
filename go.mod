@@ -1,8 +1,6 @@
 module github.com/small-ek/antgo
 
-go 1.22
-
-toolchain go1.23.3
+go 1.20
 
 replace github.com/ugorji/go => github.com/ugorji/go v1.2.12
 

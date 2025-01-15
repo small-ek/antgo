@@ -1,7 +1,7 @@
 package awebsocket
 
 import (
-	"github.com/small-ek/antgo/crypto/hash"
+	"github.com/small-ek/antgo/crypto/ahash"
 	"sync"
 )
 
@@ -82,7 +82,7 @@ func (get *Client) DeleteClients(client *Connection) {
 
 // GetUserKey 获取用户key
 func GetUserKey(appId string, userId string) string {
-	return hash.Sha1(appId + userId)
+	return ahash.Sha1(appId + userId)
 }
 
 // AddUsers 添加用户

@@ -3,7 +3,7 @@ package awebsocket
 import (
 	"errors"
 	"github.com/gorilla/websocket"
-	"github.com/small-ek/antgo/crypto/hash"
+	"github.com/small-ek/antgo/crypto/ahash"
 	"sync"
 )
 
@@ -164,6 +164,6 @@ type Login struct {
 
 // GetUserKey 获取用户的Key
 func (get *Login) GetUserKey() (key string) {
-	key = hash.Sha1(get.AppId + get.UserId)
+	key = ahash.Sha1(get.AppId + get.UserId)
 	return
 }
