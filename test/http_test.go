@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var http = ahttp.NewClient(nil).SetZapLog(ant.Log()).Client()
+var http = ahttp.New(nil).SetLog(ant.Log()).Client()
 
 func TestHttp(t *testing.T) {
 	RegisterLog()
