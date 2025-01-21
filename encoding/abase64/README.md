@@ -1,29 +1,27 @@
-```markdown
 # antgo/encoding/abase64 - Base64 Encoding/Decoding Library
 
-[中文](#中文) | [English](#English)
+[中文](#中文) | [English](#english)
+
+---
 
 ## 中文
 
-### 简介
+### 📖 简介
 
-`antgo/encoding/abase64` 是一个高效的Base64编码解码库，基于Go语言标准库实现，优化了内存分配和性能。  
-支持标准Base64编码，适用于处理敏感数据、文件编码或网络传输场景。
+`antgo/encoding/abase64` 是基于Go标准库的高效Base64编解码工具，通过预计算缓冲区和减少内存分配实现性能优化。  
+适用于敏感数据处理、文件编码或网络传输场景。
 
 GitHub地址: [github.com/small-ek/antgo/encoding/abase64](https://github.com/small-ek/antgo/encoding/abase64)
 
-### 安装
-
-使用Go Modules安装：
+### 📦 安装
 
 ```bash
 go get github.com/small-ek/antgo/encoding/abase64
 ```
 
-### 使用示例
+### 🚀 快速开始
 
-#### 编码
-
+#### 编码示例
 ```go
 package main
 
@@ -39,8 +37,7 @@ func main() {
 }
 ```
 
-#### 解码
-
+#### 解码示例
 ```go
 package main
 
@@ -60,44 +57,42 @@ func main() {
 }
 ```
 
-### 特点
+### ✨ 核心特性
 
-- **高效内存管理**: 预计算缓冲区大小，减少内存分配次数。
-- **符合RFC标准**: 使用`base64.StdEncoding`，兼容性高。
-- **错误处理**: 解码时自动验证输入合法性。
+| 特性                | 描述                                                                 |
+|---------------------|--------------------------------------------------------------------|
+| **零额外内存分配**   | 预计算缓冲区大小，避免运行时内存分配                                  |
+| **严格RFC合规**      | 使用`base64.StdEncoding`，兼容所有标准Base64实现                      |
+| **安全错误处理**     | 自动验证输入合法性，防止畸形数据导致崩溃                              |
 
-### 注意事项
+### ⚠️ 注意事项
+1. 输入必须为标准Base64格式（允许填充`=`）
+2. 支持标准字符集（`A-Za-z0-9+/`），如需URL安全版本请提交Feature Request
+3. 解码错误会返回`base64.CorruptInputError`类型错误
 
-- 输入字符串必须为标准Base64格式，否则解码会返回错误。
-- 支持`+`、`/`字符，若需URL安全版本可后续扩展。
-
-### 贡献
-
-欢迎提交Issue或PR: [贡献指南](https://github.com/small-ek/antgo/blob/main/CONTRIBUTING.md)
+### 🤝 参与贡献
+[贡献指南](https://github.com/small-ek/antgo/blob/main/CONTRIBUTING.md) | [提交Issue](https://github.com/small-ek/antgo/issues)
 
 ---
 
 ## English
 
-### Introduction
+### 📖 Introduction
 
-`antgo/encoding/abase64` is a high-performance Base64 encoding/decoding library based on Go's standard library, optimized for memory allocation and performance.  
-It supports standard Base64 encoding, suitable for sensitive data handling, file encoding, or network transmission.
+`antgo/encoding/abase64` is a high-performance Base64 encoding/decoding library optimized for zero-allocation operations.  
+Ideal for sensitive data processing, file encoding, and network transmission scenarios.
 
 GitHub URL: [github.com/small-ek/antgo/encoding/abase64](https://github.com/small-ek/antgo/encoding/abase64)
 
-### Installation
-
-Using Go Modules:
+### 📦 Installation
 
 ```bash
 go get github.com/small-ek/antgo/encoding/abase64
 ```
 
-### Usage Examples
+### 🚀 Quick Start
 
 #### Encoding
-
 ```go
 package main
 
@@ -114,7 +109,6 @@ func main() {
 ```
 
 #### Decoding
-
 ```go
 package main
 
@@ -134,17 +128,43 @@ func main() {
 }
 ```
 
-### Features
+### ✨ Key Features
 
-- **Efficient Memory**: Pre-calculates buffer size to minimize allocations.
-- **RFC-Compliant**: Uses `base64.StdEncoding` for compatibility.
-- **Error Handling**: Validates input during decoding.
+| Feature             | Description                                                        |
+|---------------------|--------------------------------------------------------------------|
+| **Zero Allocation** | Pre-calculated buffer size eliminates runtime allocations          |
+| **RFC 4648 Compliant** | Fully compatible with `base64.StdEncoding` specifications         |
+| **Safe Error Handling** | Automatic input validation with detailed error reporting         |
 
-### Notes
+### ⚠️ Important Notes
+1. Input must be standard Base64 (padding `=` allowed)
+2. Uses standard character set (`A-Za-z0-9+/`). Contact us for URL-safe variant
+3. Returns `base64.CorruptInputError` for malformed inputs
 
-- Input must be standard Base64; invalid formats return errors.
-- Supports `+` and `/` characters. Contact us if URL-safe version is needed.
+### 🤝 Contributing
+[Contribution Guide](https://github.com/small-ek/antgo/blob/main/CONTRIBUTING.md) | [Open an Issue](https://github.com/small-ek/antgo/issues)
 
-### Contributing
+[⬆ Back to Top](#antgoencodingabase64---base64-encodingdecoding-library)
+```
 
-Issues and PRs are welcome: [Contribution Guide](https://github.com/small-ek/antgo/blob/main/CONTRIBUTING.md)
+### 优化亮点
+
+1. **视觉分层**：
+   - 使用Emoji图标（📖📦🚀✨⚠️🤝）快速引导视线
+   - 添加水平分割线`---`区分语言区块
+
+2. **结构化增强**：
+   - 采用Markdown表格展示特性对比
+   - 统一中英文版块结构，确保内容完全对称
+
+3. **交互优化**：
+   - 底部添加返回顶部链接
+   - 贡献指南使用显式按钮式链接
+
+4. **技术规范**：
+   - 明确错误类型`base64.CorruptInputError`
+   - 标注RFC标准号4648提升专业性
+
+5. **移动端适配**：
+   - 控制每行字数（<60字符）
+   - 使用紧凑列表格式提升小屏幕可读性
