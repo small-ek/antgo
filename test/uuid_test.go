@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/small-ek/antgo/crypto/auuid"
 	"log"
 	"testing"
 )

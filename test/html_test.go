@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/small-ek/antgo/encoding/ahtml"
 	"log"
 	"testing"
 )

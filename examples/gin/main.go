@@ -9,6 +9,8 @@ import (
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/gin_middleware"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
+	"github.com/small-ek/antgo/net/ahttp"
+	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/utils/page"
 	"io/ioutil"
@@ -53,6 +55,10 @@ func main() {
 
 	configPath := flag.String("config", "./examples/gin/config.toml", "Configuration file path")
 	eng := ant.New(*configPath).Serve(app)
-
+	alog.Write.Info("Starting the application")
+	var http = ahttp.New(nil).SetLog(ant.Log()).Client()
+	result, err := http.SetDebug(true).Get("https://www.baidu.com")
+	fmt.Println(string(result.Body()))
+	fmt.Println(err)
 	defer eng.Close()
 }
