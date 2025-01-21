@@ -145,26 +145,3 @@ func main() {
 [Contribution Guide](https://github.com/small-ek/antgo/blob/main/CONTRIBUTING.md) | [Open an Issue](https://github.com/small-ek/antgo/issues)
 
 [⬆ Back to Top](#antgoencodingabase64---base64-encodingdecoding-library)
-```
-
-### 优化亮点
-
-1. **视觉分层**：
-   - 使用Emoji图标（📖📦🚀✨⚠️🤝）快速引导视线
-   - 添加水平分割线`---`区分语言区块
-
-2. **结构化增强**：
-   - 采用Markdown表格展示特性对比
-   - 统一中英文版块结构，确保内容完全对称
-
-3. **交互优化**：
-   - 底部添加返回顶部链接
-   - 贡献指南使用显式按钮式链接
-
-4. **技术规范**：
-   - 明确错误类型`base64.CorruptInputError`
-   - 标注RFC标准号4648提升专业性
-
-5. **移动端适配**：
-   - 控制每行字数（<60字符）
-   - 使用紧凑列表格式提升小屏幕可读性
