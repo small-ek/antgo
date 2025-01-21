@@ -10,94 +10,104 @@ import (
 	"strings"
 )
 
-// Decode
-func Decode(data []byte) (res map[string]interface{}, err error) {
-	res = make(map[string]interface{})
-	fieldMap := make(map[string]interface{})
+// Decode parses INI format data into a nested map structure
+// Decode 将INI格式数据解析为嵌套的map结构
+func Decode(data []byte) (result map[string]interface{}, err error) {
+	result = make(map[string]interface{})
+	reader := bufio.NewReader(bytes.NewReader(data))
 
-	a := bytes.NewReader(data)
-	r := bufio.NewReader(a)
-	var section string
-	var lastSection string
-	var haveSection bool
+	var (
+		currentSection string                 // Current section name 当前节名称
+		sectionData    map[string]interface{} // Current section data 当前节数据
+		inSection      bool                   // Flag for valid section 是否在有效节中
+	)
+
 	for {
-		line, err := r.ReadString('\n')
-		if err == io.EOF {
+		lineBytes, _, err := reader.ReadLine()
+		if errors.Is(err, io.EOF) {
 			break
 		}
-
 		if err != nil {
+			return nil, fmt.Errorf("read error: %w", err)
+		}
+
+		// Clean and check line
+		// 清理并检查行内容
+		line := strings.TrimSpace(string(lineBytes))
+		if len(line) == 0 || line[0] == ';' || line[0] == '#' {
+			continue // Skip empty lines and comments 跳过空行和注释
+		}
+
+		// Parse section header
+		// 解析节头
+		if start, end := strings.Index(line, "["), strings.Index(line, "]"); start >= 0 && end > start+1 {
+			currentSection = line[start+1 : end]
+			sectionData = make(map[string]interface{})
+			result[currentSection] = sectionData
+			inSection = true
+			continue
+		}
+
+		// Skip lines not in section
+		// 跳过不在节中的行
+		if !inSection {
+			continue
+		}
+
+		// Parse key-value pairs
+		// 解析键值对
+		if sepIdx := strings.Index(line, "="); sepIdx > 0 {
+			key := strings.TrimSpace(line[:sepIdx])
+			value := strings.TrimSpace(line[sepIdx+1:])
+			sectionData[key] = value
+		}
+	}
+
+	if !inSection {
+		return nil, errors.New("no valid section found in INI data")
+	}
+	return result, nil
+}
+
+// Encode converts map data to INI format bytes
+// Encode 将map数据转换为INI格式字节
+func Encode(data map[string]interface{}) ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+
+	for sectionName, sectionContent := range data {
+		// Validate section type
+		// 验证节类型
+		sectionData, ok := sectionContent.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid section type: %T", sectionContent)
+		}
+
+		// Write section header
+		// 写入节头
+		if _, err := fmt.Fprintf(buf, "[%s]\n", sectionName); err != nil {
 			return nil, err
 		}
 
-		lineStr := strings.TrimSpace(line)
-		if len(lineStr) == 0 {
-			continue
-		}
-
-		if lineStr[0] == ';' || lineStr[0] == '#' {
-			continue
-		}
-
-		sectionBeginPos := strings.Index(lineStr, "[")
-		sectionEndPos := strings.Index(lineStr, "]")
-
-		if sectionBeginPos >= 0 && sectionEndPos >= 2 {
-			section = lineStr[sectionBeginPos+1 : sectionEndPos]
-
-			if lastSection == "" {
-				lastSection = section
-			} else if lastSection != section {
-				lastSection = section
-				fieldMap = make(map[string]interface{})
-			}
-			haveSection = true
-		} else if haveSection == false {
-			continue
-		}
-
-		if strings.Contains(lineStr, "=") && haveSection {
-			values := strings.Split(lineStr, "=")
-			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], ""))
-			res[section] = fieldMap
-		}
-	}
-
-	if haveSection == false {
-		return nil, errors.New("failed to parse INI file, section not found")
-	}
-	return res, nil
-}
-
-// Encode converts map to INI format.
-func Encode(data map[string]interface{}) (res []byte, err error) {
-	w := new(bytes.Buffer)
-	for k, v := range data {
-		n, err := w.WriteString(fmt.Sprintf("[%s]\n", k))
-		if err != nil || n == 0 {
-			return nil, errors.New("write data failed")
-		}
-		for kk, vv := range v.(map[string]interface{}) {
-			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
-			if err != nil || n == 0 {
-				return nil, errors.New("write data failed")
+		// Write key-value pairs
+		// 写入键值对
+		for key, value := range sectionData {
+			if _, err := fmt.Fprintf(buf, "%s = %s\n", key, value); err != nil {
+				return nil, err
 			}
 		}
-	}
-	res = make([]byte, w.Len())
-	n, err := w.Read(res)
-	if err != nil || n == 0 {
-		return nil, errors.New("write data failed")
+
+		buf.WriteByte('\n') // Add section separator 添加节分隔符
 	}
 
-	return res, nil
+	return buf.Bytes(), nil
 }
 
-// ToJson convert INI format to JSON.
-func ToJson(data []byte) (res []byte, err error) {
+// ToJson converts INI data to JSON format
+// ToJson 将INI数据转换为JSON格式
+func ToJson(data []byte) ([]byte, error) {
 	iniMap, err := Decode(data)
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(iniMap)
+	return json.MarshalIndent(iniMap, "", "  ") // Pretty-print JSON 格式化输出JSON
 }

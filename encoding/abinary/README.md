@@ -1,4 +1,4 @@
-# antgo/encoding/abinary - 二进制序列化库 / Binary Serialization Library
+# antgo/encoding/abinary - Binary Serialization Library / 二进制序列化库
 
 [中文](#中文) | [English](#english)
 
@@ -176,4 +176,4 @@ func main() {
 ### 🤝 Contributing
 [Contribution Guide](https://github.com/small-ek/antgo/blob/main/CONTRIBUTING.md) | [Open an Issue](https://github.com/small-ek/antgo/issues)
 
-[⬆ Back to Top](#antgoencodingabinary---binary-serialization-library)
+[⬆ Back to Top](#中文)
