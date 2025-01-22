@@ -164,8 +164,14 @@ func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 	return h
 }
 
-// Client 返回 Resty 客户端的请求实例 / Returns a request instance of the Resty client
-func (h *HttpClient) Client() *resty.Request {
+// Request 返回 Resty 请求实例 / Returns the Resty request instance
+func (h *HttpClient) Request() *resty.Request {
 	h.httpClient.SetHeader("User-Agent", "antgo")
 	return h.httpClient.R()
+}
+
+// Client 返回 Resty 客户端实例 / Returns the Resty client instance
+func (h *HttpClient) Client() *resty.Client {
+	h.httpClient.SetHeader("User-Agent", "antgo")
+	return h.httpClient
 }

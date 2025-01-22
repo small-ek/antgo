@@ -1,7 +1,6 @@
 package alog
 
 import (
-	"fmt"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -193,40 +192,31 @@ func (logs *Logs) SetCompress(compress bool) *Logs {
 	return logs
 }
 
-// Debug Debug printing<调试打印>
 func Debug(msg string, fields ...zap.Field) {
 	Write.Debug(msg, fields...)
 }
 
-// Error  printing<错误打印>
-func Error(msg string, fields ...zap.Field) {
-	if Write == nil {
-		fmt.Println(msg, fields)
-		return
-	}
-	Write.Error(msg, fields...)
+func Info(msg string, fields ...zap.Field) {
+	Write.Info(msg, fields...)
 }
 
-// Warn Warning print<警告打印>
 func Warn(msg string, fields ...zap.Field) {
-	if Write == nil {
-		fmt.Println(msg, fields)
-		return
-	}
 	Write.Warn(msg, fields...)
 }
 
-// Panic Abnormal printing<异常打印>
+func Error(msg string, fields ...zap.Field) {
+	Write.Error(msg, fields...)
+}
+
 func Panic(msg string, fields ...zap.Field) {
 	Write.Panic(msg, fields...)
 }
 
-// DPanic passed at the log site, as well as any fields accumulated on the logger.<如果记录器处于开发模式，则会恐慌（DPanic表示 “发展恐慌”）。 这对于捕获错误很有用>
-func DPanic(msg string, fields ...zap.Field) {
-	Write.DPanic(msg, fields...)
+func Fatal(msg string, fields ...zap.Field) {
+	Write.Fatal(msg, fields...)
 }
 
-// Info Print log by default<默认情况下打印日志>
-func Info(msg string, fields ...zap.Field) {
-	Write.Info(msg, fields...)
+// Sync 确保日志缓冲区内容写入输出
+func Sync() error {
+	return Write.Sync()
 }

@@ -247,7 +247,7 @@ func (c *AsyncClient) Close() error {
 			zap.Any("config", c.config))
 		return err
 	}
-	c.logger.Info("Connection closed cleanly")
+	c.logger.Info("Connection closed successfully")
 	return nil
 }
 

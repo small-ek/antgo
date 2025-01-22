@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	// 初始化配置
 	cfg := queue.ClientConfig{
 		Addr:        "127.0.0.1:6379",
