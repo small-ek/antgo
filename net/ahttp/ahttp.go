@@ -116,6 +116,9 @@ func newTransport(config *Config) *http.Transport {
 
 // SetLog 设置日志记录器 / SetLog sets the logger
 func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
+	if logger == nil {
+		return h
+	}
 	h.logger = logger
 	h.httpClient.OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 		logger.Info("Request",

@@ -14,7 +14,7 @@ var http = ahttp.New(nil).SetLog(ant.Log()).Client()
 
 func TestHttp(t *testing.T) {
 	RegisterLog()
-	result, err := http.EnableGenerateCurlOnDebug().Get("https://www.baidu.com")
+	result, err := http.SetDebug(true).EnableGenerateCurlOnDebug().Get("https://www.baidu.com")
 	fmt.Println(string(result.Body()))
 	fmt.Println(err)
 }

@@ -1,4 +1,4 @@
-package array
+package search
 
 // SearchString 搜索切片
 func SearchString(list []string, key string) int {

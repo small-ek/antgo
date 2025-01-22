@@ -1,132 +1,159 @@
 package array
 
 import (
+	"errors"
 	"sync"
 )
 
-// Array parameter structure
-type Array struct {
-	Slice []interface{}
-	lock  sync.RWMutex // 加锁
+// ConcurrentArray is a generic thread-safe array.
+// ConcurrentArray 是一个泛型线程安全数组。
+type ConcurrentArray[T comparable] struct {
+	data []T          // Underlying typed data storage. 底层类型化数据存储。
+	lock sync.RWMutex // Read-write lock for concurrency control. 读写锁用于并发控制。
 }
 
-// New Array
-func New() *Array {
-	return &Array{Slice: make([]interface{}, 0)}
+// New creates a new ConcurrentArray with initial capacity.
+// New 创建一个具有初始容量的 ConcurrentArray。
+// Parameters:
+//
+//	capacity - Initial capacity to reduce reallocations. 初始容量以减少内存重分配。
+func New[T comparable](capacity int) *ConcurrentArray[T] {
+	return &ConcurrentArray[T]{
+		data: make([]T, 0, capacity),
+	}
 }
 
-// Append Set Array
-func (a *Array) Append(value interface{}) {
-	a.lock.Lock()
-	defer a.lock.Unlock()
-
-	a.Slice = append(a.Slice, value)
+// Append adds an element to the end of the array.
+// Append 向数组末尾添加元素。
+func (ca *ConcurrentArray[T]) Append(element T) {
+	ca.lock.Lock()
+	defer ca.lock.Unlock()
+	ca.data = append(ca.data, element)
 }
 
-// Len Count Array
-func (a *Array) Len() int {
-	a.lock.RLock()
-	defer a.lock.RUnlock()
-
-	return len(a.Slice)
+// Len returns the number of elements in the array.
+// Len 返回数组中元素的数量。
+func (ca *ConcurrentArray[T]) Len() int {
+	ca.lock.RLock()
+	defer ca.lock.RUnlock()
+	return len(ca.data)
 }
 
-// List Array
-func (a *Array) List() []interface{} {
-	a.lock.RLock()
-	defer a.lock.RUnlock()
-
-	return a.Slice
+// List returns a copy of the underlying data to prevent external modification.
+// List 返回底层数据的副本以防止外部修改。
+func (ca *ConcurrentArray[T]) List() []T {
+	ca.lock.RLock()
+	defer ca.lock.RUnlock()
+	copied := make([]T, len(ca.data))
+	copy(copied, ca.data)
+	return copied
 }
 
-// InsertAfter Array
-func (a *Array) InsertAfter(index int, value interface{}) []interface{} {
-	a.lock.Lock()
-	defer a.lock.Unlock()
+// Insert inserts an element at the specified index.
+// Insert 在指定索引处插入元素。
+// Returns error if index is out of bounds.
+// 如果索引越界则返回错误。
+func (ca *ConcurrentArray[T]) Insert(index int, element T) error {
+	ca.lock.Lock()
+	defer ca.lock.Unlock()
 
-	if index < 0 || index >= len(a.Slice) {
-		return nil
+	if index < 0 || index > len(ca.data) { // Allow inserting at len(data) (append)
+		return errors.New("index out of bounds")
 	}
 
-	var reset = make([]interface{}, 0)
-	prefix := append(reset, a.Slice[index:]...)
-	a.Slice = append(a.Slice[0:index], value)
-	a.Slice = append(a.Slice, prefix...)
-	return a.Slice
+	// Optimized insertion with single allocation
+	newData := make([]T, 0, len(ca.data)+1)
+	newData = append(newData, ca.data[:index]...)
+	newData = append(newData, element)
+	newData = append(newData, ca.data[index:]...)
+	ca.data = newData
+
+	return nil
 }
 
-// Delete Array
-func (a *Array) Delete(index int) []interface{} {
-	a.lock.Lock()
-	defer a.lock.Unlock()
+// Delete removes the element at the specified index.
+// Delete 删除指定索引处的元素。
+// Returns error if index is invalid.
+// 如果索引无效则返回错误。
+func (ca *ConcurrentArray[T]) Delete(index int) error {
+	ca.lock.Lock()
+	defer ca.lock.Unlock()
 
-	if index < 0 || index >= len(a.Slice) {
-		return nil
+	if index < 0 || index >= len(ca.data) {
+		return errors.New("index out of bounds")
 	}
 
-	a.Slice = append(a.Slice[:index], a.Slice[index+1:]...)
-	return a.Slice
+	ca.data = append(ca.data[:index], ca.data[index+1:]...)
+	return nil
 }
 
-// Set Array
-func (a *Array) Set(index int, value interface{}) {
-	a.lock.Lock()
-	defer a.lock.Unlock()
+// Set updates the element at the specified index.
+// Set 更新指定索引处的元素。
+// Returns error if index is invalid.
+// 如果索引无效则返回错误。
+func (ca *ConcurrentArray[T]) Set(index int, element T) error {
+	ca.lock.Lock()
+	defer ca.lock.Unlock()
 
-	if index < 0 || index >= len(a.Slice) {
-		return
+	if index < 0 || index >= len(ca.data) {
+		return errors.New("index out of bounds")
 	}
 
-	a.Slice[index] = value
+	ca.data[index] = element
+	return nil
 }
 
-// Get Array
-func (a *Array) Get(index int) interface{} {
-	a.lock.RLock()
-	defer a.lock.RUnlock()
+// Get returns the element at the specified index.
+// Get 返回指定索引处的元素。
+// Returns zero value and error if index is invalid.
+// 如果索引无效则返回零值和错误。
+func (ca *ConcurrentArray[T]) Get(index int) (T, error) {
+	ca.lock.RLock()
+	defer ca.lock.RUnlock()
 
-	if index < 0 || index >= len(a.Slice) {
-		return nil
+	var zero T
+	if index < 0 || index >= len(ca.data) {
+		return zero, errors.New("index out of bounds")
 	}
-
-	return a.Slice[index]
+	return ca.data[index], nil
 }
 
-// Search Array
-func (a *Array) Search(value interface{}) int {
-	a.lock.RLock()
-	defer a.lock.RUnlock()
+// Search returns the first index of the target element.
+// Search 返回目标元素的第一个索引。
+// Returns -1 if not found.
+// 如果未找到则返回 -1。
+func (ca *ConcurrentArray[T]) Search(target T) int {
+	ca.lock.RLock()
+	defer ca.lock.RUnlock()
 
-	for i := 0; i < len(a.Slice); i++ {
-		if a.Slice[i] == value {
+	for i, v := range ca.data {
+		if v == target {
 			return i
 		}
 	}
 	return -1
 }
 
-// Clear Array
-func (a *Array) Clear() {
-	a.lock.Lock()
-	defer a.lock.Unlock()
-
-	a.Slice = nil
+// Clear removes all elements from the array.
+// Clear 清空数组中的所有元素。
+func (ca *ConcurrentArray[T]) Clear() {
+	ca.lock.Lock()
+	defer ca.lock.Unlock()
+	ca.data = nil
 }
 
-// LockFunc locks writing by callback function <f>
-func (a *Array) LockFunc(f func(array []interface{})) *Array {
-	a.lock.Lock()
-	defer a.lock.Unlock()
-
-	f(a.Slice)
-	return a
+// WithWriteLock executes a function with write lock held.
+// WithWriteLock 在持有写锁的情况下执行函数。
+func (ca *ConcurrentArray[T]) WithWriteLock(fn func([]T)) {
+	ca.lock.Lock()
+	defer ca.lock.Unlock()
+	fn(ca.data)
 }
 
-// ReadLockFunc locks writing by callback function <f>
-func (a *Array) ReadLockFunc(f func(array []interface{})) *Array {
-	a.lock.RLock()
-	defer a.lock.RUnlock()
-
-	f(a.Slice)
-	return a
+// WithReadLock executes a function with read lock held.
+// WithReadLock 在持有读锁的情况下执行函数。
+func (ca *ConcurrentArray[T]) WithReadLock(fn func([]T)) {
+	ca.lock.RLock()
+	defer ca.lock.RUnlock()
+	fn(ca.data)
 }
