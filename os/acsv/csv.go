@@ -16,7 +16,7 @@ type CSV struct {
 }
 
 // NewCSV 创建CSV实例
-func NewCSV(fileName string) (*CSV, error) {
+func New(fileName string) (*CSV, error) {
 	c := &CSV{
 		FileName: fileName,
 	}

@@ -2,14 +2,13 @@ package ahttp
 
 import (
 	"crypto/tls"
+	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"runtime"
 	"sync"
 	"time"
-
-	"github.com/go-resty/resty/v2"
-	"go.uber.org/zap"
 )
 
 // Config 包含 HTTP 客户端的配置选项
@@ -27,6 +26,8 @@ type Config struct {
 	RetryAttempts         int           // 请求重试次数 / Number of retry attempts for failed requests
 	DialerTimeout         time.Duration // Dialer 的连接超时时间 / Dialer connection timeout
 	DialerKeepAlive       time.Duration // Dialer 的 Keep-Alive 时间 / Dialer keep-alive time
+	RetryWaitTime         time.Duration // 重试等待时间 / RetryWaitTime
+	RetryMaxWaitTime      time.Duration // 最大重试等待时间 / RetryMaxWaitTime
 }
 
 // HttpClient 是对 Resty 客户端的封装，支持自定义配置和日志 / HttpClient is a wrapper for the Resty client with custom configuration and logging support
@@ -54,6 +55,7 @@ func New(config *Config) *HttpClient {
 			httpTransport: newTransport(config),
 			config:        config,
 		}
+		singletonClient.init()
 	})
 	return singletonClient
 }
@@ -66,8 +68,8 @@ func newRestyClient(config *Config) *resty.Client {
 	})
 
 	client.SetRetryCount(config.RetryAttempts)
-	client.SetRetryWaitTime(1 * time.Second)
-	client.SetRetryMaxWaitTime(10 * time.Second)
+	client.SetRetryWaitTime(config.RetryWaitTime)
+	client.SetRetryMaxWaitTime(config.RetryMaxWaitTime)
 
 	return client
 }
@@ -78,13 +80,15 @@ func defaultConfig() *Config {
 		MaxIdleConnections:    runtime.GOMAXPROCS(0) * 200,
 		IdleConnectionTimeout: 120 * time.Second,
 		DisableCompression:    false,
-		Timeout:               90 * time.Second,
+		Timeout:               60 * time.Second,
 		TLSHandshakeTimeout:   30 * time.Second,
 		ExpectContinueTimeout: 2 * time.Second,
 		MaxConnectionsPerHost: runtime.GOMAXPROCS(0) * 100,
 		RetryAttempts:         3,
 		DialerTimeout:         15 * time.Second, // 默认 Dialer 超时时间
 		DialerKeepAlive:       60 * time.Second, // 默认 Dialer Keep-Alive 时间
+		RetryWaitTime:         1 * time.Second,  // 默认重试等待时间
+		RetryMaxWaitTime:      10 * time.Second, // 默认最大重试等待时间
 	}
 }
 
@@ -106,6 +110,7 @@ func newTransport(config *Config) *http.Transport {
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: config.InsecureSkipVerify,
 			MinVersion:         tls.VersionTLS12,
+			MaxVersion:         tls.VersionTLS13,
 			CurvePreferences:   []tls.CurveID{tls.X25519, tls.CurveP256},
 		},
 		TLSHandshakeTimeout:   config.TLSHandshakeTimeout,
@@ -134,8 +139,20 @@ func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 	})
 
 	h.httpClient.OnAfterResponse(func(c *resty.Client, r *resty.Response) error {
-		if r.StatusCode() >= 400 {
-			logger.Error("Request failed",
+		if r.StatusCode() >= 500 {
+			logger.Error("Server error",
+				zap.Int("StatusCode", r.StatusCode()),
+				zap.String("URL", r.Request.URL),
+				zap.String("Method", r.Request.Method),
+				zap.Any("Headers", r.Header),
+				zap.Any("Cookies", r.Cookies),
+				zap.Any("FormData", r.Request.FormData),
+				zap.Any("QueryParam", r.Request.QueryParam),
+				zap.ByteString("Body", r.Body()),
+				zap.Duration("Duration", time.Since(r.Request.Time)),
+			)
+		} else if r.StatusCode() >= 400 {
+			logger.Warn("Client error",
 				zap.Int("StatusCode", r.StatusCode()),
 				zap.String("URL", r.Request.URL),
 				zap.String("Method", r.Request.Method),
@@ -147,7 +164,7 @@ func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 				zap.Duration("Duration", time.Since(r.Request.Time)),
 			)
 		} else {
-			logger.Info("Response",
+			logger.Info("Response success",
 				zap.Int("StatusCode", r.StatusCode()),
 				zap.String("URL", r.Request.URL),
 				zap.String("Method", r.Request.Method),
@@ -166,12 +183,15 @@ func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 
 // Request 返回 Resty 请求实例 / Returns the Resty request instance
 func (h *HttpClient) Request() *resty.Request {
-	h.httpClient.SetHeader("User-Agent", "antgo")
 	return h.httpClient.R()
 }
 
 // Client 返回 Resty 客户端实例 / Returns the Resty client instance
 func (h *HttpClient) Client() *resty.Client {
-	h.httpClient.SetHeader("User-Agent", "antgo")
 	return h.httpClient
+}
+
+// 初始化时统一设置 User-Agent 头部 / Set the User-Agent header during initialization
+func (h *HttpClient) init() {
+	h.httpClient.SetHeader("User-Agent", "antgo")
 }

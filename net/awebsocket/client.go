@@ -82,7 +82,7 @@ func (get *Client) DeleteClients(client *Connection) {
 
 // GetUserKey 获取用户key
 func GetUserKey(appId string, userId string) string {
-	return ahash.Sha1(appId + userId)
+	return ahash.SHA1(appId + userId)
 }
 
 // AddUsers 添加用户

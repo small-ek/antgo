@@ -17,9 +17,7 @@ require (
 	github.com/hibiken/asynq v0.25.1
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
-	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/panjf2000/ants/v2 v2.10.0
-	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.7.1
@@ -28,8 +26,10 @@ require (
 	go.mongodb.org/mongo-driver v1.17.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.31.0
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	golang.org/x/text v0.21.0
 	google.golang.org/grpc v1.69.0
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/clickhouse v0.6.1
 	gorm.io/driver/mysql v1.5.7
@@ -116,6 +116,7 @@ require (
 	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sagikazarmark/crypt v0.24.0 // indirect
 	github.com/sagikazarmark/locafero v0.6.0 // indirect
@@ -146,7 +147,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.31.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
