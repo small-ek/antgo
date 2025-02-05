@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/small-ek/antgo/utils/conv"
-	"log"
 	"strings"
 	"time"
 )
@@ -77,7 +76,7 @@ func New(param ...interface{}) *Times {
 func StrToTime(str string) *Times {
 	t, err := time.ParseInLocation("2006-01-02 15:04:05", str, time.Local)
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 	return &Times{Time: t}
 }

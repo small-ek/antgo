@@ -8,7 +8,10 @@ import (
 
 // UTC 将当前时间转换为 UTC 时区。
 func (t *Times) UTC() *Times {
-	return WithTime(t.Time.UTC())
+	if t == nil {
+		return nil
+	}
+	return &Times{Time: t.Time.UTC()}
 }
 
 // Timestamp Get timestamp.时间转时间戳

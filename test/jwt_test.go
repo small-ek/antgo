@@ -72,10 +72,10 @@ PEqRQFBDR49ayaxSqwIDAQAB
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			defer wg.Done()
-			jwtManagerFactory := jwt.New().SetPublicKey(PublicKey).SetPrivateKey(PrivateKey)
-			jwtManager, err11 := jwtManagerFactory.Encrypt(data, time.Now().Add(time.Minute*1).Unix())
+			jwtManagerFactory := jwt.New().SetPublicKey(PublicKey).SetPrivateKey(PrivateKey).SetExpiration(time.Hour * 24 * 7)
+			jwtManager, err11 := jwtManagerFactory.Generate(data)
 
-			jwtManager2, err12 := jwtManagerFactory.Decode(jwtManager)
+			jwtManager2, err12 := jwtManagerFactory.Parse(jwtManager)
 
 			alog.Write.Info("123", zap.Any("jwtManager2", jwtManager2), zap.Error(err12), zap.Error(err11))
 			// 在这里执行对 JwtManager 实例的操作
