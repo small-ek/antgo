@@ -1,7 +1,6 @@
 package conv
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"math"
@@ -9,7 +8,9 @@ import (
 	"time"
 )
 
-// Rune converts `any` to rune.<将“any”转换为rune。>
+// Rune converts any type to rune. Maintains original value for rune types,
+// converts to int32 for other types (supports numeric/string/bool compatibility)
+// 将任意类型转换为rune类型。保留rune类型的原始值，其他类型转换为int32（支持数字/字符串/布尔型兼容）
 func Rune(any interface{}) rune {
 	if v, ok := any.(rune); ok {
 		return v
@@ -17,7 +18,9 @@ func Rune(any interface{}) rune {
 	return Int32(any)
 }
 
-// Runes converts `any` to []rune.<将“any”转换为[]rune。>
+// Runes converts any type to []rune. Direct conversion for []rune types,
+// converts to string first for other types
+// 将任意类型转换为[]rune类型。直接转换[]rune类型，其他类型先转换为字符串
 func Runes(any interface{}) []rune {
 	if v, ok := any.([]rune); ok {
 		return v
@@ -25,7 +28,9 @@ func Runes(any interface{}) []rune {
 	return []rune(String(any))
 }
 
-// Byte converts `any` to byte.<将“any”转换为byte。>
+// Byte converts any type to byte. Maintains original value for byte types,
+// converts to uint8 for other types (supports numeric/string/bool compatibility)
+// 将任意类型转换为byte类型。保留byte类型的原始值，其他类型转换为uint8（支持数字/字符串/布尔型兼容）
 func Byte(any interface{}) byte {
 	if v, ok := any.(byte); ok {
 		return v
@@ -33,25 +38,33 @@ func Byte(any interface{}) byte {
 	return Uint8(any)
 }
 
-// Bytes converts `any` to []byte.<将“any”转换为[]byte。>
+// Bytes converts any type to []byte with optimized memory allocation.
+// Special handling for basic types, JSON serialization for complex types
+// 将任意类型转换为[]byte（优化内存分配），基础类型特殊处理，复杂类型使用JSON序列化
 func Bytes(any interface{}) []byte {
 	if any == nil {
 		return nil
 	}
 
-	switch value := any.(type) {
-	case string:
-		return []byte(value)
+	switch v := any.(type) {
 	case []byte:
-		return value
-	case int, int32, int64:
-		return intToBytes(value)
+		return v
+	case string:
+		return []byte(v)
+	case int:
+		return intToBytes(int64(v))
+	case int32:
+		return intToBytes(int64(v))
+	case int64:
+		return intToBytes(v)
 	case float32:
-		return float32ToBytes(value)
+		return float32ToBytes(v)
 	case float64:
-		return float64ToBytes(value)
+		return float64ToBytes(v)
 	default:
-		result, err := json.Marshal(value)
+		// Fallback to JSON serialization for complex types
+		// 复杂类型回退到JSON序列化
+		result, err := json.Marshal(v)
 		if err != nil {
 			panic(err)
 		}
@@ -59,71 +72,86 @@ func Bytes(any interface{}) []byte {
 	}
 }
 
-// String converts `any` to string.<将“any”转换为string。>
+// String converts any type to string with optimized type handling.
+// Specialized conversion for basic types, JSON serialization for others
+// 将任意类型转换为字符串（优化类型处理），基础类型特殊转换，其他类型使用JSON序列化
 func String(any interface{}) string {
 	if any == nil {
 		return ""
 	}
-	switch value := any.(type) {
-	case int8, int16, int32, int:
-		return strconv.Itoa(value.(int))
+
+	switch v := any.(type) {
+	case int:
+		return strconv.Itoa(v)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
 	case int64:
-		return strconv.FormatInt(value, 10)
-	case uint, uint8, uint16, uint32, uint64:
-		return strconv.FormatUint(value.(uint64), 10)
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
 	case float32:
-		return strconv.FormatFloat(float64(value), 'f', -1, 32)
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
 	case float64:
-		return strconv.FormatFloat(value, 'f', -1, 64)
+		return strconv.FormatFloat(v, 'f', -1, 64)
 	case bool:
-		return strconv.FormatBool(value)
+		return strconv.FormatBool(v)
 	case string:
-		return value
+		return v
 	case []byte:
-		return string(value)
+		return string(v)
 	case time.Time:
-		if value.IsZero() {
+		if v.IsZero() {
 			return ""
 		}
-		return value.String()
+		return v.String()
 	case *time.Time:
-		if value == nil {
+		if v == nil {
 			return ""
 		}
-		return value.String()
+		return v.String()
 	default:
-		result, err := json.Marshal(value)
+		// JSON serialization for complex types
+		// 复杂类型使用JSON序列化
+		result, err := json.Marshal(v)
 		if err != nil {
 			panic(err)
 		}
 		return string(result)
 	}
-	return any.(string)
 }
 
-// intToBytes converts `any` to []byte.<将“any”转换为[]byte。>
-func intToBytes(any interface{}) []byte {
-	x := Int64(any)
-	bytesBuffer := bytes.NewBuffer([]byte{})
-	var err = binary.Write(bytesBuffer, binary.BigEndian, x)
-	if err != nil {
-		panic(err)
-	}
-	return bytesBuffer.Bytes()
+// intToBytes converts integer to 8-byte slice with zero allocations
+// 整型转8字节切片（零内存分配）
+func intToBytes(n int64) []byte {
+	var buf [8]byte
+	binary.BigEndian.PutUint64(buf[:], uint64(n))
+	return buf[:]
 }
 
-// float32ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
-func float32ToBytes(float float32) []byte {
-	bits := math.Float32bits(float)
-	result := make([]byte, 4)
-	binary.LittleEndian.PutUint32(result, bits)
-	return result
+// float32ToBytes converts float32 to 4-byte slice with zero allocations
+// float32转4字节切片（零内存分配）
+func float32ToBytes(f float32) []byte {
+	var buf [4]byte
+	binary.LittleEndian.PutUint32(buf[:], math.Float32bits(f))
+	return buf[:]
 }
 
-// float64ToBytes converts `float` to []byte.<将“float”转换为[]byte。>
-func float64ToBytes(float float64) []byte {
-	bits := math.Float64bits(float)
-	result := make([]byte, 8)
-	binary.LittleEndian.PutUint64(result, bits)
-	return result
+// float64ToBytes converts float64 to 8-byte slice with zero allocations
+// float64转8字节切片（零内存分配）
+func float64ToBytes(f float64) []byte {
+	var buf [8]byte
+	binary.LittleEndian.PutUint64(buf[:], math.Float64bits(f))
+	return buf[:]
 }

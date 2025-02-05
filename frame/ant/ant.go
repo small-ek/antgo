@@ -6,7 +6,6 @@ import (
 	"github.com/small-ek/antgo/frame/serve"
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
-	"github.com/small-ek/antgo/utils/ants"
 	"log"
 	"net/http"
 )
@@ -155,7 +154,5 @@ func loadApp() {
 		initLog()
 		adb.InitDb(config.GetMaps("connections"))
 		initRedis()
-
-		ants.InitPool(config.GetInt("system.max_pool_count"))
 	}
 }

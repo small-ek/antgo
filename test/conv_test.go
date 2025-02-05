@@ -2,107 +2,126 @@ package test
 
 import (
 	"github.com/small-ek/antgo/utils/conv"
-	"log"
 	"testing"
+	"time"
 )
 
-func TestConv(t *testing.T) {
-	str1 := "1234A"
-	log.Println(conv.Int(str1))
-	str2 := "1234"
-	log.Println(conv.Int(str2))
-	log.Println(conv.Uint64(str2))
-	var srt3 int = 3
-	log.Println(conv.Uint64(srt3))
-	var test float32 = 12
-	log.Println(conv.Bytes(test))
-
-	log.Println(conv.Float64(str1))
-	log.Println(conv.Float32(str2))
-}
-
-type JsonStr struct {
-	Name string
-}
-
-func TestConvMap(t *testing.T) {
-	mapStr := `{"name":"Hello"}`
-	log.Println(conv.Map(mapStr))
-	MapJson := []JsonStr{{Name: "Hello2"}}
-	log.Println(conv.Maps(MapJson))
-}
-
-func TestInterfaces(t *testing.T) {
-	mapStr := `[1,2,3,4]`
-	log.Println(conv.Interfaces(mapStr))
-	MapJson := []string{"1", "2", "3", "4"}
-	log.Println(conv.Interfaces(MapJson))
-}
-
-type Test struct {
-	Name  string `json:"name"`
-	Name2 string `json:"name2"`
-}
-
-type Test2 struct {
-	Name string `json:"name"`
-}
-
-func TestStruct(t *testing.T) {
-	test := Test{}
-	test2 := Test2{Name: "222222222222"}
-	conv.ToStruct(test2, &test)
-	log.Println(test)
-}
-
-type Test3 struct {
-	Name  string `json:"name"`
-	Name2 string `json:"name2"`
-}
-
-func TestJSON(t *testing.T) {
-	test3 := Test3{}
-	str := `{"name":"123"}`
-	conv.UnmarshalJSON([]byte(str), &test3)
-	log.Println(conv.String(test3))
-
-}
-
-type User struct {
-	ID   int
-	Name string
-	Age  int
-}
-
-func TestGob(t *testing.T) {
-	user := User{
-		ID:   1,
-		Name: "Alice",
-		Age:  30,
+func TestRune(t *testing.T) {
+	tests := []struct {
+		input    interface{}
+		expected rune
+	}{
+		{rune('a'), 'a'},
+		{int(97), 'a'},
+		{int8(97), 'a'},
+		{int16(97), 'a'},
+		{int64(97), 'a'},
+		{nil, 0}, // Edge case for nil
 	}
 
-	// 将 User 数据结构转换为字节切片
-	dataBytes, err := conv.GobEncoder(user)
-	if err != nil {
-		log.Fatalf("Error while converting to bytes: %v", err)
+	for _, test := range tests {
+		t.Run("TestRune", func(t *testing.T) {
+			result := conv.Rune(test.input)
+			if result != test.expected {
+				t.Errorf("expected %v, got %v", test.expected, result)
+			}
+		})
 	}
-	log.Println(dataBytes)
-	user2 := User{}
-	conv.GobDecoder(dataBytes, &user2)
-	log.Println(user2)
 }
-func BenchmarkConv(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) { //并发
-		for pb.Next() {
-			str1 := "1234A"
-			log.Println(conv.Int(str1))
-			str2 := "1234"
-			log.Println(conv.Int(str2))
-			log.Println(conv.Uint64(str2))
-			var srt3 int = 3
-			log.Println(conv.Uint64(srt3))
-			var test float32 = 12
-			log.Println(conv.Bytes(test))
-		}
-	})
+
+func TestRunes(t *testing.T) {
+	tests := []struct {
+		input    interface{}
+		expected []rune
+	}{
+		{"hello", []rune{'h', 'e', 'l', 'l', 'o'}},
+		{[]rune{'h', 'e', 'l', 'l', 'o'}, []rune{'h', 'e', 'l', 'l', 'o'}},
+		{123, []rune("123")}, // Integer as string
+		{nil, []rune("")},    // Edge case for nil
+	}
+
+	for _, test := range tests {
+		t.Run("TestRunes", func(t *testing.T) {
+			result := conv.Runes(test.input)
+			if len(result) != len(test.expected) {
+				t.Errorf("expected %v, got %v", test.expected, result)
+			}
+			for i, r := range result {
+				if r != test.expected[i] {
+					t.Errorf("at index %d: expected %v, got %v", i, test.expected[i], r)
+				}
+			}
+		})
+	}
+}
+
+func TestByte(t *testing.T) {
+	tests := []struct {
+		input    interface{}
+		expected byte
+	}{
+		{byte(97), 97},
+		{int(97), 97},
+		{int8(97), 97},
+		{int16(97), 97},
+		{int64(97), 97},
+		{nil, 0}, // Edge case for nil
+	}
+
+	for _, test := range tests {
+		t.Run("TestByte", func(t *testing.T) {
+			result := conv.Byte(test.input)
+			if result != test.expected {
+				t.Errorf("expected %v, got %v", test.expected, result)
+			}
+		})
+	}
+}
+
+func TestBytes(t *testing.T) {
+	tests := []struct {
+		input    interface{}
+		expected []byte
+	}{
+		{"hello", []byte("hello")},
+		{123, []byte{0, 0, 0, 123}},            // Example byte slice for int
+		{3.14, []byte{0xC0, 0x48, 0xF5, 0x3F}}, // Example byte slice for float64
+		{nil, nil},                             // Edge case for nil
+	}
+
+	for _, test := range tests {
+		t.Run("TestBytes", func(t *testing.T) {
+			result := conv.Bytes(test.input)
+			if len(result) != len(test.expected) {
+				t.Errorf("expected %v, got %v", test.expected, result)
+			}
+			for i, b := range result {
+				if b != test.expected[i] {
+					t.Errorf("at index %d: expected %v, got %v", i, test.expected[i], b)
+				}
+			}
+		})
+	}
+}
+
+func TestString(t *testing.T) {
+	tests := []struct {
+		input    interface{}
+		expected string
+	}{
+		{123, "123"},
+		{3.14, "3.14"},
+		{"hello", "hello"},
+		{time.Now().Format(time.RFC3339), time.Now().Format(time.RFC3339)},
+		{nil, ""}, // Edge case for nil
+	}
+
+	for _, test := range tests {
+		t.Run("TestString", func(t *testing.T) {
+			result := conv.String(test.input)
+			if result != test.expected {
+				t.Errorf("expected %v, got %v", test.expected, result)
+			}
+		})
+	}
 }

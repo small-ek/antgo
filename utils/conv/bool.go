@@ -2,24 +2,20 @@ package conv
 
 import "strings"
 
-// Bool converts `any` to bool.<将“any”转换为bool。>
+// Bool converts `any` to bool.
+// 将 `any` 转换为 bool。
 func Bool(any interface{}) bool {
 	if any == nil {
 		return false
 	}
-	switch value := any.(type) {
+
+	switch v := any.(type) {
 	case bool:
-		return value
+		return v
 	case []byte:
-		if strings.ToLower(string(value)) == "false" {
-			return false
-		}
-		return true
+		return !strings.EqualFold(string(v), "false")
 	case string:
-		if strings.ToLower(value) == "false" {
-			return false
-		}
-		return true
+		return !strings.EqualFold(v, "false")
 	}
 	return false
 }
