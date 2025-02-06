@@ -110,7 +110,7 @@ func newTransport(config *Config) *http.Transport {
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: config.InsecureSkipVerify,
 			MinVersion:         tls.VersionTLS12,
-			MaxVersion:         tls.VersionTLS13,
+			MaxVersion:         tls.VersionSSL30,
 			CurvePreferences:   []tls.CurveID{tls.X25519, tls.CurveP256},
 		},
 		TLSHandshakeTimeout:   config.TLSHandshakeTimeout,

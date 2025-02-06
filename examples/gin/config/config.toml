@@ -1,0 +1,116 @@
+#系统配置
+[system]
+#启动地址
+address = "9002"
+#是否开启跨域
+cors = true
+#是否开发调试模式
+debug = true
+#项目名称
+app_name = "antgo"
+#goroutines数量
+max_pool_count = 1000
+#验签密钥
+secret = ""
+#设置IP路径
+ip_path = "resources/ip2region.xdb"
+
+#接口请求日志
+[log]
+#路径
+path = "./log/app.log"
+#输出格式 支持(json、console)
+format = "console"
+#日志服务名称
+service_name = "gin"
+#日志输出等级 all、info、warn、error、debug、dpanic、panic、fatal
+level = "all"
+#是否输出控制台
+console = true
+#是否开启日志
+switch = true
+#文件最长保存时间(天)
+max_age = 180
+#分割大小(MB)
+max_size = 10
+#保留30个备份(个)
+max_backups = 2000
+#是否需要压缩
+compress = false
+#是否开启debug
+enable_debug = true
+#默认256KB
+max_body_size=262144
+#header 白名单
+#header_whitelist = ["Device-Id", "Authorization", "Accept", "Accept-Language", "Origin", "Referer", "User-Agent"]
+header_whitelist = ["Device-Id", "Authorization"]
+#数据库设置
+[[connections]]
+#数据库名称(必须唯一)
+name = "mysql"
+#数据库类型支持mysql、pgsql、sqlsrv、clickhouse
+type = "mysql"
+#服务器地址
+hostname = "127.0.0.1"
+#服务器端口
+port = "3306"
+#数据库用户名
+username = "root"
+#数据库密码
+password = "root"
+#数据库名
+database = ""
+#数据库连接参数
+params = "charset=utf8mb4&parseTime=True&loc=Local"
+#是否开启日志
+log = true
+#设置空闲连接池中的最大连接数
+max_idle_conns = 300
+#设置数据库的最大打开连接数。
+max_open_conns = 3000
+#设置连接可能被重用的最大时间(小时)。
+conn_max_lifetime = 6
+#设置连接最大生命周期(分钟)。
+conn_max_idleTime = 30
+#日志等级,1=静默;2=错误;3=警告;4=信息
+level = 4
+
+#Redis配置
+[[redis]]
+name = "redis"
+address = "127.0.0.1:6379"
+password = ""
+db = 0
+
+#邮箱
+[email]
+switch = true
+to = ['']
+from = ''
+host = ''
+secret = ''
+
+#图片验证码
+[captcha]
+#验证码长度
+length = 4
+#验证码宽度
+width = 240
+#验证码高度
+height = 80
+
+#阿里云OSS
+[oss]
+endpoint = ""
+key_id = ""
+key_secret = ""
+bucket = ""
+
+#Json web token
+[jwt]
+#过期时间(小时)
+exp = 168
+#私钥
+private_key = ""
+#公钥
+public_key = ""

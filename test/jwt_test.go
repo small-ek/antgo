@@ -1,20 +1,14 @@
 package test
 
 import (
-	"flag"
-	"github.com/small-ek/antgo/os/alog"
-	"github.com/small-ek/antgo/utils/jwt"
-	"go.uber.org/zap"
-	"log"
-	"sync"
+	"github.com/small-ek/antgo/utils/ajwt"
 	"testing"
 	"time"
 )
 
-func TestJwt(t *testing.T) {
-
-	var PrivateKey = []byte(`
------BEGIN PRIVATE KEY-----
+// 用于测试的RSA密钥对（仅用于测试环境，请勿在生产环境中使用）
+// Test RSA key pair (for testing purposes only, do not use in production)
+const testRSAPrivateKeyPEM = `-----BEGIN PRIVATE KEY-----
 MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAMMBf8hUaDk+oCsQ
 ecIJDrRt+EktQaGE+11Un1YWgjelgJR68JcS+2HsSTjkd+aUYFuy7uo7Jc0ugQqN
 xTwPzyJXfIX0J3niM0MM4SNLiqGD+UYGJ3bbBiw33NPT4CQ0/ATKk7Y4kdGXWl9z
@@ -29,59 +23,109 @@ RGWHAkAN/lCJJ0j4Vv+nuvSzjAL5+If51NEs+1KfGbb5XNhAXEjlq0QwXVxWR6Ts
 Nwovyph0340C9XCajvvtIuQPq0gJNoBYbgIsLRGARWAc1BvD7I9/AkEAgQEnpQEI
 isXUlyKSsakm+M+hzkoJxlizUiM3tN9cIfsIBXdWv9LNGRp2gl8Sa69ri3EdqQXv
 0PcStMOn2IX1kw==
------END PRIVATE KEY-----
-`)
-	var PublicKey = []byte(`
------BEGIN PUBLIC KEY-----
+-----END PRIVATE KEY-----`
+
+const testRSAPublicKeyPEM = `-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDAX/IVGg5PqArEHnCCQ60bfhJ
 LUGhhPtdVJ9WFoI3pYCUevCXEvth7Ek45HfmlGBbsu7qOyXNLoEKjcU8D88iV3yF
 9Cd54jNDDOEjS4qhg/lGBid22wYsN9zT0+AkNPwEypO2OJHRl1pfczjKlemKlmrv
 PEqRQFBDR49ayaxSqwIDAQAB
------END PUBLIC KEY-----
-`)
+-----END PUBLIC KEY-----`
 
-	var data = map[string]interface{}{
-		"test": "test",
-	}
-	//var j, err = jwt.New(PublicKey, PrivateKey)
-	//log.Println(err)
-	//j = j.SetPublicKey(publicKey).SetPrivateKey(privateKey)
-	//var token, err2 = j.Encrypt(data, time.Now().Add(time.Minute*1).Unix())
-	//log.Println(token)
-	//log.Println(err2)
-	//var j2, err3 = jwt.New(PublicKey, nil)
-	//log.Println(err3)
-	//var getData, err4 = j2.Decode(token)
-	//log.Println(getData)
-	//log.Println(err4)
-	//var getData2, err5 = j2.Decode("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTIyMTc3MDQsImlhdCI6MTcxMTY5OTMwNCwibmJmIjoxNzExNjk5MzA0LCJ0ZXN0IjoidGVzdCJ9.nzs_r92fY-Z24GX6LtMeQBdQm2B63tY4gbzufx0Z61nXPoLLXcA9dH5zmQpfQ00ivfJd5SxzxDwF_tHzYagZCcGuSsDnnXNNkyCKfF6e2A4s5jYbQAt39x4frimRMclmckq7ko1uCEkeRiNCsctYm5XHEOT_PTKvecHkiGFXnb8")
-	//log.Println(getData2)
-	//log.Println(err5)
-	log.SetFlags(log.Llongfile | log.LstdFlags)
-	flag.Parse()
-	alog.New("./log/ek2.log").SetServiceName("api").Register()
+// TestGenerateAndParse 测试生成和解析JWT令牌
+// TestGenerateAndParse tests token generation and parsing.
+func TestGenerateAndParse(t *testing.T) {
+	// 初始化JwtManager并设置公钥和私钥
+	// Initialize JwtManager and set RSA keys.
+	jm := ajwt.New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
 
-	//if err != nil {
-	//	t.Fatalf("Failed to create JwtManagerFactory: %v", err)
-	//}
-
-	var wg sync.WaitGroup
-	numWorkers := 10000
-	wg.Add(numWorkers)
-
-	for i := 0; i < numWorkers; i++ {
-		go func() {
-			defer wg.Done()
-			jwtManagerFactory := jwt.New().SetPublicKey(PublicKey).SetPrivateKey(PrivateKey).SetExpiration(time.Hour * 24 * 7)
-			jwtManager, err11 := jwtManagerFactory.Generate(data)
-
-			jwtManager2, err12 := jwtManagerFactory.Parse(jwtManager)
-
-			alog.Write.Info("123", zap.Any("jwtManager2", jwtManager2), zap.Error(err12), zap.Error(err11))
-			// 在这里执行对 JwtManager 实例的操作
-			// 例如，调用 Encrypt 或 Decode 方法
-		}()
+	// 设置自定义声明 / Define custom claims.
+	claims := map[string]interface{}{
+		"user": "john",
+		"role": "admin",
 	}
 
-	wg.Wait()
+	// 生成Token / Generate token.
+	token, err := jm.Generate(claims)
+	if err != nil {
+		t.Fatalf("Generate token failed: %v", err)
+	}
+
+	// 解析Token / Parse token.
+	parsedClaims, err := jm.Parse(token)
+	if err != nil {
+		t.Fatalf("Parse token failed: %v", err)
+	}
+
+	// 验证声明中的数据 / Validate claims.
+	if parsedClaims["user"] != "john" {
+		t.Errorf("Expected user 'john', got %v", parsedClaims["user"])
+	}
+	if parsedClaims["role"] != "admin" {
+		t.Errorf("Expected role 'admin', got %v", parsedClaims["role"])
+	}
+}
+
+// TestInvalidToken 测试解析一个无效的Token
+// TestInvalidToken tests parsing an invalid token string.
+func TestInvalidToken(t *testing.T) {
+	jm := ajwt.New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
+	_, err := jm.Parse("invalid.token.here")
+	if err == nil {
+		t.Fatal("Expected error for invalid token, got nil")
+	}
+}
+
+// TestMissingKeys 测试缺少密钥时的行为
+// TestMissingKeys tests the behavior when required keys are missing.
+func TestMissingKeys(t *testing.T) {
+	jm := ajwt.New() // 未设置公钥和私钥
+	claims := map[string]interface{}{
+		"user": "john",
+	}
+
+	// 测试缺少私钥时生成Token应返回错误 / Generate should error if private key is not set.
+	_, err := jm.Generate(claims)
+	if err == nil {
+		t.Error("Expected error for missing private key, got nil")
+	}
+
+	// 设置私钥，但不设置公钥
+	jm.SetPrivateKey([]byte(testRSAPrivateKeyPEM))
+	token, err := jm.Generate(claims)
+	if err != nil {
+		t.Fatalf("Generate token failed: %v", err)
+	}
+
+	// 解析Token时应返回缺少公钥的错误 / Parse should error if public key is not set.
+	_, err = jm.Parse(token)
+	if err == nil {
+		t.Error("Expected error for missing public key, got nil")
+	}
+}
+
+// TestCustomExpiration 测试自定义过期时间
+// TestCustomExpiration tests token expiration with a custom expiration duration.
+func TestCustomExpiration(t *testing.T) {
+	// 初始化JwtManager，并设置公钥和私钥
+	jm := ajwt.New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
+
+	claims := map[string]interface{}{
+		"user": "john",
+	}
+
+	// 生成一个1秒后过期的Token
+	token, err := jm.Generate(claims, time.Second*1)
+	if err != nil {
+		t.Fatalf("Generate token failed: %v", err)
+	}
+
+	// 等待2秒以确保Token过期
+	time.Sleep(2 * time.Second)
+
+	_, err = jm.Parse(token)
+
+	if err != nil {
+		t.Error("Expected token to be expired, but no error returned")
+	}
 }
