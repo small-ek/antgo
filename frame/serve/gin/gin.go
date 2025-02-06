@@ -3,19 +3,19 @@ package gin
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/frame/ant"
 	"github.com/small-ek/antgo/frame/serve"
 	"github.com/small-ek/antgo/os/alog"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 )
 
-// Gin structure value is a Gin GoAdmin adapter.
+// Gin 结构体是Gin框架的适配器，用于集成Gin到自定义框架中
+// Gin struct is an adapter for Gin framework, integrating Gin into the custom framework.
 type Gin struct {
 	serve.BaseAdapter
 	ctx *gin.Context
@@ -27,56 +27,75 @@ func init() {
 	ant.Register(new(Gin))
 }
 
-// Name implements the method Adapter.Name.
-func (gins *Gin) Name() string {
+// Name 返回当前适配器名称
+// Name returns the name of the current adapter.
+func (g *Gin) Name() string {
 	return "gin"
 }
 
-// SetApp implements the method Adapter.Use.
-func (gins *Gin) SetApp(app interface{}) error {
-	var (
-		eng *gin.Engine
-		ok  bool
-	)
-	if eng, ok = app.(*gin.Engine); !ok {
-		return errors.New("gin adapter SetApp: wrong parameter")
+// SetApp 设置并验证Gin引擎实例
+// SetApp sets and validates the Gin engine instance.
+func (g *Gin) SetApp(app interface{}) error {
+	engine, ok := app.(*gin.Engine)
+	if !ok {
+		return errors.New("gin adapter SetApp: invalid parameter type")
 	}
-	gins.app = eng
+
+	// 设置生产模式提升性能
+	// Set production mode to enhance performance
+	gin.SetMode(gin.ReleaseMode)
+	g.app = engine
 	return nil
 }
 
-// Run http service<不加载配置服务>
-func (eng *Gin) Run(addr string) {
-	eng.Srv = &http.Server{
+// Run 启动HTTP服务（不加载配置服务）
+// Run starts the HTTP server (without loading configuration service)
+func (g *Gin) Run(addr string) {
+	// 初始化HTTP服务器配置
+	// Initialize HTTP server configuration
+	g.Srv = &http.Server{
 		Addr:    ":" + addr,
-		Handler: eng.app,
+		Handler: g.app,
 	}
-	fmt.Printf("  PID: %d \n", os.Getpid())
-	fmt.Println("  App running at:")
-	fmt.Println("  -Local: http://127.0.0.1" + eng.Srv.Addr)
 
+	// 输出服务启动信息
+	// Print service startup information
+	alog.Write.Info("Service started",
+		zap.Int("pid", os.Getpid()),
+		zap.String("address", "http://127.0.0.1"+g.Srv.Addr),
+	)
+
+	// 启动异步HTTP服务
+	// Start asynchronous HTTP service
 	go func() {
-		// 服务连接
-		if err := eng.Srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+		if err := g.Srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			alog.Write.Fatal("Server startup failed", zap.Error(err))
 		}
 	}()
-	return
 }
 
-// Close http service<关闭当前一些服务>
-func (eng *Gin) Close() {
-	quit := make(chan os.Signal)
+// Close 实现优雅的HTTP服务关闭
+// Close implements graceful shutdown of the HTTP service
+func (g *Gin) Close() {
+	// 创建带缓冲的信号通道
+	// Create buffered signal channel
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
-	<-quit
-	alog.Warn("Exit service")
 
+	// 阻塞等待关闭信号
+	// Block waiting for shutdown signal
+	<-quit
+
+	// 创建带超时的上下文
+	// Create timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := eng.Srv.Shutdown(ctx); err != nil {
-		alog.Error("Server Shutdown:" + err.Error())
+	// 执行优雅关闭
+	// Perform graceful shutdown
+	if err := g.Srv.Shutdown(ctx); err != nil {
+		alog.Write.Error("Server shutdown error", zap.Error(err))
+	} else {
+		alog.Write.Info("Service shutdown", zap.Int("pid", os.Getpid()))
 	}
-
-	return
 }

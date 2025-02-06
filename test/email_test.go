@@ -1,12 +1,17 @@
 package test
 
 import (
+	"fmt"
 	"github.com/small-ek/antgo/aemail"
-	"log"
 	"testing"
 )
 
 func TestEmail(t *testing.T) {
-	err := aemail.New("56494565@qq.com").SetTo([]string{"56494565@qq.com"}).SetTitle("test").SetText("test2223223").SetPassword("fdtshicbbvybbiic").SetFilePath([]string{"test.txt"}).Send().Error()
-	log.Println(err)
+	mailer := aemail.NewMailer("56494565@qq.com", "fdtshicbbvybbiic")
+	err := mailer.QuickSend(
+		[]string{"56494565@qq.com"},
+		"测试邮件",
+		"这是一封测试邮件",
+	)
+	fmt.Println(err)
 }

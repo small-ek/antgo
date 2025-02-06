@@ -102,7 +102,9 @@ func Logger() gin.HandlerFunc {
 		if maxBodySize > 0 && len(responseBody) > maxBodySize {
 			responseBody = responseBody[:maxBodySize]
 		}
-		logFields = append(logFields, zap.ByteString("response_body", responseBody))
+		if enableDebugLog {
+			logFields = append(logFields, zap.ByteString("response_body", responseBody))
+		}
 
 		// 根据状态码记录不同级别日志 / Log different levels based on status code
 		switch {

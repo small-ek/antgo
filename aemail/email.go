@@ -2,179 +2,152 @@ package aemail
 
 import (
 	"crypto/tls"
-	"github.com/jordan-wright/email"
+	"fmt"
 	"net/smtp"
+	"strings"
+
+	"github.com/jordan-wright/email"
 )
 
-// Email Email parameter structure
+type Mailer struct {
+	from     string
+	password string
+	server   string
+	host     string
+	port     int
+	useTLS   bool
+}
+
 type Email struct {
-	From     string   //Send email
-	To       []string //Accept mailbox
-	Cc       []string //Set cc
-	Bcc      []string //Set Bcc
-	Title    string   //Email title
-	Text     string   //Email Text
-	Html     string   //Email Html
-	Password string   //Email password
-	Address  string   //Send email address
-	Host     string   //Send email host
-	FilePath []string //Email attachment path
-	Err      error    //Email error
+	To      []string
+	Subject string
+	Text    string
+	HTML    string
+	Files   []string
 }
 
-// SetFrom Set Send email
-func (e *Email) SetFrom(from string) *Email {
-	e.From = from
-	return e
-}
-
-// SetTo Set To
-func (e *Email) SetTo(to []string) *Email {
-	e.To = to
-	return e
-}
-
-// SetTitle Set Title
-func (e *Email) SetTitle(title string) *Email {
-	e.Title = title
-	return e
-}
-
-// SetText Set Text
-func (e *Email) SetText(text string) *Email {
-	e.Text = text
-	return e
-}
-
-// SetHtml Set Html
-func (e *Email) SetHtml(html string) *Email {
-	e.Html = html
-	return e
-}
-
-// SetPassword Set Password
-func (e *Email) SetPassword(password string) *Email {
-	e.Password = password
-	return e
-}
-
-// SetAddress Set Address
-func (e *Email) SetAddress(address string) *Email {
-	e.Address = address
-	return e
-}
-
-// SetHost Set Host
-func (e *Email) SetHost(host string) *Email {
-	e.Host = host
-	return e
-}
-
-// SetFilePath Set Email attachment path
-func (e *Email) SetFilePath(filePath []string) *Email {
-	e.FilePath = filePath
-	return e
-}
-
-// New 创建
-func New(from ...string) *Email {
-	if len(from[0]) > 0 {
-		return &Email{From: from[0]}
+// NewMailer 创建邮件客户端（推荐方式）
+// 自动识别常见邮箱服务的 SMTP 配置
+func NewMailer(from, password string) *Mailer {
+	m := &Mailer{
+		from:     from,
+		password: password,
+		useTLS:   true, // 默认启用 TLS
 	}
-	return &Email{}
+
+	domain := strings.Split(from, "@")[1]
+	switch {
+	case strings.Contains(domain, "qq.com"):
+		m.server = "smtp.qq.com:465"
+		m.host = "smtp.qq.com"
+		m.port = 465
+	case strings.Contains(domain, "gmail.com"):
+		m.server = "smtp.gmail.com:587"
+		m.host = "smtp.gmail.com"
+		m.port = 587
+	case strings.Contains(domain, "163.com"):
+		m.server = "smtp.163.com:465"
+		m.host = "smtp.163.com"
+		m.port = 465
+	default:
+		m.server = "smtp." + domain + ":465"
+		m.host = "smtp." + domain
+		m.port = 465
+	}
+
+	return m
 }
 
-// Send Email
-func (e *Email) Send() error {
-	emails := email.NewEmail()
-	//设置发送方的邮箱
-	emails.From = e.From
-	// 设置接收方的邮箱
-	emails.To = e.To
-	//设置主题
-	emails.Subject = e.Title
-	//设置文件发送的内容
+// WithCustomSMTP 自定义 SMTP 配置
+func (m *Mailer) WithCustomSMTP(host string, port int, useTLS bool) *Mailer {
+	m.server = fmt.Sprintf("%s:%d", host, port)
+	m.host = host
+	m.port = port
+	m.useTLS = useTLS
+	return m
+}
+
+// Send 发送邮件（自动选择 TLS 配置）
+func (m *Mailer) Send(e *Email) error {
+	em := email.NewEmail()
+	em.From = m.from
+	em.To = e.To
+	em.Subject = e.Subject
+
 	if e.Text != "" {
-		emails.Text = []byte(e.Text)
+		em.Text = []byte(e.Text)
 	}
-	//设置文件发送的html
-	if e.Html != "" {
-		emails.HTML = []byte(e.Html)
+	if e.HTML != "" {
+		em.HTML = []byte(e.HTML)
 	}
-	//附件
-	if len(e.FilePath) > 0 {
-		for i := 0; i < len(e.FilePath); i++ {
-			_, err := emails.AttachFile(e.FilePath[i])
-			if err != nil {
-				e.Err = err
-			}
+
+	for _, f := range e.Files {
+		if _, err := em.AttachFile(f); err != nil {
+			return fmt.Errorf("附件添加失败: %w", err)
 		}
 	}
-	//设置服务器相关的配置
-	if e.Address == "" {
-		e.Address = "smtp.qq.com:25"
-	}
-	//发送地址
-	if e.Host == "" {
-		e.Host = "smtp.qq.com"
-	}
-	//设置抄送如果抄送多人逗号隔开
-	if len(e.Cc) > 0 {
-		emails.Cc = e.Cc
-	}
-	//设置秘密抄送
-	if len(e.Bcc) > 0 {
-		emails.Bcc = e.Bcc
-	}
 
-	return emails.Send(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host))
+	auth := smtp.PlainAuth("", m.from, m.password, m.host)
+
+	if m.useTLS {
+		return em.SendWithTLS(
+			m.server,
+			auth,
+			&tls.Config{ServerName: m.host},
+		)
+	}
+	return em.Send(m.server, auth)
 }
 
-// SendWithTLS  sends an email over tls with an optional TLS config.
-func (e *Email) SendWithTLS() error {
-	emails := email.NewEmail()
-	//设置发送方的邮箱
-	emails.From = e.From
-	// 设置接收方的邮箱
-	emails.To = e.To
-	//设置主题
-	emails.Subject = e.Title
-	//设置文件发送的内容
-	if e.Text != "" {
-		emails.Text = []byte(e.Text)
-	}
-	//设置文件发送的html
-	if e.Html != "" {
-		emails.HTML = []byte(e.Html)
-	}
-	//附件
-	if len(e.FilePath) > 0 {
-		for i := 0; i < len(e.FilePath); i++ {
-			_, err := emails.AttachFile(e.FilePath[i])
-			if err != nil {
-				e.Err = err
-			}
-		}
-	}
-	//设置服务器相关的配置
-	if e.Address == "" {
-		e.Address = "smtp.qq.com:25"
-	}
-	//发送地址
-	if e.Host == "" {
-		e.Host = "smtp.qq.com"
-	}
-	//设置抄送如果抄送多人逗号隔开
-	if len(e.Cc) > 0 {
-		emails.Cc = e.Cc
-	}
-	//设置秘密抄送
-	if len(e.Bcc) > 0 {
-		emails.Bcc = e.Bcc
-	}
-	tlsConfig := &tls.Config{
-		ServerName: e.Host, // 保证和 addr的host一致
-	}
+// QuickSend 快速发送文本邮件
+func (m *Mailer) QuickSend(to []string, subject, text string) error {
+	return m.Send(&Email{
+		To:      to,
+		Subject: subject,
+		Text:    text,
+	})
+}
 
-	return emails.SendWithTLS(e.Address, smtp.PlainAuth("", e.From, e.Password, e.Host), tlsConfig)
+//================= 高级用法 =================//
+
+// EmailOption 邮件配置函数类型
+type EmailOption func(*Email)
+
+// NewEmail 创建邮件对象
+func NewEmail(opts ...EmailOption) *Email {
+	e := &Email{}
+	for _, opt := range opts {
+		opt(e)
+	}
+	return e
+}
+
+func WithTo(to ...string) EmailOption {
+	return func(e *Email) {
+		e.To = to
+	}
+}
+
+func WithSubject(subject string) EmailOption {
+	return func(e *Email) {
+		e.Subject = subject
+	}
+}
+
+func WithText(text string) EmailOption {
+	return func(e *Email) {
+		e.Text = text
+	}
+}
+
+func WithHTML(html string) EmailOption {
+	return func(e *Email) {
+		e.HTML = html
+	}
+}
+
+func WithFiles(files ...string) EmailOption {
+	return func(e *Email) {
+		e.Files = files
+	}
 }

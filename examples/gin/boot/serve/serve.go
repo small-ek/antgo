@@ -39,6 +39,14 @@ func load() *gin.Engine {
 		})
 	})
 
+	app.GET("/query", func(c *gin.Context) {
+		var list = make([]map[string]interface{}, 0)
+		ant.Db().Table("sys_menu").Find(&list)
+		c.JSON(200, gin.H{
+			"list": list,
+		})
+	})
+
 	app.POST("/error", func(c *gin.Context) {
 		var test = []int{1, 2, 3}
 		fmt.Println(test[4])

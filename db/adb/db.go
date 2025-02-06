@@ -3,6 +3,9 @@ package adb
 import (
 	"database/sql"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/utils/conv"
 	"go.uber.org/zap"
@@ -13,15 +16,16 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
-	"sync"
-	"time"
 )
 
+// Global Master map 存储所有数据库连接对象（全局唯一）
 var (
-	Master map[string]*gorm.DB
+	Master = make(map[string]*gorm.DB)
 	once   sync.Once
 )
 
+// DatabaseConfig 数据库配置结构体
+// DatabaseConfig represents the configuration for a database connection.
 type DatabaseConfig struct {
 	Name            string              `json:"name"`
 	Type            string              `json:"type"`
@@ -36,46 +40,45 @@ type DatabaseConfig struct {
 	MaxIdleConns    int                 `json:"max_idle_conns"`
 	MaxOpenConns    int                 `json:"max_open_conns"`
 	ConnMaxLifetime int                 `json:"conn_max_lifetime"`
-	ConnMaxIdleTime int                 `json:"conn_max_idleTime"`
+	ConnMaxIdleTime int                 `json:"conn_max_idle_time"` // 注意：修改为统一格式
 	LogLevel        gormlogger.LogLevel `json:"level"`
 }
 
-// InitDb initializes the database connections based on the configuration 初始化基于配置的数据库连接
+// InitDb 初始化数据库连接
+// InitDb initializes database connections based on the provided configuration.
+// connections is a slice of maps representing the configuration for each database.
 func InitDb(connections []map[string]any) {
 	once.Do(func() {
-		Master = make(map[string]*gorm.DB)
-
-		for i := 0; i < len(connections); i++ {
-			value := connections[i]
-			config := DatabaseConfig{}
-			err := conv.ToStruct(value, &config)
-			if err != nil {
+		for _, value := range connections {
+			var config DatabaseConfig
+			if err := conv.ToStruct(value, &config); err != nil {
 				alog.Write.Panic("Failed to convert database config to struct:", zap.Error(err))
 			}
 
-			if value["name"] != "" {
-				db, err2 := CreateConnection(config)
-				if err2 != nil {
-					alog.Write.Panic("Failed to initialize database connection "+config.Name+" :", zap.Error(err2))
+			// 仅当 name 不为空时初始化连接 / Initialize connection only if name is provided
+			if config.Name != "" {
+				db, err := CreateConnection(config)
+				if err != nil {
+					alog.Write.Panic("Failed to initialize database connection "+config.Name+" : ", zap.Error(err))
 				}
 				Master[config.Name] = db
 			}
-
 		}
 	})
-
 }
 
-// GetDatabase retrieves a database connection by name 通过名称检索数据库连接
+// GetDatabase 根据名称获取数据库连接对象
+// GetDatabase retrieves a database connection by its name.
 func GetDatabase(name string) *gorm.DB {
 	db, exists := Master[name]
 	if !exists {
-		alog.Write.Error("Database connection not found:", zap.String("name", name))
+		alog.Write.Error("Database connection not found :", zap.String("name", name))
 	}
 	return db
 }
 
-// generateDSN generates a DSN string based on the database config 生成基于数据库配置的DSN字符串
+// generateDSN 根据数据库配置生成 DSN 字符串
+// generateDSN generates a DSN string based on the provided database configuration.
 func generateDSN(config DatabaseConfig) string {
 	switch config.Type {
 	case "mysql":
@@ -95,7 +98,8 @@ func generateDSN(config DatabaseConfig) string {
 	}
 }
 
-// configureConnectionPool sets up the connection pool parameters for the database connection 设置数据库连接的连接池参数
+// configureConnectionPool 设置数据库连接池参数
+// configureConnectionPool configures the connection pool settings for a database connection.
 func configureConnectionPool(sqlDB *sql.DB, config DatabaseConfig) {
 	if config.MaxIdleConns > 0 {
 		sqlDB.SetMaxIdleConns(config.MaxIdleConns)
@@ -111,12 +115,19 @@ func configureConnectionPool(sqlDB *sql.DB, config DatabaseConfig) {
 	}
 }
 
-// CreateConnection creates a single database connection based on the configuration 创建基于配置的单个数据库连接
-func CreateConnection(config DatabaseConfig) (db *gorm.DB, err error) {
+// CreateConnection 根据配置创建单个数据库连接
+// CreateConnection creates a single database connection based on the provided configuration.
+func CreateConnection(config DatabaseConfig) (*gorm.DB, error) {
+	// 若未提供 DSN，则自动生成 / Automatically generate DSN if not provided.
 	if config.DSN == "" {
 		config.DSN = generateDSN(config)
 	}
 
+	var (
+		db  *gorm.DB
+		err error
+	)
+	// 根据数据库类型选择对应驱动 / Select appropriate driver based on database type.
 	switch config.Type {
 	case "mysql":
 		db, err = config.Open(Mysql(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
@@ -130,6 +141,10 @@ func CreateConnection(config DatabaseConfig) (db *gorm.DB, err error) {
 		return nil, fmt.Errorf("unsupported database type: %s", config.Type)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err
@@ -139,59 +154,65 @@ func CreateConnection(config DatabaseConfig) (db *gorm.DB, err error) {
 	return db, nil
 }
 
-// getConfig
+// getConfig 返回 GORM 的配置对象
+// getConfig returns a GORM configuration object based on logging settings.
 func getConfig(isLog bool, level gormlogger.LogLevel) *gorm.Config {
+	cfg := &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+		SkipDefaultTransaction:                   true,
+		PrepareStmt:                              true,
+		AllowGlobalUpdate:                        false,
+	}
+
 	if isLog {
+		// 初始化自定义 Zap 日志记录器，并设置为默认日志记录器 / Initialize a custom Zap logger and set it as the default logger.
 		zapLog := New(zap.L())
 		zapLog.SetAsDefault()
-		return &gorm.Config{
-			Logger:                                   zapLog.LogMode(level),
-			DisableForeignKeyConstraintWhenMigrating: true,
-			SkipDefaultTransaction:                   true,
-			PrepareStmt:                              true,
-			AllowGlobalUpdate:                        false,
+		cfg.Logger = zapLog.LogMode(level)
+	}
+	return cfg
+}
+
+// Open 使用指定的 Dialector 和选项打开数据库连接
+// Open opens a database connection using the provided Dialector and GORM options.
+func (d *DatabaseConfig) Open(dialector gorm.Dialector, opts *gorm.Config) (*gorm.DB, error) {
+	db, err := gorm.Open(dialector, opts)
+	if err != nil {
+		// 记录错误，但不直接 panic，交由调用者处理 / Log error and return it for the caller to handle.
+		alog.Write.Panic("gorm open error :", zap.Error(err))
+	}
+	return db, nil
+}
+
+// Use 为指定数据库连接添加插件
+// Use applies a GORM plugin to the database connection identified by name.
+func (d *DatabaseConfig) Use(name string, plugin gorm.Plugin) {
+	if db, exists := Master[name]; exists {
+		if err := db.Use(plugin); err != nil {
+			alog.Write.Error("Failed to apply plugin:", zap.Error(err))
 		}
 	} else {
-		return &gorm.Config{
-			DisableForeignKeyConstraintWhenMigrating: true,
-			SkipDefaultTransaction:                   true,
-			PrepareStmt:                              true,
-			AllowGlobalUpdate:                        false,
-		}
+		alog.Write.Error("Database connection not found when applying plugin:", zap.String("name", name))
 	}
 }
 
-// Open connection
-func (d *DatabaseConfig) Open(Dialector gorm.Dialector, opts gorm.Option) (db *gorm.DB, err error) {
-	db, err = gorm.Open(Dialector, opts)
-	if err != nil {
-		alog.Write.Panic("gorm open error:", zap.Error(err))
-	}
-	return
-}
-
-// Use
-func (d *DatabaseConfig) Use(name string, plugin gorm.Plugin) {
-	if err := Master[name].Use(plugin); err != nil {
-		alog.Write.Error("Use", zap.Error(err))
-	}
-}
-
-// Mysql connection Mysql连接
+// Mysql 返回 MySQL 的 Dialector 配置
+// Mysql returns the GORM Dialector for MySQL.
 func Mysql(dsn string) gorm.Dialector {
-	defaultPrecision := 3 // 设置默认的时间精度为 3（毫秒）
+	defaultPrecision := 3 // 默认时间精度设为3（毫秒） / Set default time precision to 3 (milliseconds)
 	return mysql.New(mysql.Config{
-		DSN:                       dsn, // DSN data source name
-		DefaultStringSize:         256, // string 类型字段的默认长度
+		DSN:                       dsn,
+		DefaultStringSize:         256, // 默认字符串长度 / Default length for string fields
 		DefaultDatetimePrecision:  &defaultPrecision,
-		DisableDatetimePrecision:  false, // 支持 datetime 精度
-		DontSupportRenameIndex:    false, // 支持直接重命名索引（适用于 MySQL 8.0+）
-		DontSupportRenameColumn:   false, // 支持直接重命名列（适用于 MySQL 8.0+）
-		SkipInitializeWithVersion: false, // 自动初始化版本特性
+		DisableDatetimePrecision:  false, // 支持 datetime 精度 / Enable datetime precision
+		DontSupportRenameIndex:    false, // 支持直接重命名索引（适用于 MySQL 8.0+） / Support renaming indexes (MySQL 8.0+)
+		DontSupportRenameColumn:   false, // 支持直接重命名列（适用于 MySQL 8.0+） / Support renaming columns (MySQL 8.0+)
+		SkipInitializeWithVersion: false, // 自动初始化版本特性 / Automatically initialize version-specific features
 	})
 }
 
-// Postgres connection Postgres连接
+// Postgres 返回 PostgreSQL 的 Dialector 配置
+// Postgres returns the GORM Dialector for PostgreSQL.
 func Postgres(dsn string) gorm.Dialector {
 	return postgres.New(postgres.Config{
 		DSN:                  dsn,
@@ -200,32 +221,35 @@ func Postgres(dsn string) gorm.Dialector {
 	})
 }
 
-// Sqlserver connection Sqlserver连接
+// Sqlserver 返回 SQL Server 的 Dialector 配置
+// Sqlserver returns the GORM Dialector for SQL Server.
 func Sqlserver(dsn string) gorm.Dialector {
 	return sqlserver.Open(dsn)
 }
 
-// Distributed 分布式
+// Distributed 设置分布式数据库，返回 dbresolver 插件实例
+// Distributed configures a distributed database using GORM's dbresolver plugin.
+// 'config' specifies the resolver configuration, and 'datas' represents the data sources.
 func (d *DatabaseConfig) Distributed(config dbresolver.Config, datas ...interface{}) *dbresolver.DBResolver {
 	return dbresolver.Register(config, datas)
 }
 
-// Close 关闭数据库
+// Close 关闭所有数据库连接（除了名称为 "default" 的连接）
+// Close closes all database connections except for the one named "default".
 func Close() {
 	for name, db := range Master {
-		if name != "default" {
-			sqlDB, err := db.DB()
-			if err != nil {
-				alog.Write.Error("Error retrieving DB instance for "+name+":", zap.Error(err))
-				continue
-			}
-			if err = sqlDB.Close(); err != nil {
-				alog.Write.Error("Error closing DB connection for "+name+":", zap.Error(err))
-			} else {
-				alog.Write.Warn("Database connection '" + name + "' closed successfully")
-			}
+		if name == "default" {
+			continue
 		}
-
+		sqlDB, err := db.DB()
+		if err != nil {
+			alog.Write.Error("Error retrieving DB instance for "+name+"：", zap.Error(err))
+			continue
+		}
+		if err = sqlDB.Close(); err != nil {
+			alog.Write.Error("Error closing DB connection for "+name+"：", zap.Error(err))
+		} else {
+			alog.Write.Info("Database connection '" + name + "' closed successfully")
+		}
 	}
-
 }

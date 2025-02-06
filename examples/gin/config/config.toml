@@ -59,7 +59,7 @@ username = "root"
 #数据库密码
 password = "root"
 #数据库名
-database = ""
+database = "antgo"
 #数据库连接参数
 params = "charset=utf8mb4&parseTime=True&loc=Local"
 #是否开启日志
