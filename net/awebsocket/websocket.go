@@ -164,6 +164,6 @@ type Login struct {
 
 // GetUserKey 获取用户的Key
 func (get *Login) GetUserKey() (key string) {
-	key = ahash.Sha1(get.AppId + get.UserId)
+	key = ahash.SHA1(get.AppId + get.UserId)
 	return
 }

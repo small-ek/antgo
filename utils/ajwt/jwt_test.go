@@ -1,7 +1,6 @@
-package test
+package ajwt
 
 import (
-	"github.com/small-ek/antgo/utils/ajwt"
 	"testing"
 	"time"
 )
@@ -37,7 +36,7 @@ PEqRQFBDR49ayaxSqwIDAQAB
 func TestGenerateAndParse(t *testing.T) {
 	// 初始化JwtManager并设置公钥和私钥
 	// Initialize JwtManager and set RSA keys.
-	jm := ajwt.New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
+	jm := New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
 
 	// 设置自定义声明 / Define custom claims.
 	claims := map[string]interface{}{
@@ -69,7 +68,7 @@ func TestGenerateAndParse(t *testing.T) {
 // TestInvalidToken 测试解析一个无效的Token
 // TestInvalidToken tests parsing an invalid token string.
 func TestInvalidToken(t *testing.T) {
-	jm := ajwt.New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
+	jm := New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
 	_, err := jm.Parse("invalid.token.here")
 	if err == nil {
 		t.Fatal("Expected error for invalid token, got nil")
@@ -79,7 +78,7 @@ func TestInvalidToken(t *testing.T) {
 // TestMissingKeys 测试缺少密钥时的行为
 // TestMissingKeys tests the behavior when required keys are missing.
 func TestMissingKeys(t *testing.T) {
-	jm := ajwt.New() // 未设置公钥和私钥
+	jm := New() // 未设置公钥和私钥
 	claims := map[string]interface{}{
 		"user": "john",
 	}
@@ -108,7 +107,7 @@ func TestMissingKeys(t *testing.T) {
 // TestCustomExpiration tests token expiration with a custom expiration duration.
 func TestCustomExpiration(t *testing.T) {
 	// 初始化JwtManager，并设置公钥和私钥
-	jm := ajwt.New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
+	jm := New().SetPrivateKey([]byte(testRSAPrivateKeyPEM)).SetPublicKey([]byte(testRSAPublicKeyPEM))
 
 	claims := map[string]interface{}{
 		"user": "john",

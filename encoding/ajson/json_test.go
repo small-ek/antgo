@@ -1,7 +1,6 @@
-package test
+package ajson
 
 import (
-	"github.com/small-ek/antgo/encoding/ajson"
 	"log"
 	"testing"
 )
@@ -17,11 +16,11 @@ func TestJson(t *testing.T) {
 	    ]
 		}
 	}]`
-		var result = ajson.Decode([]byte(jsonStr)).Get("0").Get("users").Get("list").Array()
+		var result = Decode([]byte(jsonStr)).Get("0").Get("users").Get("list").Array()
 		log.Println(result)
-		log.Println(ajson.Encode(map[string]interface{}{"name": "21"}))
+		log.Println(Encode(map[string]interface{}{"name": "21"}))
 
-		var result2 = ajson.Decode([]byte(jsonStr)).Get("0.users.list").Interface()
+		var result2 = Decode([]byte(jsonStr)).Get("0.users.list").Interface()
 		log.Println(result2)
 	}
 }

@@ -9,6 +9,7 @@ import (
 	_ "github.com/small-ek/antgo/frame/serve/gin"
 	"github.com/small-ek/antgo/os/config"
 	"io/ioutil"
+	"os"
 )
 
 // LoadSrv Load Api service<加载API服务>
@@ -53,6 +54,10 @@ func load() *gin.Engine {
 		c.JSON(200, gin.H{
 			"message": "Hello World!",
 		})
+	})
+
+	app.GET("/pid", func(c *gin.Context) {
+		c.String(200, fmt.Sprintf("%d", os.Getpid()))
 	})
 	return app
 
