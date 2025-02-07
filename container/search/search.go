@@ -5,9 +5,9 @@ import (
 	"unsafe"
 )
 
-// Search 线性搜索优化版（性能提升约15%-20%）
+// IndexOf 线性搜索优化版（性能提升约15%-20%）
 // Optimized linear search (15-20% performance improvement)
-func Search[T comparable](slice []T, key T) int {
+func IndexOf[T comparable](slice []T, key T) int {
 	// 使用指针操作优化内存访问
 	// Optimize memory access using pointer operations
 	if len(slice) == 0 {
@@ -28,9 +28,9 @@ func Search[T comparable](slice []T, key T) int {
 	return -1
 }
 
-// SearchOrdered 二分搜索优化版（性能提升约10%-15%）
+// BinarySearch 二分搜索优化版（性能提升约10%-15%）
 // Optimized binary search (10-15% performance improvement)
-func SearchOrdered[T constraints.Ordered](sortedSlice []T, key T) int {
+func BinarySearch[T constraints.Ordered](sortedSlice []T, key T) int {
 	n := len(sortedSlice)
 	if n == 0 {
 		return -1

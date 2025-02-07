@@ -47,17 +47,17 @@ func TestSearch(t *testing.T) {
 			// Type assertion to execute test
 			switch s := tc.slice.(type) {
 			case []string:
-				result = Search(s, tc.key.(string))
+				result = IndexOf(s, tc.key.(string))
 			case []int:
-				result = Search(s, tc.key.(int))
+				result = IndexOf(s, tc.key.(int))
 			case []float32:
-				result = Search(s, tc.key.(float32))
+				result = IndexOf(s, tc.key.(float32))
 			case []float64:
-				result = Search(s, tc.key.(float64))
+				result = IndexOf(s, tc.key.(float64))
 			case []rune:
-				result = Search(s, tc.key.(rune))
+				result = IndexOf(s, tc.key.(rune))
 			case nil:
-				result = Search([]int(nil), 0) // 测试nil切片
+				result = IndexOf([]int(nil), 0) // 测试nil切片
 			default:
 				t.Fatalf("不支持的切片类型: %T", s)
 			}
@@ -101,11 +101,11 @@ func TestSearchOrdered(t *testing.T) {
 
 			switch s := tc.slice.(type) {
 			case []int:
-				result = SearchOrdered(s, tc.key.(int))
+				result = BinarySearch(s, tc.key.(int))
 			case []string:
-				result = SearchOrdered(s, tc.key.(string))
+				result = BinarySearch(s, tc.key.(string))
 			case []float64:
-				result = SearchOrdered(s, tc.key.(float64))
+				result = BinarySearch(s, tc.key.(float64))
 			default:
 				t.Fatalf("不支持的切片类型: %T", s)
 			}
@@ -126,7 +126,7 @@ func TestCustomType(t *testing.T) {
 	t.Run("CustomIntFound", func(t *testing.T) {
 		slice := []myInt{1, 2, 3}
 		key := myInt(2)
-		result := Search(slice, key)
+		result := IndexOf(slice, key)
 		if result != 1 {
 			t.Errorf("预期 1, 实际 %d", result)
 		}
@@ -135,7 +135,7 @@ func TestCustomType(t *testing.T) {
 	t.Run("CustomIntOrdered", func(t *testing.T) {
 		slice := []myInt{10, 20, 30}
 		key := myInt(20)
-		result := SearchOrdered(slice, key)
+		result := BinarySearch(slice, key)
 		if result != 1 {
 			t.Errorf("预期 1, 实际 %d", result)
 		}

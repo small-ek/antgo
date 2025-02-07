@@ -32,12 +32,12 @@ import (
 func main() {
 	// 字符串切片搜索
 	names := []string{"Alice", "Bob", "Charlie"}
-	index := search.Search(names, "Bob")
+	index := search.IndexOf(names, "Bob")
 	fmt.Println(index) // 输出: 1
 
 	// 整型切片搜索
 	numbers := []int{10, 20, 30, 15}
-	fmt.Println(search.Search(numbers, 15)) // 输出: 3
+	fmt.Println(search.IndexOf(numbers, 15)) // 输出: 3
 }
 ```
 
@@ -48,11 +48,11 @@ func main() {
 	sorted := []int{1, 3, 5, 7, 9, 11}
 
 	// 查找存在的元素
-	index := search.SearchOrdered(sorted, 7)
+	index := search.BinarySearch(sorted, 7)
 	fmt.Println(index) // 输出: 3
 
 	// 查找不存在的元素
-	fmt.Println(search.SearchOrdered(sorted, 8)) // 输出: -1
+	fmt.Println(search.BinarySearch(sorted, 8)) // 输出: -1
 }
 ```
 
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	// 自定义相等判断
-	index := search.Search(products, Product{ID: 102})
+	index := search.IndexOf(products, Product{ID: 102})
 	fmt.Println(index) // 输出: 1
 }
 ```
@@ -89,7 +89,7 @@ func concurrentSearch() {
 	}()
 
 	go func() {
-		fmt.Println(search.SearchOrdered(data, 4.4)) // 输出: 3
+		fmt.Println(search.BinarySearch(data, 4.4)) // 输出: 3
 	}()
 }
 ```
@@ -105,7 +105,7 @@ func concurrentSearch() {
 | **安全并发**        | 无状态设计，原生支持并发调用                                       |
 
 ### ⚠️ 注意事项
-1. 使用`SearchOrdered`前必须确保切片**已按升序排列**
+1. 使用`BinarySearch`前必须确保切片**已按升序排列**
 2. 自定义结构体类型需要实现`==`运算符
 3. 二分搜索时间复杂度为O(log n)，线性搜索为O(n)
 4. 未找到元素时统一返回-1
@@ -143,12 +143,12 @@ import (
 func main() {
 	// String slice search
 	names := []string{"Alice", "Bob", "Charlie"}
-	index := search.Search(names, "Bob")
+	index := search.IndexOf(names, "Bob")
 	fmt.Println(index) // Output: 1
 
 	// Integer slice search
 	numbers := []int{10, 20, 30, 15}
-	fmt.Println(search.Search(numbers, 15)) // Output: 3
+	fmt.Println(search.IndexOf(numbers, 15)) // Output: 3
 }
 ```
 
@@ -159,11 +159,11 @@ func main() {
 	sorted := []int{1, 3, 5, 7, 9, 11}
 
 	// Search existing element
-	index := search.SearchOrdered(sorted, 7)
+	index := search.BinarySearch(sorted, 7)
 	fmt.Println(index) // Output: 3
 
 	// Search non-existing element
-	fmt.Println(search.SearchOrdered(sorted, 8)) // Output: -1
+	fmt.Println(search.BinarySearch(sorted, 8)) // Output: -1
 }
 ```
 
@@ -184,7 +184,7 @@ func main() {
 	}
 
 	// Custom equality check
-	index := search.Search(products, Product{ID: 102})
+	index := search.IndexOf(products, Product{ID: 102})
 	fmt.Println(index) // Output: 1
 }
 ```
@@ -196,11 +196,11 @@ func concurrentSearch() {
 
 	// Concurrent searches in goroutines
 	go func() {
-		fmt.Println(search.Search(data, 3.3)) // Output: 2
+		fmt.Println(search.IndexOf(data, 3.3)) // Output: 2
 	}()
 
 	go func() {
-		fmt.Println(search.SearchOrdered(data, 4.4)) // Output: 3
+		fmt.Println(search.BinarySearch(data, 4.4)) // Output: 3
 	}()
 }
 ```
@@ -216,7 +216,7 @@ func concurrentSearch() {
 | **Concurrency Safe**| Stateless design for native concurrent calls                   |
 
 ### ⚠️ Important Notes
-1. Slice **must be sorted in ascending order** before using `SearchOrdered`
+1. Slice **must be sorted in ascending order** before using `BinarySearch`
 2. Custom structs must implement `==` operator
 3. Time complexity: O(log n) for binary, O(n) for linear search
 4. Returns -1 uniformly when element not found
