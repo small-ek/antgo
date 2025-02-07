@@ -103,8 +103,7 @@ func Init(config Config) error {
 		}
 		languageBundles[langCode] = bundle
 	}
-	fmt.Println(languageBundles)
-	fmt.Println(config.DefaultLanguage)
+	
 	// 校验默认语言包
 	if _, exists := languageBundles[config.DefaultLanguage]; !exists {
 		return fmt.Errorf("default language %s bundle not found", config.DefaultLanguage)
