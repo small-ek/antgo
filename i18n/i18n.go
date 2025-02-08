@@ -16,360 +16,489 @@ import (
 	"time"
 )
 
-// 常量定义
+/****************************** 常量定义 Constants ******************************/
+
+// 默认配置参数
 const (
-	defaultLanguage   = "en"         // 默认语言
-	contextKey        = "i18nBundle" // Gin上下文存储键
-	maxCacheSize      = 1000         // 最大缓存条目数
-	defaultDateFormat = time.RFC3339 // 默认日期格式
+	DefaultLanguageCode   = "zh-CN"      // 默认语言代码 | Default language code
+	ContextKeyLanguage    = "i18nBundle" // 上下文存储键名 | Context storage key name
+	MaxCacheEntries       = 1000         // 最大缓存条目数 | Maximum cache entries
+	DefaultDateTimeLayout = time.RFC3339 // 默认日期时间格式 | Default datetime format
 )
 
-// 全局变量
+/****************************** 全局变量 Global Variables ******************************/
+
 var (
-	languageBundles  = make(map[string]*Bundle) // 语言包集合
-	bundlesLock      sync.RWMutex               // 语言包读写锁
-	languageMatcher  language.Matcher           // 语言匹配器
-	globalConfig     Config                     // 全局配置
-	translationCache *lruCache                  // 翻译缓存
+	// 语言包映射表 | Language bundles map
+	languageBundleMap = make(map[string]*LanguageBundle)
+
+	// 映射表读写锁 | Map read-write mutex
+	bundleMapMutex sync.RWMutex
+
+	// 语言匹配器 | Language matcher
+	languagePriorityMatcher language.Matcher
+
+	// 全局配置 | Global configuration
+	globalConfiguration Config
+
+	// 翻译缓存 | Translation cache
+	cachedTranslations *translationCache
 )
+
+/****************************** 结构体定义 Struct Definitions ******************************/
 
 // Config 国际化配置结构
+// Internationalization configuration structure
 type Config struct {
-	DefaultLanguage    string            // 默认语言代码，例如"en"
-	FallbackLanguage   string            // 备用回退语言代码
-	TranslationPath    string            // 翻译文件路径
-	SupportedLanguages []string          // 支持的语言列表
-	EnableCache        bool              // 是否启用翻译缓存
-	CacheSize          int               // 缓存最大容量
-	PluralRules        PluralRuleFunc    // 自定义复数规则处理函数
-	DateFormats        map[string]string // 各语言日期格式配置
+	DefaultLang      string            `comment:"默认语言代码（如'en'）| Default language code"`
+	FallbackLang     string            `comment:"备用回退语言代码 | Fallback language code"`
+	TranslationsDir  string            `comment:"翻译文件目录路径 | Translation files directory path"`
+	SupportedLangs   []string          `comment:"支持的语言列表 | Supported languages list"`
+	CacheEnabled     bool              `comment:"是否启用翻译缓存 | Enable translation cache"`
+	MaxCacheSize     int               `comment:"缓存最大容量 | Maximum cache size"`
+	CustomPluralRule PluralRuleHandler `comment:"自定义复数规则处理器 | Custom plural rule handler"`
+	DateTimeLayouts  map[string]string `comment:"各语言日期时间格式 | Per-language datetime formats"`
 }
 
-// PluralRuleFunc 复数规则处理函数类型定义
-type PluralRuleFunc func(lang string, n int, key string, args ...interface{}) string
+// PluralRuleHandler 复数规则处理函数类型
+// Plural rule handler function type
+type PluralRuleHandler func(lang string, n int, key string, args ...interface{}) string
 
-// Bundle 语言包结构
-type Bundle struct {
-	languageTag    string                 // 语言标签
-	translations   map[string]interface{} // 扁平化翻译条目
-	pluralRule     func(n int) int        // 复数形式计算函数
-	dateTimeFormat string                 // 日期时间格式
-	numberFormats  map[string]string      // 数字格式配置
+// LanguageBundle 语言包数据结构
+// Language bundle data structure
+type LanguageBundle struct {
+	langTag          string                 // 语言标签 | Language tag
+	flatTranslations map[string]interface{} // 扁平化翻译映射 | Flattened translation map
+	pluralRuleFunc   func(n int) int        // 复数规则函数 | Plural rule function
+	datetimeLayout   string                 // 日期时间格式 | Datetime format
+	numberFormats    map[string]string      // 数字格式化配置 | Number formatting configs
 }
 
-// lruCache LRU缓存结构
-type lruCache struct {
+// translationCache 线程安全的LRU翻译缓存
+// Thread-safe LRU translation cache
+type translationCache struct {
 	sync.RWMutex
-	cacheEntries map[string]string // 缓存条目存储
-	cacheKeys    []string          // 缓存键顺序记录
-	maxCapacity  int               // 最大缓存容量
+	entries     map[string]string // 缓存条目存储 | Cache entries storage
+	accessOrder []string          // 访问顺序记录 | Access order records
+	maxEntries  int               // 最大条目限制 | Maximum entries limit
 }
 
-// Init 初始化国际化配置
-// Initialize internationalization configuration
-func Init(config Config) error {
-	// 配置默认值处理
-	if config.DefaultLanguage == "" {
-		config.DefaultLanguage = defaultLanguage
-	}
-	if config.CacheSize == 0 {
-		config.CacheSize = maxCacheSize
+/****************************** 初始化函数 Initialization Functions ******************************/
+
+// Init 初始化国际化模块
+// Initialize internationalization module
+//
+// 参数:
+//
+//	config - 配置参数结构体 | Configuration parameters struct
+//
+// 返回:
+//
+//	error - 初始化过程中遇到的错误 | Error during initialization
+func New(config Config) error {
+	// 设置配置默认值 | Set default configuration values
+	setConfigDefaults(&config)
+
+	globalConfiguration = config
+
+	// 初始化翻译缓存 | Initialize translation cache
+	initTranslationCache(config)
+
+	// 初始化语言匹配器 | Initialize language matcher
+	if err := initLanguageMatcher(config); err != nil {
+		return err
 	}
 
-	globalConfig = config
-
-	// 初始化缓存
-	translationCache = &lruCache{
-		cacheEntries: make(map[string]string),
-		cacheKeys:    make([]string, 0, config.CacheSize),
-		maxCapacity:  config.CacheSize,
+	// 加载所有支持语言的翻译包 | Load bundles for all supported languages
+	if err := loadAllLanguageBundles(config); err != nil {
+		return err
 	}
 
-	// 初始化语言匹配器
-	languageTags := make([]language.Tag, 0, len(config.SupportedLanguages))
-	for _, langCode := range config.SupportedLanguages {
-		languageTags = append(languageTags, language.Make(langCode))
-	}
-	languageMatcher = language.NewMatcher(languageTags)
-
-	// 加载所有支持语言的翻译包
-	for _, langCode := range config.SupportedLanguages {
-		bundle, err := loadLanguageResources(langCode)
-		if err != nil {
-			if langCode == config.FallbackLanguage {
-				return fmt.Errorf("fallback language %s load failed: %w", langCode, err)
-			}
-			continue
-		}
-		languageBundles[langCode] = bundle
-	}
-	
-	// 校验默认语言包
-	if _, exists := languageBundles[config.DefaultLanguage]; !exists {
-		return fmt.Errorf("default language %s bundle not found", config.DefaultLanguage)
-	}
-
-	// 校验备用语言包
-	if config.FallbackLanguage != "" {
-		if _, exists := languageBundles[config.FallbackLanguage]; !exists {
-			return fmt.Errorf("fallback language %s bundle not found", config.FallbackLanguage)
-		}
+	// 验证默认和备用语言包 | Validate default and fallback bundles
+	if err := validateCoreBundles(config); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// loadLanguageResources 加载指定语言的翻译资源
-// Load translation resources for specified language
-func loadLanguageResources(langCode string) (*Bundle, error) {
+// setConfigDefaults 设置配置默认值
+// Set configuration default values
+func setConfigDefaults(config *Config) {
+	if config.DefaultLang == "" {
+		config.DefaultLang = DefaultLanguageCode
+	}
+	if config.MaxCacheSize == 0 {
+		config.MaxCacheSize = MaxCacheEntries
+	}
+}
+
+// initTranslationCache 初始化翻译缓存
+// Initialize translation cache
+func initTranslationCache(config Config) {
+	cachedTranslations = &translationCache{
+		entries:     make(map[string]string),
+		accessOrder: make([]string, 0, config.MaxCacheSize),
+		maxEntries:  config.MaxCacheSize,
+	}
+}
+
+// initLanguageMatcher 初始化语言匹配器
+// Initialize language matcher
+func initLanguageMatcher(config Config) error {
+	tags := make([]language.Tag, 0, len(config.SupportedLangs))
+	for _, code := range config.SupportedLangs {
+		tags = append(tags, language.Make(code))
+	}
+	languagePriorityMatcher = language.NewMatcher(tags)
+	return nil
+}
+
+// loadAllLanguageBundles 加载所有语言包
+// Load all language bundles
+func loadAllLanguageBundles(config Config) error {
+	for _, langCode := range config.SupportedLangs {
+		bundle, err := loadLanguageBundle(langCode)
+		if err != nil {
+			return fmt.Errorf("加载语言包失败 [%s]: %w", langCode, err)
+		}
+		languageBundleMap[langCode] = bundle
+	}
+	return nil
+}
+
+// validateCoreBundles 验证核心语言包
+// Validate core language bundles
+func validateCoreBundles(config Config) error {
+	if _, exists := languageBundleMap[config.DefaultLang]; !exists {
+		return fmt.Errorf("默认语言包缺失 [%s]", config.DefaultLang)
+	}
+	if config.FallbackLang != "" {
+		if _, exists := languageBundleMap[config.FallbackLang]; !exists {
+			return fmt.Errorf("备用语言包缺失 [%s]", config.FallbackLang)
+		}
+	}
+	return nil
+}
+
+/****************************** 语言包加载 Language Bundle Loading ******************************/
+
+// loadLanguageBundle 加载指定语言包
+// Load specified language bundle
+func loadLanguageBundle(langCode string) (*LanguageBundle, error) {
 	translations := make(map[string]interface{})
 
-	// 遍历翻译文件目录
-	err := filepath.WalkDir(globalConfig.TranslationPath, func(filePath string, dirEntry fs.DirEntry, err error) error {
-		if err != nil || dirEntry.IsDir() {
+	// 遍历翻译目录 | Walk through translation directory
+	err := filepath.WalkDir(globalConfiguration.TranslationsDir, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
 			return err
 		}
 
-		// 解析文件名和扩展名
-		fileExt := filepath.Ext(filePath)
-		fileName := strings.TrimSuffix(filepath.Base(filePath), fileExt)
+		// 解析文件信息 | Parse file information
+		ext := strings.ToLower(filepath.Ext(path))
+		baseName := strings.TrimSuffix(filepath.Base(path), ext)
 
-		// 匹配语言代码
-		if !strings.HasPrefix(fileName, langCode) {
+		// 匹配目标语言 | Match target language
+		if !strings.HasPrefix(baseName, langCode) {
 			return nil
 		}
 
-		// 打开翻译文件
-		file, openErr := os.Open(filePath)
-		if openErr != nil {
-			return openErr
-		}
-		defer file.Close()
-
-		// 根据文件类型解析
-		switch strings.ToLower(fileExt[1:]) {
-		case "toml":
-			if _, decodeErr := toml.NewDecoder(file).Decode(&translations); decodeErr != nil {
-				return fmt.Errorf("TOML decode error: %w", decodeErr)
-			}
-		case "yaml", "yml":
-			if decodeErr := yaml.NewDecoder(file).Decode(&translations); decodeErr != nil {
-				return fmt.Errorf("YAML decode error: %w", decodeErr)
-			}
-		case "json":
-			if decodeErr := json.NewDecoder(file).Decode(&translations); decodeErr != nil {
-				return fmt.Errorf("JSON decode error: %w", decodeErr)
-			}
-		default:
-			return fmt.Errorf("unsupported file format: %s", fileExt)
+		// 解析翻译文件 | Parse translation file
+		if err := parseTranslationFile(path, ext, translations); err != nil {
+			return fmt.Errorf("文件解析失败 [%s]: %w", path, err)
 		}
 		return nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("directory traversal error: %w", err)
+		return nil, fmt.Errorf("目录遍历错误: %w", err)
 	}
 
-	return &Bundle{
-		languageTag:    langCode,
-		translations:   flattenNestedTranslations(translations),
-		dateTimeFormat: resolveDateTimeFormat(langCode),
-	}, nil
+	return createLanguageBundle(langCode, translations), nil
 }
 
-// resolveDateTimeFormat 解析日期时间格式
-func resolveDateTimeFormat(langCode string) string {
-	if format, exists := globalConfig.DateFormats[langCode]; exists {
-		return format
+// parseTranslationFile 解析翻译文件
+// Parse translation file
+func parseTranslationFile(path, ext string, translations map[string]interface{}) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
 	}
-	return defaultDateFormat
+	defer file.Close()
+
+	switch strings.TrimPrefix(ext, ".") {
+	case "toml":
+		_, err = toml.NewDecoder(file).Decode(&translations)
+	case "yaml", "yml":
+		err = yaml.NewDecoder(file).Decode(&translations)
+	case "json":
+		err = json.NewDecoder(file).Decode(&translations)
+	default:
+		return fmt.Errorf("不支持的格式类型: %s", ext)
+	}
+
+	if err != nil {
+		return fmt.Errorf("解码错误: %w", err)
+	}
+	return nil
 }
 
-// flattenNestedTranslations 扁平化嵌套的翻译结构
-func flattenNestedTranslations(nestedData map[string]interface{}) map[string]interface{} {
-	flatData := make(map[string]interface{})
-	for key, value := range nestedData {
+// createLanguageBundle 创建语言包实例
+// Create language bundle instance
+func createLanguageBundle(langCode string, data map[string]interface{}) *LanguageBundle {
+	return &LanguageBundle{
+		langTag:          langCode,
+		flatTranslations: flattenTranslations(data),
+		datetimeLayout:   resolveDatetimeLayout(langCode),
+	}
+}
+
+// resolveDatetimeLayout 解析日期时间格式
+// Resolve datetime format
+func resolveDatetimeLayout(langCode string) string {
+	if layout, exists := globalConfiguration.DateTimeLayouts[langCode]; exists {
+		return layout
+	}
+	return DefaultDateTimeLayout
+}
+
+// flattenTranslations 扁平化嵌套翻译结构
+// Flatten nested translation structure
+func flattenTranslations(nested map[string]interface{}) map[string]interface{} {
+	flat := make(map[string]interface{})
+	for key, value := range nested {
 		switch v := value.(type) {
 		case map[string]interface{}:
-			// 递归处理嵌套结构
-			subItems := flattenNestedTranslations(v)
-			for subKey, subValue := range subItems {
-				flatData[key+"."+subKey] = subValue
+			sub := flattenTranslations(v)
+			for sk, sv := range sub {
+				flat[key+"."+sk] = sv
 			}
 		default:
-			flatData[key] = v
+			flat[key] = v
 		}
 	}
-	return flatData
+	return flat
 }
 
-// Middleware Gin中间件，用于注入语言包到上下文
-// Gin middleware for injecting language bundle into context
+/****************************** Gin中间件 Gin Middleware ******************************/
+
+// Middleware 语言包注入中间件
+// Language bundle injection middleware
 func Middleware() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		detectedLang := detectRequestLanguage(ctx)
-		bundle := getLanguageBundle(detectedLang)
-		ctx.Set(contextKey, bundle)
-		ctx.Next()
+	return func(c *gin.Context) {
+		// 检测客户端语言 | Detect client language
+		lang := detectClientLanguage(c)
+
+		// 获取对应语言包 | Get corresponding bundle
+		bundle := getBundleByLanguage(lang)
+
+		// 注入上下文 | Inject into context
+		c.Set(ContextKeyLanguage, bundle)
+		c.Next()
 	}
 }
 
-// detectRequestLanguage 检测请求的语言偏好
-func detectRequestLanguage(ctx *gin.Context) string {
-	// 1. 检查URL参数
-	if langParam := ctx.Query("lang"); langParam != "" && isValidLanguageCode(langParam) {
-		return langParam
+/****************************** 语言检测 Language Detection ******************************/
+
+// detectClientLanguage 检测客户端首选语言
+// Detect client preferred language
+func detectClientLanguage(c *gin.Context) string {
+	// 1. 检查URL参数 | Check URL parameter
+
+	if lang := c.Query("lang"); isValidLanguage(lang) {
+		return lang
 	}
 
-	// 2. 检查Cookie设置
-	if langCookie, err := ctx.Cookie("lang"); err == nil && isValidLanguageCode(langCookie) {
-		return langCookie
+	// 2. 检查Cookie设置 | Check cookie setting
+	if lang, err := c.Cookie("lang"); err == nil && isValidLanguage(lang) {
+		return lang
 	}
 
-	// 3. 解析Accept-Language头
-	acceptLangHeader := ctx.GetHeader("Accept-Language")
-	matchedTag, _ := language.MatchStrings(languageMatcher, acceptLangHeader)
+	// 3. 解析Accept-Language头 | Parse Accept-Language header
+	acceptLang := c.GetHeader("Accept-Language")
+
+	matchedTag, _ := language.MatchStrings(languagePriorityMatcher, acceptLang)
 	baseTag, _ := matchedTag.Base()
-	if baseTag.String() != "" && isValidLanguageCode(baseTag.String()) {
+
+	if matchedTag.String() != "" && isValidLanguage(matchedTag.String()) {
+		return matchedTag.String()
+	}
+	if baseTag.String() != "" && isValidLanguage(baseTag.String()) {
 		return baseTag.String()
 	}
 
-	// 4. 返回默认语言
-	return globalConfig.DefaultLanguage
+	// 4. 返回默认语言 | Return default language
+	return globalConfiguration.DefaultLang
 }
 
-// isValidLanguageCode 验证语言代码有效性
-func isValidLanguageCode(langCode string) bool {
-	for _, supportedLang := range globalConfig.SupportedLanguages {
-		if supportedLang == langCode {
+// isValidLanguage 验证语言有效性
+// Validate language validity
+func isValidLanguage(code string) bool {
+	for _, lang := range globalConfiguration.SupportedLangs {
+		if lang == code {
 			return true
 		}
 	}
 	return false
 }
 
-// getLanguageBundle 获取对应的语言包
-func getLanguageBundle(langCode string) *Bundle {
-	bundlesLock.RLock()
-	defer bundlesLock.RUnlock()
+/****************************** 语言包获取 Bundle Retrieval ******************************/
 
-	if bundle, exists := languageBundles[langCode]; exists {
+// getBundleByLanguage 获取对应语言包
+// Get corresponding language bundle
+func getBundleByLanguage(langCode string) *LanguageBundle {
+	bundleMapMutex.RLock()
+	defer bundleMapMutex.RUnlock()
+
+	if bundle, exists := languageBundleMap[langCode]; exists {
 		return bundle
 	}
 
-	// 回退到备用语言
-	if globalConfig.FallbackLanguage != "" {
-		if fallbackBundle, exists := languageBundles[globalConfig.FallbackLanguage]; exists {
-			return fallbackBundle
+	// 回退到备用语言 | Fallback to secondary language
+	if globalConfiguration.FallbackLang != "" {
+		if bundle, exists := languageBundleMap[globalConfiguration.FallbackLang]; exists {
+			return bundle
 		}
 	}
 
-	// 最后返回默认语言包
-	return languageBundles[globalConfig.DefaultLanguage]
+	// 回退到默认语言 | Fallback to default
+	return languageBundleMap[globalConfiguration.DefaultLang]
 }
 
-// T 获取翻译文本（带格式化参数）
-// Get translated text with formatting arguments
-func T(ctx *gin.Context, key string, args ...interface{}) string {
-	if globalConfig.EnableCache {
-		if cached := getCachedTranslation(key, args...); cached != "" {
+/****************************** 翻译核心功能 Translation Core ******************************/
+
+// T 获取翻译文本
+// Get translated text
+
+func T(c *gin.Context, key string, args ...interface{}) string {
+	// 尝试缓存获取 | Try cache retrieval
+	fmt.Println(globalConfiguration.CacheEnabled)
+	if globalConfiguration.CacheEnabled {
+		if cached := getCachedTranslation(c, key, args...); cached != "" {
 			return cached
 		}
 	}
 
-	bundle := ctx.MustGet(contextKey).(*Bundle)
-	translatedText := bundle.translateKey(key, args...)
+	// 执行翻译 | Perform translation
+	bundle := c.MustGet(ContextKeyLanguage).(*LanguageBundle)
+	result := bundle.translate(key, args...)
 
-	if globalConfig.EnableCache {
-		cacheTranslation(key, translatedText, args...)
+	// 缓存结果 | Cache result
+	if globalConfiguration.CacheEnabled {
+		cacheTranslation(c, key, result, args...)
 	}
-
-	return translatedText
+	return result
 }
 
 // TPlural 获取复数形式翻译
 // Get plural-form translation
-func TPlural(ctx *gin.Context, count int, key string, args ...interface{}) string {
-	bundle := ctx.MustGet(contextKey).(*Bundle)
-	return bundle.handlePluralization(count, key, args...)
+func TPlural(c *gin.Context, count int, key string, args ...interface{}) string {
+	bundle := c.MustGet(ContextKeyLanguage).(*LanguageBundle)
+	return bundle.pluralize(count, key, args...)
 }
 
-// TDate 获取本地化日期格式
-// Get localized date format
-func TDate(ctx *gin.Context, timestamp time.Time) string {
-	bundle := ctx.MustGet(contextKey).(*Bundle)
-	return bundle.formatLocalizedDate(timestamp)
+// TDate 本地化日期时间格式化
+// Localized datetime formatting
+func TDate(c *gin.Context, t time.Time) string {
+	bundle := c.MustGet(ContextKeyLanguage).(*LanguageBundle)
+	return t.Format(bundle.datetimeLayout)
 }
 
-// translateKey 执行翻译逻辑
-func (b *Bundle) translateKey(key string, args ...interface{}) string {
-	translation, exists := b.translations[key]
-	if !exists {
-		// 尝试回退语言包
-		if fallbackBundle := getLanguageBundle(globalConfig.FallbackLanguage); fallbackBundle != nil {
-			return fallbackBundle.translateKey(key, args...)
-		}
-		return key // 最后返回键名本身
+/****************************** 语言包方法 Bundle Methods ******************************/
+
+// translate 执行翻译逻辑
+// Perform translation logic
+func (b *LanguageBundle) translate(key string, args ...interface{}) string {
+	// 当前语言包查找 | Lookup in current bundle
+	if val, exists := b.flatTranslations[key]; exists {
+		return formatString(conv.String(val), args)
 	}
 
-	baseText := conv.String(translation)
-	if len(args) > 0 {
-		return fmt.Sprintf(baseText, args...)
+	// 回退语言处理 | Fallback handling
+	if fbBundle := getBundleByLanguage(globalConfiguration.FallbackLang); fbBundle != nil {
+		return fbBundle.translate(key, args...)
 	}
-	return baseText
+
+	// 默认语言处理 | Default language handling
+	if defBundle := getBundleByLanguage(globalConfiguration.DefaultLang); defBundle != nil {
+		return defBundle.translate(key, args...)
+	}
+
+	return key // 最终退回键名 | Fallback to key
 }
 
-// handlePluralization 处理复数形式翻译
-func (b *Bundle) handlePluralization(count int, key string, args ...interface{}) string {
-	// 优先使用自定义复数规则
-	if globalConfig.PluralRules != nil {
-		return globalConfig.PluralRules(b.languageTag, count, key, args...)
+func (b *LanguageBundle) pluralize(n int, key string, args ...interface{}) string {
+	// 优先使用自定义规则 | Priority to custom rules
+	if globalConfiguration.CustomPluralRule != nil {
+		return globalConfiguration.CustomPluralRule(b.langTag, n, key, args...)
 	}
 
-	// 默认复数规则处理
+	// 默认复数规则 | Default plural rule
 	pluralKey := key
-	if count != 1 {
+	if n != 1 {
 		pluralKey = key + ".plural"
 	}
 
-	if pluralText, exists := b.translations[pluralKey]; exists {
-		return fmt.Sprintf(conv.String(pluralText), append([]interface{}{count}, args...)...)
+	// 提前判断是否存在对应的翻译
+	if val, exists := b.flatTranslations[pluralKey]; exists {
+		// 判断是否需要格式化
+		if n == 1 {
+			return val.(string) // 返回单数形式
+		}
+
+		// 使用 fmt.Sprintf 来格式化字符串，避免不必要的 conv.String 转换
+		return fmt.Sprintf(val.(string), append([]interface{}{n}, args...)...)
 	}
-	return b.translateKey(key, args...)
+
+	// 如果找不到翻译，调用默认翻译
+	return b.translate(key, args...)
 }
 
-// formatLocalizedDate 格式化本地化日期
-func (b *Bundle) formatLocalizedDate(timestamp time.Time) string {
-	return timestamp.Format(b.dateTimeFormat)
+// formatString 格式化字符串
+// Format string with arguments
+func formatString(base string, args []interface{}) string {
+	if len(args) > 0 {
+		return fmt.Sprintf(base, args...)
+	}
+	return base
 }
 
-// 缓存相关操作
-// getCachedTranslation 从缓存获取翻译
-func getCachedTranslation(key string, args ...interface{}) string {
-	cacheKey := generateCacheKey(key, args...)
-	translationCache.RLock()
-	defer translationCache.RUnlock()
-	return translationCache.cacheEntries[cacheKey]
+/****************************** 缓存管理 Cache Management ******************************/
+
+// getCachedTranslation 获取缓存翻译
+// Get cached translation
+func getCachedTranslation(c *gin.Context, key string, args ...interface{}) string {
+	// 获取当前语言 | Get the current language from context
+	lang := c.MustGet(ContextKeyLanguage).(*LanguageBundle).langTag
+	cacheKey := generateCacheKey(lang, key, args...)
+	cachedTranslations.RLock()
+	defer cachedTranslations.RUnlock()
+	return cachedTranslations.entries[cacheKey]
 }
 
 // cacheTranslation 缓存翻译结果
-func cacheTranslation(key, value string, args ...interface{}) {
-	cacheKey := generateCacheKey(key, args...)
-	translationCache.Lock()
-	defer translationCache.Unlock()
+// Cache translation result
+func cacheTranslation(c *gin.Context, key, value string, args ...interface{}) {
+	// 获取当前语言 | Get the current language from context
+	lang := c.MustGet(ContextKeyLanguage).(*LanguageBundle).langTag
+	cacheKey := generateCacheKey(lang, key, args...)
+	cachedTranslations.Lock()
+	defer cachedTranslations.Unlock()
 
-	// LRU淘汰策略
-	if len(translationCache.cacheKeys) >= translationCache.maxCapacity {
-		oldestKey := translationCache.cacheKeys[0]
-		delete(translationCache.cacheEntries, oldestKey)
-		translationCache.cacheKeys = translationCache.cacheKeys[1:]
+	// LRU淘汰机制 | LRU eviction mechanism
+	if len(cachedTranslations.accessOrder) >= cachedTranslations.maxEntries {
+		oldest := cachedTranslations.accessOrder[0]
+		delete(cachedTranslations.entries, oldest)
+		cachedTranslations.accessOrder = cachedTranslations.accessOrder[1:]
 	}
 
-	translationCache.cacheEntries[cacheKey] = value
-	translationCache.cacheKeys = append(translationCache.cacheKeys, cacheKey)
+	cachedTranslations.entries[cacheKey] = value
+	cachedTranslations.accessOrder = append(cachedTranslations.accessOrder, cacheKey)
 }
 
 // generateCacheKey 生成缓存键
-func generateCacheKey(key string, args ...interface{}) string {
-	return fmt.Sprintf("%s|%v", key, args)
+// Generate cache key
+func generateCacheKey(lang, key string, args ...interface{}) string {
+	// 在缓存键中包括语言 | Include language in the cache key
+	return fmt.Sprintf("%s|%s|%v", lang, key, args)
 }

@@ -1,0 +1,11 @@
+
+[common]
+hello = "Hello, %s!"
+welcome = "Welcome"
+
+[plural]
+apple = "apple"
+"apple.plural" = "%d apples"
+
+[date]
+format = "2006-01-02"

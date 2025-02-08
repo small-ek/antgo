@@ -1,0 +1,11 @@
+
+common:
+  hello: "你好，%s！"
+  welcome: "欢迎"
+
+plural:
+  apple: "苹果"
+  "apple.plural": "%d 个苹果"
+
+date:
+  format: "2006年01月02日"
