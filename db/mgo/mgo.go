@@ -2,8 +2,6 @@ package mgo
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/small-ek/antgo/os/config"
 	"github.com/small-ek/antgo/utils/conv"
@@ -13,305 +11,335 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"sync"
+	"time"
 )
 
+// MongoDB客户端（线程安全）
+// Global MongoDB Client (Thread-Safe)
 var (
-	client *mongo.Client
+	globalClient     *mongo.Client
+	clientMutex      sync.RWMutex
+	defaultTimeout   = 30 * time.Second
+	maxPoolSizeLimit = 100
 )
 
-// Mgo MongoDB操作结构体
-type Mgo struct {
-	Database     *mongo.Database // 数据库
-	Ctx          context.Context
-	Collection   *mongo.Collection
-	Cancel       context.CancelFunc
-	DataBaseName string
-	TableName    string
-	Filter       bson.D
-	Pages        Pages
-	Timeout      int
-	Err          error
-	sync.Mutex
+// MongoDB操作器（包含数据库操作配置）
+// MongoDB Operator (Contains DB operation settings)
+type MongoOperator struct {
+	databaseName    string             // 数据库名称 / Database Name
+	collectionName  string             // 集合名称 / Collection Name
+	queryFilter     bson.D             // 查询过滤器 / Query Filter
+	paginationOpts  PaginationOpt      // 分页配置 / Pagination Settings
+	operationCtx    context.Context    // 操作上下文 / Operation Context
+	operationCancel context.CancelFunc // 上下文取消函数 / Context Cancel Function
+	lastError       error              // 最后操作错误 / Last Operation Error
+	sync.RWMutex                       // 读写锁 / Read-Write Lock
 }
 
-// Pages 分页过滤排序
-type Pages struct {
-	Limit *int64
-	Skip  *int64
-	Sort  interface{}
+// PaginationOpt 分页配置参数 / Pagination Options
+type PaginationOpt struct {
+	Limit int64       // 返回文档数量限制 / Limit the number of documents to return
+	Skip  int64       // 跳过文档数量 / Skip the number of documents
+	Sort  interface{} // 排序规则 / Sorting Rules
 }
 
-// GetConfig 获取配置
-func GetConfig() (string, string, uint64, int) {
-	uri := config.GetString("mgo_uri")
-	database := config.GetString("mgo_database")
-	poollimit := config.GetInt64("mgo_poollimit")
-	timeout := config.GetInt("mgo_timeout")
-	return uri, database, conv.Uint64(poollimit), timeout
+// initConfig 初始化配置 / Initialize Config
+func initConfig() (uri string, dbName string, poolSize uint64, timeout time.Duration) {
+	uri = config.GetString("mgo_uri")
+	dbName = config.GetString("mgo_database")
+	poolSize = conv.Uint64(config.GetInt64("mgo_poollimit"))
+	timeout = time.Duration(config.GetInt("mgo_timeout")) * time.Second
+	return
 }
 
-// InitEngine 初始化MongoDB引擎
-func InitEngine(databaseName ...string) error {
-	uri, _, poollimit, _ := GetConfig()
-	ctx := context.Background()
+// InitConnection 初始化全局MongoDB连接（线程安全）
+// Initialize Global MongoDB Connection (Thread-Safe)
+func InitConnection(databaseNames ...string) error {
+	uri, _, poolSize, _ := initConfig()
 
-	opts := options.Client().ApplyURI(uri).SetMaxPoolSize(poollimit)
+	// 连接配置 / Connection Options
+	clientOpts := options.Client().
+		ApplyURI(uri).
+		SetMaxPoolSize(poolSize).
+		SetServerSelectionTimeout(defaultTimeout)
 
-	c, err := mongo.Connect(ctx, opts)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
+
+	// 创建新客户端 / Create New Client
+	newClient, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		return fmt.Errorf("failed to connect to MongoDB: %w", err)
+		return fmt.Errorf("MongoDB connection failed: %w", err)
 	}
 
-	if err := c.Ping(ctx, readpref.Primary()); err != nil {
-		return fmt.Errorf("failed to ping MongoDB: %w", err)
+	// 健康检查 / Health Check
+	if err = newClient.Ping(ctx, readpref.Primary()); err != nil {
+		return fmt.Errorf("MongoDB ping failed: %w", err)
 	}
 
-	client = c
+	globalClient = newClient
 	return nil
 }
 
-// NewMongoDB 创建MongoDB实例
-func NewMongoDB(tableName string, databaseName ...string) *Mgo {
-	_, database, _, _ := GetConfig()
-	dbName := database
-	if len(databaseName) > 0 {
-		dbName = databaseName[0]
+// NewOperator 创建新的MongoDB操作实例 / Create New MongoDB Operator Instance
+func NewOperator(collectionName string, databaseNames ...string) *MongoOperator {
+	_, defaultDB, _, _ := initConfig()
+	targetDB := defaultDB
+	if len(databaseNames) > 0 {
+		targetDB = databaseNames[0]
 	}
 
-	return &Mgo{
-		DataBaseName: dbName,
-		TableName:    tableName,
-		Ctx:          context.Background(),
-		Filter:       bson.D{},
+	ctx, cancel := context.WithCancel(context.Background())
+	return &MongoOperator{
+		databaseName:    targetDB,
+		collectionName:  collectionName,
+		operationCtx:    ctx,
+		operationCancel: cancel,
+		queryFilter:     bson.D{},
 	}
 }
 
-// SetDatabase 设置数据库
-func (m *Mgo) SetDatabase(databaseName string) *Mgo {
-	m.DataBaseName = databaseName
-	return m
+// Clone 克隆操作器实例（用于链式调用） / Clone Operator Instance (For Chain Calling)
+func (mo *MongoOperator) Clone() *MongoOperator {
+	return &MongoOperator{
+		databaseName:    mo.databaseName,
+		collectionName:  mo.collectionName,
+		queryFilter:     mo.queryFilter,
+		paginationOpts:  mo.paginationOpts,
+		operationCtx:    mo.operationCtx,
+		operationCancel: mo.operationCancel,
+	}
 }
 
-// Table 设置表
-func (m *Mgo) Table(tableName string) *Mgo {
-	m.TableName = tableName
-	return m
+// SetDatabase 切换目标数据库 / Switch Target Database
+func (mo *MongoOperator) SetDatabase(dbName string) *MongoOperator {
+	mo.Lock()
+	defer mo.Unlock()
+	mo.databaseName = dbName
+	return mo
 }
 
-// Create 创建数据
-func (m *Mgo) Create(data interface{}) (*mongo.InsertOneResult, error) {
-	return client.Database(m.DataBaseName).Collection(m.TableName).InsertOne(m.Ctx, data)
+// Collection 切换目标集合 / Switch Target Collection
+func (mo *MongoOperator) Collection(colName string) *MongoOperator {
+	mo.Lock()
+	defer mo.Unlock()
+	mo.collectionName = colName
+	return mo
 }
 
-// SaveAll 创建多条数据
-func (m *Mgo) SaveAll(data []interface{}) (*mongo.InsertManyResult, error) {
-	opts := options.InsertMany().SetOrdered(false)
-	return client.Database(m.DataBaseName).Collection(m.TableName).InsertMany(m.Ctx, data, opts)
+// InsertOne 插入单条文档 / Insert a Single Document
+func (mo *MongoOperator) InsertOne(document interface{}) (*mongo.InsertOneResult, error) {
+	client := mo.getClient()
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		InsertOne(mo.operationCtx, document)
 }
 
-// Update 修改数据
-func (m *Mgo) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
-	return client.Database(m.DataBaseName).Collection(m.TableName).UpdateMany(
-		m.Ctx,
-		filter,
-		bson.M{"$set": update},
-	)
+// BatchInsert 批量插入文档 / Insert Multiple Documents
+func (mo *MongoOperator) BatchInsert(documents []interface{}) (*mongo.InsertManyResult, error) {
+	client := mo.getClient()
+	insertOpts := options.InsertMany().SetOrdered(false)
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		InsertMany(mo.operationCtx, documents, insertOpts)
 }
 
-// UpdateById 根据id修改数据
-func (m *Mgo) UpdateById(id string, update interface{}) (*mongo.UpdateResult, error) {
+// Update 更新文档（支持批量更新）/ Update Documents (Supports Bulk Update)
+func (mo *MongoOperator) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
+	client := mo.getClient()
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		UpdateMany(mo.operationCtx, filter, bson.M{"$set": update})
+}
+
+// UpdateByID 通过ID更新文档 / Update Document by ID
+func (mo *MongoOperator) UpdateByID(id string, update interface{}) (*mongo.UpdateResult, error) {
+	client := mo.getClient()
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid object ID format: %w", err)
 	}
 
-	return client.Database(m.DataBaseName).Collection(m.TableName).UpdateOne(
-		m.Ctx,
-		bson.M{"_id": oid},
-		bson.M{"$set": update},
-	)
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		UpdateOne(mo.operationCtx, bson.M{"_id": oid}, bson.M{"$set": update})
 }
 
-// Delete 删除数据
-func (m *Mgo) Delete(filter interface{}) (*mongo.DeleteResult, error) {
-	return client.Database(m.DataBaseName).Collection(m.TableName).DeleteOne(m.Ctx, filter)
+// DeleteOne 删除单个文档 / Delete a Single Document
+func (mo *MongoOperator) DeleteOne(filter interface{}) (*mongo.DeleteResult, error) {
+	client := mo.getClient()
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		DeleteOne(mo.operationCtx, filter)
 }
 
-// DeleteMany 删除多个数据
-func (m *Mgo) DeleteMany(filter interface{}) (*mongo.DeleteResult, error) {
-	return client.Database(m.DataBaseName).Collection(m.TableName).DeleteMany(m.Ctx, filter)
+// Delete 批量删除文档 / Delete Multiple Documents
+func (mo *MongoOperator) Delete(filter interface{}) (*mongo.DeleteResult, error) {
+	client := mo.getClient()
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		DeleteMany(mo.operationCtx, filter)
 }
 
-// Count 获取总数量
-func (m *Mgo) Count(count *int64) *Mgo {
-	total, err := client.Database(m.DataBaseName).Collection(m.TableName).CountDocuments(m.Ctx, m.Filter)
+// QueryCount 获取匹配文档数量 / Get Count of Matching Documents
+func (mo *MongoOperator) QueryCount() (int64, error) {
+	client := mo.getClient()
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		CountDocuments(mo.operationCtx, mo.queryFilter)
+}
+
+// FindOne 查询单条文档 / Find One Document
+func (mo *MongoOperator) FindOne(result interface{}) error {
+	client := mo.getClient()
+	mo.RLock()
+	defer mo.RUnlock()
+
+	err := client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		FindOne(mo.operationCtx, mo.queryFilter).
+		Decode(result)
 	if err != nil {
-		m.Err = err
-	} else {
-		*count = total
+		return fmt.Errorf("document decode failed: %w", err)
 	}
-	return m
+	return nil
 }
 
-// FindOne 单个查询
-func (m *Mgo) FindOne(v interface{}) error {
-	m.Lock()
-	defer m.Unlock()
+// FindAll 查询多条文档（带分页）/ Find Multiple Documents (With Pagination)
+func (mo *MongoOperator) FindAll() (*mongo.Cursor, error) {
+	client := mo.getClient()
+	mo.RLock()
+	defer mo.RUnlock()
 
-	if client == nil {
-		return errors.New("database connection failed")
-	}
+	findOpts := options.Find().
+		SetLimit(mo.paginationOpts.Limit).
+		SetSkip(mo.paginationOpts.Skip).
+		SetSort(mo.paginationOpts.Sort)
 
-	return client.Database(m.DataBaseName).Collection(m.TableName).FindOne(m.Ctx, m.Filter).Decode(v)
+	return client.Database(mo.databaseName).
+		Collection(mo.collectionName).
+		Find(mo.operationCtx, mo.queryFilter, findOpts)
 }
 
-// Find 多条数据查询
-func (m *Mgo) Find() (*mongo.Cursor, error) {
-	m.Lock()
-	defer m.Unlock()
+// SetPagination 设置分页参数 / Set Pagination Parameters
+func (mo *MongoOperator) SetPagination(page, pageSize int64) *MongoOperator {
+	skip := page * pageSize
+	mo.paginationOpts.Limit = pageSize
+	mo.paginationOpts.Skip = skip
+	return mo
+}
 
-	if client == nil {
-		return nil, errors.New("database connection failed")
+// SetSorting 设置排序规则 / Set Sorting Rules
+func (mo *MongoOperator) SetSorting(sortRules bson.D) *MongoOperator {
+	mo.paginationOpts.Sort = sortRules
+	return mo
+}
+
+// Where 构建查询条件 / Build Query Conditions
+func (mo *MongoOperator) Where(conditions interface{}) *MongoOperator {
+	var query bson.D
+	switch cond := conditions.(type) {
+	case [][]interface{}:
+		query = buildDynamicQuery(cond)
+	case map[string]interface{}:
+		query = buildMapQuery(cond)
+	case bson.D:
+		query = cond
+	default:
+		query = bson.D{}
 	}
 
-	return client.Database(m.DataBaseName).Collection(m.TableName).Find(m.Ctx, m.Filter, &options.FindOptions{
-		Limit: m.Pages.Limit,
-		Skip:  m.Pages.Skip,
-		Sort:  m.Pages.Sort,
+	mo.queryFilter = query
+	return mo
+}
+
+// ExecuteTransaction 执行事务操作 / Execute Transaction Operations
+func (mo *MongoOperator) ExecuteTransaction(txnFunc func(mongo.SessionContext) error) error {
+	client := mo.getClient()
+	session, err := client.StartSession()
+	if err != nil {
+		return fmt.Errorf("session start failed: %w", err)
+	}
+	defer session.EndSession(mo.operationCtx)
+
+	return mongo.WithSession(mo.operationCtx, session, func(sessCtx mongo.SessionContext) error {
+		if err := session.StartTransaction(); err != nil {
+			return fmt.Errorf("transaction start failed: %w", err)
+		}
+
+		if err := txnFunc(sessCtx); err != nil {
+			_ = session.AbortTransaction(sessCtx)
+			return err
+		}
+
+		if err := session.CommitTransaction(sessCtx); err != nil {
+			return fmt.Errorf("transaction commit failed: %w", err)
+		}
+		return nil
 	})
 }
 
-// Distinct 查询不重复的数据
-func (m *Mgo) Distinct(name string) ([]interface{}, error) {
-	m.Lock()
-	defer m.Unlock()
-
-	if client == nil {
-		return nil, errors.New("database connection failed")
+// CloseConnection 安全关闭全局连接 / Safely Close Global Connection
+func CloseConnection() {
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
+	if globalClient != nil {
+		_ = globalClient.Disconnect(context.Background())
 	}
-
-	return client.Database(m.DataBaseName).Collection(m.TableName).Distinct(m.Ctx, name, m.Filter)
 }
 
-// Limit 显示数量
-func (m *Mgo) Limit(limit int64) *Mgo {
-	m.Pages.Limit = &limit
-	return m
+// getClient 获取线程安全客户端 / Get Thread-Safe Client
+func (mo *MongoOperator) getClient() *mongo.Client {
+	clientMutex.RLock()
+	defer clientMutex.RUnlock()
+	return globalClient
 }
 
-// Skip 跳转多少页
-func (m *Mgo) Skip(skip int64) *Mgo {
-	m.Pages.Skip = &skip
-	return m
-}
-
-// Sort 排序
-func (m *Mgo) Sort(sort map[string]interface{}) *Mgo {
-	m.Pages.Sort = sort
-	return m
-}
-
-// Where 条件查询
-func (m *Mgo) Where(filter interface{}) *Mgo {
-	var where bson.D
-	switch filters := filter.(type) {
-	case [][]interface{}:
-		where = buildWhereFromInterfaceSlice(filters)
-	case [][]string:
-		where = buildWhereFromStringSlice(filters)
-	default:
-		where = bson.D{}
-	}
-
-	m.Filter = where
-	return m
-}
-
-// buildWhereFromInterfaceSlice 从[][]interface{}构建查询条件
-func buildWhereFromInterfaceSlice(filters [][]interface{}) bson.D {
-	var where bson.D
-	for _, value := range filters {
-		if len(value) == 2 {
-			where = append(where, bson.E{Key: conv.String(value[0]), Value: value[1]})
-		} else if len(value) == 3 {
-			where = append(where, bson.E{Key: conv.String(value[0]), Value: bson.D{{Key: conv.String(value[1]), Value: value[2]}}})
+// buildDynamicQuery 构建动态查询条件 / Build Dynamic Query Conditions
+func buildDynamicQuery(conditions [][]interface{}) bson.D {
+	var query bson.D
+	for _, cond := range conditions {
+		if len(cond) == 2 {
+			query = append(query, bson.E{Key: conv.String(cond[0]), Value: cond[1]})
+		} else if len(cond) == 3 {
+			op := convertOperator(conv.String(cond[1]))
+			query = append(query, bson.E{
+				Key: conv.String(cond[0]),
+				Value: bson.D{{
+					Key:   op,
+					Value: cond[2],
+				}}})
 		}
 	}
-	return where
+	return query
 }
 
-// buildWhereFromStringSlice 从[][]string构建查询条件
-func buildWhereFromStringSlice(filters [][]string) bson.D {
-	var where bson.D
-	for _, value := range filters {
-		if len(value) == 2 {
-			where = append(where, bson.E{Key: value[0], Value: value[1]})
-		} else if len(value) == 3 {
-			where = append(where, bson.E{Key: value[0], Value: bson.D{{Key: value[1], Value: value[2]}}})
-		}
-	}
-	return where
-}
-
-// Close 关闭连接
-func Close() {
-	if client != nil {
-		if err := client.Disconnect(context.Background()); err != nil {
-			panic(err)
-		}
-	}
-}
-
-// Aggregate 聚合高级查询
-func (m *Mgo) Aggregate() (*mongo.Cursor, error) {
-	if client == nil {
-		return nil, errors.New("database connection failed")
-	}
-	return client.Database(m.DataBaseName).Collection(m.TableName).Aggregate(m.Ctx, m.Filter)
-}
-
-// GetCtx 获取上下文
-func (m *Mgo) GetCtx() context.Context {
-	return m.Ctx
-}
-
-// StartTrans 开启事务
-func (m *Mgo) StartTrans(fn func(mongo.SessionContext) error) {
-	if err := client.UseSession(m.Ctx, fn); err != nil {
-		panic(err)
-	}
-}
-
-// BuildWhere 构造Where搜索
-func BuildWhere(Filter []string) [][]interface{} {
-	var where [][]interface{}
-	for _, value := range Filter {
-		var binding []interface{}
-		if err := json.Unmarshal([]byte(value), &binding); err != nil {
-			panic(err)
-		}
-		if len(binding) == 3 {
-			op := condition(conv.String(binding[1]))
-			where = append(where, []interface{}{binding[0], op, binding[2]})
-		}
-	}
-	return where
-}
-
-// condition 条件选择器
-func condition(condition string) string {
-	switch condition {
-	case "<":
-		return "$lt"
-	case "<=", "=<":
-		return "$lte"
+// convertOperator 转换操作符 / Convert Operator
+func convertOperator(op string) string {
+	switch op {
 	case ">":
 		return "$gt"
-	case ">=", "=>":
+	case ">=":
 		return "$gte"
-	case "!=", "<>":
+	case "<":
+		return "$lt"
+	case "<=":
+		return "$lte"
+	case "!=":
 		return "$ne"
 	default:
-		return "="
+		return "$eq"
 	}
+}
+
+// buildMapQuery 构建Map类型查询条件 / Build Map-Type Query Conditions
+func buildMapQuery(conditions map[string]interface{}) bson.D {
+	var query bson.D
+	for k, v := range conditions {
+		query = append(query, bson.E{Key: k, Value: v})
+	}
+	return query
 }
