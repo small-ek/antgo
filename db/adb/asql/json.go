@@ -31,19 +31,19 @@ func (j *Json) Scan(value interface{}) error {
 }
 
 // MarshalJSON
-func (m Json) MarshalJSON() ([]byte, error) {
-	if m == nil {
+func (j Json) MarshalJSON() ([]byte, error) {
+	if j == nil {
 		return []byte("null"), nil
 	}
-	return m, nil
+	return j, nil
 }
 
 // UnmarshalJSON
-func (m *Json) UnmarshalJSON(data []byte) error {
-	if m == nil {
+func (j *Json) UnmarshalJSON(data []byte) error {
+	if j == nil {
 		return errors.New("null point exception")
 	}
-	*m = append((*m)[0:0], data...)
+	*j = append((*j)[0:0], data...)
 	return nil
 }
 
@@ -54,5 +54,5 @@ func (j Json) IsNull() bool {
 
 // Equals
 func (j Json) Equals(j1 Json) bool {
-	return bytes.Equal([]byte(j), []byte(j1))
+	return bytes.Equal(j, j1)
 }
