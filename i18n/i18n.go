@@ -372,7 +372,6 @@ func getBundleByLanguage(langCode string) *LanguageBundle {
 
 func T(c *gin.Context, key string, args ...interface{}) string {
 	// 尝试缓存获取 | Try cache retrieval
-	fmt.Println(globalConfiguration.CacheEnabled)
 	if globalConfiguration.CacheEnabled {
 		if cached := getCachedTranslation(c, key, args...); cached != "" {
 			return cached
