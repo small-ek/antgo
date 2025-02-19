@@ -22,7 +22,7 @@ import (
 const (
 	DefaultLanguageCode   = "zh-CN"      // 默认语言代码 | Default language code
 	ContextKeyLanguage    = "i18nBundle" // 上下文存储键名 | Context storage key name
-	MaxCacheEntries       = 1000         // 最大缓存条目数 | Maximum cache entries
+	MaxCacheEntries       = 3000         // 最大缓存条目数 | Maximum cache entries
 	DefaultDateTimeLayout = time.RFC3339 // 默认日期时间格式 | Default datetime format
 )
 
