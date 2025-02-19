@@ -14,7 +14,7 @@ func TestNewPool(t *testing.T) {
 
 	// 获取池实例，确保池已成功创建
 	// Get the pool instance to ensure it's successfully created
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// 检查池实例是否为 nil
 	// Ensure the pool instance is not nil
@@ -38,7 +38,7 @@ func TestNewPoolWithDefaultQueue(t *testing.T) {
 
 	// 获取池实例，确保池已成功创建
 	// Get the pool instance to ensure it's successfully created
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// 确保池实例不为 nil
 	// Ensure the pool instance is not nil
@@ -66,7 +66,7 @@ func TestGetWithoutInitialization(t *testing.T) {
 
 	// 调用 Get，预期会 panic
 	// Call Get, expecting it to panic
-	pool.Get()
+
 }
 
 // TestNewWithInvalidSize 测试给定无效的大小

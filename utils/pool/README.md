@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// 获取 Goroutine 池实例
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// 使用 Goroutine 池提交任务
 	err = poolInstance.Submit(func() {
@@ -72,7 +72,7 @@ func main() {
 	}
 
 	// 获取 Goroutine 池实例
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// 提交多个任务
 	for i := 0; i < 5; i++ {
@@ -108,7 +108,7 @@ func main() {
 	}
 
 	// 获取全局池实例
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// 提交任务
 	err = poolInstance.Submit(func() {
@@ -179,7 +179,7 @@ func main() {
 	}
 
 	// Retrieve the Goroutine pool instance
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// Submit a task to the Goroutine pool
 	err = poolInstance.Submit(func() {
@@ -213,7 +213,7 @@ func main() {
 	}
 
 	// Retrieve the Goroutine pool instance
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// Submit multiple tasks
 	for i := 0; i < 5; i++ {
@@ -249,7 +249,7 @@ func main() {
 	}
 
 	// Retrieve the global Goroutine pool instance
-	poolInstance := pool.Get()
+	poolInstance := pool.JobPool
 
 	// Submit a task
 	err = poolInstance.Submit(func() {
