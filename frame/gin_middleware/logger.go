@@ -37,9 +37,9 @@ var apiBufferPool = sync.Pool{
 func Logger() gin.HandlerFunc {
 	// 初始化配置 / Initialize configuration
 	headerWhitelist := config.GetStringSlice("log.header_whitelist")
-	maxBodySize := config.GetInt("log.max_body_size")        // 最大请求体大小 / max request body size
-	skipMethods := config.GetStringSlice("log.skip_methods") // 跳过日志记录的方法 / methods to skip logging
-	enableDebugLog := config.GetBool("log.enable_debug")     // 是否启用Debug日志 / enable debug logs
+	maxBodySize := config.GetInt("log.max_body_size")         // 最大请求体大小 / max request body size
+	skipMethods := config.GetStringSlice("log.skip_methods")  // 跳过日志记录的方法 / methods to skip logging
+	enableResponseBody := config.GetBool("log.response_body") // 是否启用Debug日志 / enable debug logs
 
 	// 转换跳过方法为map提高查询效率 / Convert skip methods to map for faster lookup
 	skipMethodsMap := make(map[string]bool, len(skipMethods))
@@ -102,7 +102,7 @@ func Logger() gin.HandlerFunc {
 		if maxBodySize > 0 && len(responseBody) > maxBodySize {
 			responseBody = responseBody[:maxBodySize]
 		}
-		if enableDebugLog {
+		if enableResponseBody {
 			logFields = append(logFields, zap.ByteString("response_body", responseBody))
 		}
 
@@ -113,11 +113,7 @@ func Logger() gin.HandlerFunc {
 		case statusCode >= 400:
 			alog.Write.Warn("HTTP Client Error", logFields...)
 		default:
-			if enableDebugLog {
-				alog.Write.Debug("HTTP Access Log", logFields...)
-			} else {
-				alog.Write.Info("HTTP Access Log", logFields...)
-			}
+			alog.Write.Info("HTTP Access Log", logFields...)
 		}
 	}
 }
