@@ -79,6 +79,11 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 		zap.Int64("rows", rows),
 	}
 
+	requestID := ctx.Value("request_id")
+	if requestID != nil {
+		logFields = append(logFields, zap.String("request_id", requestID.(string)))
+	}
+
 	switch {
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
 		alog.Write.Error("sql_error", logFields...)

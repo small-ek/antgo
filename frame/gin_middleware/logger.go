@@ -152,7 +152,7 @@ func prepareLogFields(
 
 	// 单独记录X-Request-Id / Record X-Request-Id separately
 	if values := c.GetHeader("X-Request-Id"); values != "" {
-		logFields = append(logFields, zap.String("x_request_id", values))
+		logFields = append(logFields, zap.String("request_id", values))
 	}
 
 	// 请求体处理 / Process request body

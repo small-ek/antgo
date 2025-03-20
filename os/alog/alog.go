@@ -1,6 +1,7 @@
 package alog
 
 import (
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -244,4 +245,12 @@ func Fatal(msg string, fields ...zap.Field) {
 // 确保所有缓存的日志条目被写入
 func Sync() error {
 	return Write.Sync()
+}
+
+// WithRequestID adds the request ID to the logger
+func WithRequestID(c *gin.Context) *zap.Logger {
+	if requestID := c.GetHeader("x-request-id"); requestID != "" {
+		return Write.With(zap.String("request_id", requestID))
+	}
+	return Write
 }
