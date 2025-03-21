@@ -5,6 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// WithContextRequestID 设置请求 ID上下文
+// WithContextRequestID sets the request ID context
 func WithContextRequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("x-request-id")
