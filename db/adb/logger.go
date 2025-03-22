@@ -48,7 +48,7 @@ func (l Logger) Info(ctx context.Context, str string, args ...interface{}) {
 		return
 	}
 
-	alog.Write.Sugar().Debugf(str, args...)
+	alog.Write.Sugar().Infof(str, args...)
 }
 
 func (l Logger) Warn(ctx context.Context, str string, args ...interface{}) {
@@ -86,10 +86,10 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 
 	switch {
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
-		alog.Write.Error("sql_error", logFields...)
+		l.ZapLogger.Error("sql_error", logFields...)
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
-		alog.Write.Warn("sql_warn", logFields...)
+		l.ZapLogger.Warn("sql_warn", logFields...)
 	case l.LogLevel >= gormlogger.Info:
-		alog.Write.Info("sql_info", logFields...)
+		l.ZapLogger.Info("sql_info", logFields...)
 	}
 }

@@ -166,7 +166,7 @@ func getConfig(isLog bool, level gormlogger.LogLevel) *gorm.Config {
 
 	if isLog {
 		// 初始化自定义 Zap 日志记录器，并设置为默认日志记录器 / Initialize a custom Zap logger and set it as the default logger.
-		zapLog := New(zap.L())
+		zapLog := New(alog.Write)
 		zapLog.SetAsDefault()
 		cfg.Logger = zapLog.LogMode(level)
 	}
