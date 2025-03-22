@@ -208,37 +208,37 @@ func (logs *Logs) SetCompress(compress bool) *Logs {
 // Debug logs a message at the Debug level
 // Debug级别日志记录
 func Debug(msg string, fields ...zap.Field) {
-	Write.Debug(msg, fields...)
+	Write.WithOptions(zap.AddCallerSkip(1)).Debug(msg, fields...)
 }
 
 // Info logs a message at the Info level
 // Info级别日志记录
 func Info(msg string, fields ...zap.Field) {
-	Write.Info(msg, fields...)
+	Write.WithOptions(zap.AddCallerSkip(1)).Info(msg, fields...)
 }
 
 // Warn logs a message at the Warn level
 // Warn级别日志记录
 func Warn(msg string, fields ...zap.Field) {
-	Write.Warn(msg, fields...)
+	Write.WithOptions(zap.AddCallerSkip(1)).Warn(msg, fields...)
 }
 
 // Error logs a message at the Error level
 // Error级别日志记录
 func Error(msg string, fields ...zap.Field) {
-	Write.Error(msg, fields...)
+	Write.WithOptions(zap.AddCallerSkip(1)).Error(msg, fields...)
 }
 
 // Panic logs a message at the Panic level
 // Panic级别日志记录
 func Panic(msg string, fields ...zap.Field) {
-	Write.Panic(msg, fields...)
+	Write.WithOptions(zap.AddCallerSkip(1)).Panic(msg, fields...)
 }
 
 // Fatal logs a message at the Fatal level
 // Fatal级别日志记录
 func Fatal(msg string, fields ...zap.Field) {
-	Write.Fatal(msg, fields...)
+	Write.WithOptions(zap.AddCallerSkip(1)).Fatal(msg, fields...)
 }
 
 // Sync ensures that all buffered log entries are written
