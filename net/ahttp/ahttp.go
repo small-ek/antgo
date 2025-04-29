@@ -89,6 +89,7 @@ func defaultConfig() *Config {
 		DialerKeepAlive:       60 * time.Second, // 默认 Dialer Keep-Alive 时间
 		RetryWaitTime:         1 * time.Second,  // 默认重试等待时间
 		RetryMaxWaitTime:      10 * time.Second, // 默认最大重试等待时间
+		InsecureSkipVerify:    true,             // 跳过 TLS 证书验证 / Skip TLS certificate verification
 	}
 }
 
