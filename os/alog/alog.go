@@ -1,7 +1,6 @@
 package alog
 
 import (
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -253,8 +252,8 @@ func Sync() error {
 }
 
 // WithRequestID adds the request ID to the logger
-func WithRequestID(c *gin.Context) *zap.Logger {
-	if requestID := c.GetHeader("x-request-id"); requestID != "" {
+func WithRequestID(requestID string) *zap.Logger {
+	if requestID != "" {
 		return Write.With(zap.String("request_id", requestID))
 	}
 	return Write
