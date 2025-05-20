@@ -1,6 +1,7 @@
 package alog
 
 import (
+	"context"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -253,8 +254,34 @@ func Sync() error {
 
 // WithRequestID adds the request ID to the logger
 func WithRequestID(requestID string) *zap.Logger {
-	if requestID != "" {
-		return Write.With(zap.String("request_id", requestID))
+	if requestID == "" {
+		return Write
 	}
-	return Write
+	return Write.With(zap.String("request_id", requestID))
+}
+
+// WithCtx adds the request ID to the logger
+func WithCtx(ctx context.Context) *zap.Logger {
+	if ctx == nil {
+		return Write
+	}
+	val := ctx.Value("request_id")
+	requestID, ok := val.(string)
+	if !ok || requestID == "" {
+		return Write
+	}
+	return Write.With(zap.String("request_id", requestID))
+}
+
+// WithCtxValue adds the request ID to the logger
+func WithCtxValue(ctx context.Context, value string) *zap.Logger {
+	if ctx == nil {
+		return Write
+	}
+	val := ctx.Value(value)
+	requestID, ok := val.(string)
+	if !ok || requestID == "" {
+		return Write
+	}
+	return Write.With(zap.String("request_id", requestID))
 }
