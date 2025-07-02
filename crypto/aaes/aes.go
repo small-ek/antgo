@@ -7,29 +7,26 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"unicode/utf8"
 )
 
-// Encryption Modes 加密模式
 const (
-	ModeCBC = "CBC" // Cipher Block Chaining (密码分组链接)
-	ModeECB = "ECB" // Electronic Codebook (电子密码本)
-	ModeCTR = "CTR" // Counter (计数器模式)
-	ModeOFB = "OFB" // Output Feedback (输出反馈)
-	ModeCFB = "CFB" // Cipher Feedback (密码反馈)
+	ModeCBC = "CBC"
+	ModeECB = "ECB"
+	ModeCTR = "CTR"
+	ModeOFB = "OFB"
+	ModeCFB = "CFB"
 )
 
-// Padding Types 填充类型
 const (
-	PaddingPKCS7    = "PKCS7"    // PKCS#7/PKCS5标准填充
-	PaddingISO10126 = "ISO10126" // ISO 10126随机填充
-	PaddingANSIX923 = "ANSIX923" // ANSI X.923零填充
-	PaddingZero     = "Zero"     // 零字节填充
-	PaddingSpace    = "Space"    // 空格字符填充
-	PaddingNone     = "None"     // 无填充
+	PaddingPKCS7    = "PKCS7"
+	PaddingPKCS5    = "PKCS5"
+	PaddingISO10126 = "ISO10126"
+	PaddingANSIX923 = "ANSIX923"
+	PaddingZERO     = "ZERO"
+	PaddingSPACE    = "SPACE"
+	PaddingNONE     = "NONE"
 )
 
-// Error Definitions 错误类型
 var (
 	ErrInvalidKeyLength    = errors.New("invalid key length (16/24/32 bytes required)")
 	ErrInvalidIVLength     = errors.New("invalid IV length")
@@ -40,28 +37,28 @@ var (
 	ErrPaddingSizeMismatch = errors.New("padding size mismatch")
 )
 
-// Encrypt AES加密
-func Encrypt(plaintext, key, iv []byte, mode string, padding string) ([]byte, error) {
+// Encrypt 加密入口
+func Encrypt(plaintext, key, iv []byte, mode, padding string) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, ErrInvalidKeyLength
 	}
-
 	blockSize := block.BlockSize()
 
-	// 参数校验
 	if err := validateParams(mode, iv, blockSize); err != nil {
 		return nil, err
 	}
 
-	// 处理填充
 	if requiresPadding(mode) {
-		if plaintext, err = applyPadding(plaintext, blockSize, padding); err != nil {
+		plaintext, err = applyPadding(plaintext, blockSize, padding)
+		if err != nil {
 			return nil, err
 		}
+	} else if len(plaintext) == 0 {
+		// 防止 CTR/OFB/CFB 空数据加密报错
+		return []byte{}, nil
 	}
 
-	// 执行加密
 	switch mode {
 	case ModeCBC:
 		return encryptCBC(block, plaintext, iv)
@@ -78,79 +75,72 @@ func Encrypt(plaintext, key, iv []byte, mode string, padding string) ([]byte, er
 	}
 }
 
-// Decrypt AES解密
-func Decrypt(ciphertext, key, iv []byte, mode string, padding string) ([]byte, error) {
+// Decrypt 解密入口
+func Decrypt(ciphertext, key, iv []byte, mode, padding string) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, ErrInvalidKeyLength
 	}
-
 	blockSize := block.BlockSize()
 
-	// 参数校验
 	if err := validateParams(mode, iv, blockSize); err != nil {
 		return nil, err
 	}
 
-	// 执行解密
+	if len(ciphertext) == 0 {
+		return []byte{}, nil
+	}
+
 	var plaintext []byte
 	switch mode {
 	case ModeCBC:
-		if plaintext, err = decryptCBC(block, ciphertext, iv); err != nil {
-			return nil, err
-		}
+		plaintext, err = decryptCBC(block, ciphertext, iv)
 	case ModeECB:
-		if plaintext, err = decryptECB(block, ciphertext); err != nil {
-			return nil, err
-		}
+		plaintext, err = decryptECB(block, ciphertext)
 	case ModeCTR:
-		plaintext = decryptCTR(block, ciphertext, iv)
+		plaintext, err = decryptCTR(block, ciphertext, iv)
 	case ModeOFB:
-		plaintext = decryptOFB(block, ciphertext, iv)
+		plaintext, err = decryptOFB(block, ciphertext, iv)
 	case ModeCFB:
-		if plaintext, err = decryptCFB(block, ciphertext, iv); err != nil {
-			return nil, err
-		}
+		plaintext, err = decryptCFB(block, ciphertext, iv)
 	default:
 		return nil, ErrUnsupportedMode
 	}
+	if err != nil {
+		return nil, err
+	}
 
-	// 去除填充
 	if requiresPadding(mode) {
 		return removePadding(plaintext, blockSize, padding)
 	}
 	return plaintext, nil
 }
 
-// ======================== 加密模式实现 ========================
+// === 加解密模式 ===
 
 func encryptCBC(block cipher.Block, plaintext, iv []byte) ([]byte, error) {
-	mode := cipher.NewCBCEncrypter(block, iv)
 	ciphertext := make([]byte, len(plaintext))
-	mode.CryptBlocks(ciphertext, plaintext)
+	cipher.NewCBCEncrypter(block, iv).CryptBlocks(ciphertext, plaintext)
 	return ciphertext, nil
 }
 
 func decryptCBC(block cipher.Block, ciphertext, iv []byte) ([]byte, error) {
 	if len(ciphertext)%block.BlockSize() != 0 {
-		return nil, fmt.Errorf("ciphertext length not multiple of block size(%d)", block.BlockSize())
+		return nil, fmt.Errorf("%w: ciphertext length %d not multiple of block size %d", ErrInvalidDataLength, len(ciphertext), block.BlockSize())
 	}
-
-	mode := cipher.NewCBCDecrypter(block, iv)
 	plaintext := make([]byte, len(ciphertext))
-	mode.CryptBlocks(plaintext, ciphertext)
+	cipher.NewCBCDecrypter(block, iv).CryptBlocks(plaintext, ciphertext)
 	return plaintext, nil
 }
 
 func encryptECB(block cipher.Block, plaintext []byte) ([]byte, error) {
 	blockSize := block.BlockSize()
 	if len(plaintext)%blockSize != 0 {
-		return nil, fmt.Errorf("plaintext length must be multiple of %d", blockSize)
+		return nil, fmt.Errorf("%w: plaintext length %d not multiple of %d", ErrInvalidDataLength, len(plaintext), blockSize)
 	}
-
 	ciphertext := make([]byte, len(plaintext))
-	for i := 0; i < len(plaintext); i += blockSize {
-		block.Encrypt(ciphertext[i:], plaintext[i:])
+	for start := 0; start < len(plaintext); start += blockSize {
+		block.Encrypt(ciphertext[start:], plaintext[start:])
 	}
 	return ciphertext, nil
 }
@@ -158,71 +148,65 @@ func encryptECB(block cipher.Block, plaintext []byte) ([]byte, error) {
 func decryptECB(block cipher.Block, ciphertext []byte) ([]byte, error) {
 	blockSize := block.BlockSize()
 	if len(ciphertext)%blockSize != 0 {
-		return nil, fmt.Errorf("ciphertext length must be multiple of %d", blockSize)
+		return nil, fmt.Errorf("%w: ciphertext length %d not multiple of %d", ErrInvalidDataLength, len(ciphertext), blockSize)
 	}
-
 	plaintext := make([]byte, len(ciphertext))
-	for i := 0; i < len(ciphertext); i += blockSize {
-		block.Decrypt(plaintext[i:], ciphertext[i:])
+	for start := 0; start < len(ciphertext); start += blockSize {
+		block.Decrypt(plaintext[start:], ciphertext[start:])
 	}
 	return plaintext, nil
 }
 
-func encryptCTR(block cipher.Block, plaintext, iv []byte) ([]byte, error) {
-	stream := cipher.NewCTR(block, iv)
-	ciphertext := make([]byte, len(plaintext))
-	stream.XORKeyStream(ciphertext, plaintext)
-	return ciphertext, nil
+// CTR、OFB 模式加解密一致，统一写法
+
+func encryptCTR(block cipher.Block, input, iv []byte) ([]byte, error) {
+	out := make([]byte, len(input))
+	cipher.NewCTR(block, iv).XORKeyStream(out, input)
+	return out, nil
 }
 
-func decryptCTR(block cipher.Block, ciphertext, iv []byte) []byte {
-	// CTR模式加解密相同
-	plaintext, _ := encryptCTR(block, ciphertext, iv)
-	return plaintext
+func decryptCTR(block cipher.Block, input, iv []byte) ([]byte, error) {
+	// CTR 对称
+	return encryptCTR(block, input, iv)
 }
 
-func encryptOFB(block cipher.Block, plaintext, iv []byte) ([]byte, error) {
-	stream := cipher.NewOFB(block, iv)
-	ciphertext := make([]byte, len(plaintext))
-	stream.XORKeyStream(ciphertext, plaintext)
-	return ciphertext, nil
+func encryptOFB(block cipher.Block, input, iv []byte) ([]byte, error) {
+	out := make([]byte, len(input))
+	cipher.NewOFB(block, iv).XORKeyStream(out, input)
+	return out, nil
 }
 
-func decryptOFB(block cipher.Block, ciphertext, iv []byte) []byte {
-	// OFB模式加解密相同
-	plaintext, _ := encryptOFB(block, ciphertext, iv)
-	return plaintext
+func decryptOFB(block cipher.Block, input, iv []byte) ([]byte, error) {
+	return encryptOFB(block, input, iv)
 }
 
-func encryptCFB(block cipher.Block, plaintext, iv []byte) ([]byte, error) {
-	stream := cipher.NewCFBEncrypter(block, iv)
-	ciphertext := make([]byte, len(plaintext))
-	stream.XORKeyStream(ciphertext, plaintext)
-	return ciphertext, nil
+func encryptCFB(block cipher.Block, input, iv []byte) ([]byte, error) {
+	out := make([]byte, len(input))
+	cipher.NewCFBEncrypter(block, iv).XORKeyStream(out, input)
+	return out, nil
 }
 
-func decryptCFB(block cipher.Block, ciphertext, iv []byte) ([]byte, error) {
-	stream := cipher.NewCFBDecrypter(block, iv)
-	plaintext := make([]byte, len(ciphertext))
-	stream.XORKeyStream(plaintext, ciphertext)
-	return plaintext, nil
+func decryptCFB(block cipher.Block, input, iv []byte) ([]byte, error) {
+	out := make([]byte, len(input))
+	cipher.NewCFBDecrypter(block, iv).XORKeyStream(out, input)
+	return out, nil
 }
 
-// ======================== 填充方法 ========================
+// === 填充 ===
 
 func applyPadding(data []byte, blockSize int, paddingType string) ([]byte, error) {
 	switch paddingType {
-	case PaddingPKCS7:
+	case PaddingPKCS7, PaddingPKCS5:
 		return pkcs7Pad(data, blockSize), nil
 	case PaddingISO10126:
 		return iso10126Pad(data, blockSize)
 	case PaddingANSIX923:
 		return ansiX923Pad(data, blockSize)
-	case PaddingZero:
+	case PaddingZERO:
 		return zeroPad(data, blockSize)
-	case PaddingSpace:
+	case PaddingSPACE:
 		return spacePad(data, blockSize)
-	case PaddingNone:
+	case PaddingNONE:
 		if len(data)%blockSize != 0 {
 			return nil, ErrInvalidDataLength
 		}
@@ -236,26 +220,25 @@ func removePadding(data []byte, blockSize int, paddingType string) ([]byte, erro
 	if len(data) == 0 {
 		return nil, ErrInvalidPadding
 	}
-
 	switch paddingType {
-	case PaddingPKCS7:
+	case PaddingPKCS7, PaddingPKCS5:
 		return pkcs7Unpad(data, blockSize)
 	case PaddingISO10126:
-		return iso10126Unpad(data, blockSize)
+		return iso10126Unpad(data)
 	case PaddingANSIX923:
 		return ansiX923Unpad(data, blockSize)
-	case PaddingZero:
+	case PaddingZERO:
 		return zeroUnpad(data, blockSize)
-	case PaddingSpace:
+	case PaddingSPACE:
 		return spaceUnpad(data, blockSize)
-	case PaddingNone:
+	case PaddingNONE:
 		return data, nil
 	default:
 		return nil, ErrUnsupportedPadding
 	}
 }
 
-// PKCS7填充
+// PKCS7 (PKCS5相同)
 func pkcs7Pad(data []byte, blockSize int) []byte {
 	padding := blockSize - len(data)%blockSize
 	return append(data, bytes.Repeat([]byte{byte(padding)}, padding)...)
@@ -265,60 +248,54 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 || len(data)%blockSize != 0 {
 		return nil, ErrInvalidPadding
 	}
-
 	padding := int(data[len(data)-1])
 	if padding == 0 || padding > blockSize {
 		return nil, ErrInvalidPadding
 	}
-
-	if !bytes.HasSuffix(data, bytes.Repeat([]byte{byte(padding)}, padding)) {
-		return nil, ErrInvalidPadding
+	for _, v := range data[len(data)-padding:] {
+		if int(v) != padding {
+			return nil, ErrInvalidPadding
+		}
 	}
 	return data[:len(data)-padding], nil
 }
 
-// ISO 10126填充
+// ISO10126 填充实现优化
 func iso10126Pad(data []byte, blockSize int) ([]byte, error) {
 	padding := blockSize - len(data)%blockSize
 	if padding == 0 {
 		padding = blockSize
 	}
-
 	buf := make([]byte, len(data)+padding)
 	copy(buf, data)
-
-	if _, err := rand.Read(buf[len(data) : len(data)+padding-1]); err != nil {
+	if _, err := rand.Read(buf[len(data) : len(buf)-1]); err != nil {
 		return nil, err
 	}
 	buf[len(buf)-1] = byte(padding)
 	return buf, nil
 }
 
-func iso10126Unpad(data []byte, _ int) ([]byte, error) {
+func iso10126Unpad(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, ErrInvalidPadding
 	}
-
 	padding := int(data[len(data)-1])
-	if padding < 1 {
-		return nil, ErrInvalidPadding
-	}
-
-	if len(data) < padding {
+	if padding < 1 || padding > len(data) {
 		return nil, ErrInvalidPadding
 	}
 	return data[:len(data)-padding], nil
 }
 
-// ANSI X.923填充
+// ANSI X.923
 func ansiX923Pad(data []byte, blockSize int) ([]byte, error) {
 	padding := blockSize - len(data)%blockSize
 	if padding == 0 {
 		padding = blockSize
 	}
-
 	buf := make([]byte, len(data)+padding)
 	copy(buf, data)
+	// 中间填充0，最后一个字节填充长度
+	// buf[len(data):len(buf)-1]默认为0
 	buf[len(buf)-1] = byte(padding)
 	return buf, nil
 }
@@ -327,16 +304,10 @@ func ansiX923Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, ErrInvalidPadding
 	}
-
 	padding := int(data[len(data)-1])
-	if padding < 1 || padding > blockSize {
+	if padding < 1 || padding > blockSize || padding > len(data) {
 		return nil, ErrInvalidPadding
 	}
-
-	if len(data) < padding {
-		return nil, ErrInvalidPadding
-	}
-
 	for i := len(data) - padding; i < len(data)-1; i++ {
 		if data[i] != 0 {
 			return nil, ErrInvalidPadding
@@ -355,38 +326,19 @@ func zeroPad(data []byte, blockSize int) ([]byte, error) {
 }
 
 func zeroUnpad(data []byte, blockSize int) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, ErrInvalidPadding
-	}
-
-	// 查找最后一个非零字节的位置
-	idx := bytes.LastIndexFunc(data, func(r rune) bool {
-		return r != 0
-	})
-
-	// 全零数据特殊处理
+	idx := bytes.LastIndexFunc(data, func(r rune) bool { return r != 0 })
 	if idx == -1 {
 		return []byte{}, nil
 	}
-
-	// 计算填充长度并验证
 	paddingLen := len(data) - idx - 1
-	if paddingLen < 0 {
-		return nil, ErrInvalidPadding
+	if paddingLen > blockSize {
+		return nil, ErrPaddingSizeMismatch
 	}
-
-	// 验证填充字节是否全零
 	for _, b := range data[idx+1:] {
 		if b != 0 {
 			return nil, ErrInvalidPadding
 		}
 	}
-
-	// 检查填充长度是否合法
-	if paddingLen > blockSize {
-		return nil, ErrPaddingSizeMismatch
-	}
-
 	return data[:idx+1], nil
 }
 
@@ -401,39 +353,26 @@ func spacePad(data []byte, blockSize int) ([]byte, error) {
 
 func spaceUnpad(data []byte, blockSize int) ([]byte, error) {
 	idx := len(data) - 1
-	for ; idx >= 0; idx-- {
-		if data[idx] != ' ' {
-			break
-		}
+	for ; idx >= 0 && data[idx] == ' '; idx-- {
 	}
-
 	padding := len(data) - idx - 1
-	if padding == 0 {
-		return data, nil
-	}
-
-	// 验证填充字符有效性
-	if !utf8.Valid(data[idx+1:]) {
-		return nil, ErrInvalidPadding
-	}
-
 	if padding > blockSize {
 		return nil, ErrPaddingSizeMismatch
 	}
 	return data[:idx+1], nil
 }
 
-// ======================== 辅助函数 ========================
+// === 辅助 ===
 
 func validateParams(mode string, iv []byte, blockSize int) error {
 	switch mode {
 	case ModeCBC, ModeCTR, ModeOFB, ModeCFB:
 		if len(iv) != blockSize {
-			return fmt.Errorf("%w: need %d bytes", ErrInvalidIVLength, blockSize)
+			return fmt.Errorf("%w: expected %d bytes, got %d", ErrInvalidIVLength, blockSize, len(iv))
 		}
 	case ModeECB:
 		if len(iv) != 0 {
-			return fmt.Errorf("%w: ECB模式需要空IV", ErrInvalidIVLength)
+			return fmt.Errorf("%w: ECB mode requires empty IV", ErrInvalidIVLength)
 		}
 	default:
 		return ErrUnsupportedMode

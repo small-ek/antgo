@@ -212,38 +212,80 @@ func (logs *Logs) SetCompress(compress bool) *Logs {
 
 // Debug logs a message at the Debug level
 // Debug级别日志记录
-func Debug(msg string, fields ...zap.Field) {
-	wrappedLogger.Debug(msg, fields...)
+func Debug(ctx context.Context, msg string, fields ...zap.Field) {
+	requestID := getRequestIDFromCtx(ctx)
+	if requestID != "" {
+		wrappedLogger.With(zap.String("request_id", requestID)).Debug(msg, fields...)
+	} else {
+		wrappedLogger.Debug(msg, fields...)
+	}
+}
+func getRequestIDFromCtx(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	if val := ctx.Value("request_id"); val != nil {
+		if id, ok := val.(string); ok {
+			return id
+		}
+	}
+	return ""
 }
 
 // Info logs a message at the Info level
 // Info级别日志记录
-func Info(msg string, fields ...zap.Field) {
-	wrappedLogger.Info(msg, fields...)
+func Info(ctx context.Context, msg string, fields ...zap.Field) {
+	requestID := getRequestIDFromCtx(ctx)
+	if requestID != "" {
+		wrappedLogger.With(zap.String("request_id", requestID)).Info(msg, fields...)
+	} else {
+		wrappedLogger.Info(msg, fields...)
+	}
+
 }
 
 // Warn logs a message at the Warn level
 // Warn级别日志记录
-func Warn(msg string, fields ...zap.Field) {
-	wrappedLogger.Warn(msg, fields...)
+func Warn(ctx context.Context, msg string, fields ...zap.Field) {
+	requestID := getRequestIDFromCtx(ctx)
+	if requestID != "" {
+		wrappedLogger.With(zap.String("request_id", requestID)).Warn(msg, fields...)
+	} else {
+		wrappedLogger.Warn(msg, fields...)
+	}
 }
 
 // Error logs a message at the Error level
 // Error级别日志记录
-func Error(msg string, fields ...zap.Field) {
-	wrappedLogger.Error(msg, fields...)
+func Error(ctx context.Context, msg string, fields ...zap.Field) {
+	requestID := getRequestIDFromCtx(ctx)
+	if requestID != "" {
+		wrappedLogger.With(zap.String("request_id", requestID)).Error(msg, fields...)
+	} else {
+		wrappedLogger.Error(msg, fields...)
+	}
 }
 
 // Panic logs a message at the Panic level
 // Panic级别日志记录
-func Panic(msg string, fields ...zap.Field) {
-	wrappedLogger.Panic(msg, fields...)
+func Panic(ctx context.Context, msg string, fields ...zap.Field) {
+	requestID := getRequestIDFromCtx(ctx)
+	if requestID != "" {
+		wrappedLogger.With(zap.String("request_id", requestID)).Panic(msg, fields...)
+	} else {
+		wrappedLogger.Panic(msg, fields...)
+	}
 }
 
 // Fatal logs a message at the Fatal level
 // Fatal级别日志记录
-func Fatal(msg string, fields ...zap.Field) {
-	wrappedLogger.Fatal(msg, fields...)
+func Fatal(ctx context.Context, msg string, fields ...zap.Field) {
+	requestID := getRequestIDFromCtx(ctx)
+	if requestID != "" {
+		wrappedLogger.With(zap.String("request_id", requestID)).Fatal(msg, fields...)
+	} else {
+		wrappedLogger.Fatal(msg, fields...)
+	}
 }
 
 // Sync ensures that all buffered log entries are written

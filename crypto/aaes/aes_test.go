@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/rand"
+	"encoding/base64"
+	"fmt"
 	"testing"
 )
 
@@ -121,7 +123,7 @@ func TestECB(t *testing.T) {
 			key:       key,
 			iv:        []byte{},
 			mode:      ModeECB,
-			padding:   PaddingZero,
+			padding:   PaddingZERO,
 		},
 		{
 			name:      "ECB-NoPaddingError",
@@ -129,7 +131,7 @@ func TestECB(t *testing.T) {
 			key:       key,
 			iv:        []byte{},
 			mode:      ModeECB,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 			wantErr:   true,
 		},
 	}
@@ -150,7 +152,7 @@ func TestCTR(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeCTR,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 		{
 			name:      "CTR-LongText",
@@ -158,7 +160,7 @@ func TestCTR(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeCTR,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 		{
 			name:      "CTR-EmptyData",
@@ -166,7 +168,7 @@ func TestCTR(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeCTR,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 	}
 
@@ -186,7 +188,7 @@ func TestOFB(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeOFB,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 		{
 			name:      "OFB-RandomData",
@@ -194,7 +196,7 @@ func TestOFB(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeOFB,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 	}
 
@@ -214,7 +216,7 @@ func TestCFB(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeCFB,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 		{
 			name:      "CFB-SpecialChars",
@@ -222,7 +224,7 @@ func TestCFB(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeCFB,
-			padding:   PaddingNone,
+			padding:   PaddingNONE,
 		},
 	}
 
@@ -260,7 +262,7 @@ func TestEdgeCases(t *testing.T) {
 			key:       key,
 			iv:        iv,
 			mode:      ModeCBC,
-			padding:   PaddingSpace,
+			padding:   PaddingSPACE,
 		},
 	}
 
@@ -328,6 +330,20 @@ func BenchmarkCTR(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Encrypt(data, key, iv, ModeCTR, PaddingNone)
+		Encrypt(data, key, iv, ModeCTR, PaddingNONE)
 	}
+}
+
+func TestAES(t *testing.T) {
+	key128 := randomBytes(16)
+	//key192 := randomBytes(24)
+	//key256 := randomBytes(32)
+	iv := randomBytes(aes.BlockSize)
+
+	ciphertext, err := Encrypt([]byte("Hello CBC Mode!"), key128, iv, ModeCBC, PaddingPKCS7)
+	text := base64.StdEncoding.EncodeToString(ciphertext)
+	fmt.Println(text)
+	fmt.Println(err)
+	result, _ := Decrypt(ciphertext, key128, iv, ModeCBC, PaddingPKCS7)
+	fmt.Println(string(result))
 }

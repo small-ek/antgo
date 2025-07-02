@@ -1,6 +1,7 @@
 package ahttp
 
 import (
+	"context"
 	"crypto/tls"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
@@ -120,6 +121,19 @@ func newTransport(config *Config) *http.Transport {
 	}
 }
 
+// getRequestId 获取请求标识
+func getRequestId(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	val := ctx.Value("request_id")
+	requestID, ok := val.(string)
+	if !ok || requestID == "" {
+		return ""
+	}
+	return requestID
+}
+
 // SetLog 设置日志记录器 / SetLog sets the logger
 func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 	if logger == nil {
@@ -127,7 +141,12 @@ func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 	}
 	h.logger = logger
 	h.httpClient.OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
-		logger.Info("Request",
+		requestID := getRequestId(r.Context())
+		reqLogger := logger
+		if requestID != "" {
+			reqLogger = logger.With(zap.String("request_id", requestID))
+		}
+		reqLogger.Info("Request",
 			zap.String("URL", r.URL),
 			zap.String("Method", r.Method),
 			zap.Any("Headers", r.Header),
@@ -140,42 +159,29 @@ func (h *HttpClient) SetLog(logger *zap.Logger) *HttpClient {
 	})
 
 	h.httpClient.OnAfterResponse(func(c *resty.Client, r *resty.Response) error {
-		if r.StatusCode() >= 500 {
-			logger.Error("Server error",
-				zap.Int("StatusCode", r.StatusCode()),
-				zap.String("URL", r.Request.URL),
-				zap.String("Method", r.Request.Method),
-				zap.Any("Headers", r.Header),
-				zap.Any("Cookies", r.Cookies),
-				zap.Any("FormData", r.Request.FormData),
-				zap.Any("QueryParam", r.Request.QueryParam),
-				zap.ByteString("Body", r.Body()),
-				zap.Duration("Duration", time.Since(r.Request.Time)),
-			)
-		} else if r.StatusCode() >= 400 {
-			logger.Warn("Client error",
-				zap.Int("StatusCode", r.StatusCode()),
-				zap.String("URL", r.Request.URL),
-				zap.String("Method", r.Request.Method),
-				zap.Any("Headers", r.Header),
-				zap.Any("Cookies", r.Cookies),
-				zap.Any("FormData", r.Request.FormData),
-				zap.Any("QueryParam", r.Request.QueryParam),
-				zap.ByteString("Body", r.Body()),
-				zap.Duration("Duration", time.Since(r.Request.Time)),
-			)
-		} else {
-			logger.Info("Response success",
-				zap.Int("StatusCode", r.StatusCode()),
-				zap.String("URL", r.Request.URL),
-				zap.String("Method", r.Request.Method),
-				zap.Any("Headers", r.Header),
-				zap.Any("Cookies", r.Cookies),
-				zap.Any("FormData", r.Request.FormData),
-				zap.Any("QueryParam", r.Request.QueryParam),
-				zap.ByteString("Body", r.Body()),
-				zap.Duration("Duration", time.Since(r.Request.Time)),
-			)
+		respLog := []zap.Field{
+			zap.Int("StatusCode", r.StatusCode()),
+			zap.String("URL", r.Request.URL),
+			zap.String("Method", r.Request.Method),
+			zap.Any("Headers", r.Header()),
+			zap.Any("Cookies", r.Cookies()),
+			zap.Any("FormData", r.Request.FormData),
+			zap.Any("QueryParam", r.Request.QueryParam),
+			zap.ByteString("Body", r.Body()),
+			zap.Duration("Duration", time.Since(r.Request.Time)),
+		}
+		requestID := getRequestId(r.Request.Context())
+		reqLogger := logger
+		if requestID != "" {
+			reqLogger = logger.With(zap.String("request_id", requestID))
+		}
+		switch {
+		case r.StatusCode() >= 500:
+			reqLogger.Error("Server error", respLog...)
+		case r.StatusCode() >= 400:
+			reqLogger.Warn("Client error", respLog...)
+		default:
+			reqLogger.Info("Response success", respLog...)
 		}
 		return nil
 	})
