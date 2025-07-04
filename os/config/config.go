@@ -69,7 +69,7 @@ func AddConfigFile(path string) error {
 		if err := newViper.ReadInConfig(); err == nil {
 			Config.Viper.MergeConfigMap(newViper.AllSettings())
 		} else {
-			alog.Error("Viper ReadInConfig error", zap.Error(err))
+			alog.Error(context.Background(), "Viper ReadInConfig error", zap.Error(err))
 		}
 	})
 	return nil
@@ -148,7 +148,7 @@ func (c *ConfigStr) loadEtcdToViper(paths []string, client *clientv3.Client) err
 		}
 		// 如果没有获取到配置内容，则跳过该 key
 		if len(resp.Kvs) == 0 {
-			alog.Warn(fmt.Sprintf("No configuration found for key: %s", pathKey))
+			alog.Warn(context.Background(), fmt.Sprintf("No configuration found for key: %s", pathKey))
 			continue
 		}
 
@@ -194,7 +194,7 @@ func (c *ConfigStr) watchEtcd3(paths []string, cli *clientv3.Client) {
 							newViper.SetConfigType("toml")
 						}
 						if err := newViper.ReadConfig(bytes.NewReader(event.Kv.Value)); err != nil {
-							alog.Error("Viper ReadConfig error", zap.Error(err))
+							alog.Error(context.Background(), "Viper ReadConfig error", zap.Error(err))
 							continue
 						}
 						filename := strings.TrimSuffix(filepath.Base(key), filepath.Ext(key))

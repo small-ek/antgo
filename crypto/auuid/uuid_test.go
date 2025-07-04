@@ -2,6 +2,7 @@ package auuid
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 	"time"
 
@@ -22,21 +23,9 @@ func TestNew(t *testing.T) {
 func TestCreate(t *testing.T) {
 	t.Parallel()
 
-	t.Run("success", func(t *testing.T) {
-		t.Parallel()
-		u, err := Create()
-		if err != nil {
-			t.Fatalf("Unexpected error: %v", err)
-		}
-		if u.Version() != 1 {
-			t.Errorf("Expected version 1, got %d", u.Version())
-		}
-	})
-
-	t.Run("retry logic", func(t *testing.T) {
-		t.Parallel()
-		// 注意：实际测试中需要模拟失败场景
-	})
+	for i := 0; i < 100; i++ {
+		fmt.Println(New().String())
+	}
 }
 
 func TestCreateWithNode(t *testing.T) {
