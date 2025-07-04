@@ -198,7 +198,13 @@ func (h *HttpClient) Client() *resty.Client {
 	return h.httpClient
 }
 
-// 初始化时统一设置 User-Agent 头部 / Set the User-Agent header during initialization
+// init 初始化时统一设置 User-Agent 头部 / Set the User-Agent header during initialization
 func (h *HttpClient) init() {
 	h.httpClient.SetHeader("User-Agent", "antgo")
+}
+
+// SetCommonHeader 设置通用请求头
+func (h *HttpClient) SetCommonHeader(key, value string) *HttpClient {
+	h.httpClient.SetHeader(key, value)
+	return h
 }
