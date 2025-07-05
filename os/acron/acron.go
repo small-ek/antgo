@@ -1,128 +1,362 @@
 package acron
 
 import (
+	"context"
 	"errors"
-	"github.com/robfig/cron/v3"
+	"fmt"
+	"github.com/robfig/cron/v3"              // 任务调度库 cron scheduler library
+	"github.com/small-ek/antgo/crypto/auuid" // 生成唯一请求 ID UUID generator for request IDs
+	"go.uber.org/zap"                        // 结构化日志库 structured logging
+	"math/rand"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
-// Crontab crontab 管理器 / Crontab manager
-type Crontab struct {
-	inner   *cron.Cron              // Cron 实例 / Cron instance
-	ids     map[string]cron.EntryID // 存储任务ID与Cron Entry ID的映射 / Store task IDs and Cron Entry IDs
-	mu      sync.RWMutex            // 读写锁 / Read-write mutex
-	running bool                    // 记录是否正在运行 / Flag to track whether cron engine is running
+// requestIDKey 定义上下文中的键，用于请求跟踪
+// requestIDKey is the key for storing request ID in context
+const requestIDKey string = "request_id"
+
+// ContextJob 支持上下文的定时任务接口，Run 方法接收 context 并返回 error
+// ContextJob is a cron job interface accepting a context and returning an error
+type ContextJob interface {
+	Run(ctx context.Context) error
 }
 
-// New 创建新的 crontab / Create a new crontab
-func New() *Crontab {
-	// 设定支持秒级的 Cron 表达式解析器 / Set up a parser for second-level cron expressions
-	secondParser := cron.NewParser(cron.Second | cron.Minute |
-		cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
+// JobMeta 存储任务的元数据信息
+// JobMeta stores metadata information for each job
+type JobMeta struct {
+	EntryID cron.EntryID  // Cron 内部任务ID Internal cron entry ID
+	Spec    string        // Cron 时间表达式 Cron schedule expression
+	Timeout time.Duration // 任务超时时间 Job timeout duration
+	Type    string        // 任务类型 (func/job) Job type (func/job)
+}
+
+// Crontab 定时任务管理器，支持全局上下文、超时、日志及并发计数
+// Crontab manages cron jobs with root context, per-job timeout, logging, and concurrency tracking
+type Crontab struct {
+	ctx     context.Context    // 根上下文，用于派生子任务 root context for child jobs
+	cron    *cron.Cron         // robfig/cron 实例 cron scheduler instance
+	ids     map[string]JobMeta // 任务ID到元数据的映射 Map of task IDs to job metadata
+	mu      sync.RWMutex       // 保护ids和cron实例的互斥锁 Mutex for protecting ids and cron instance
+	logger  *zap.Logger        // Zap 日志实例 zap logger for structured logging
+	timeout time.Duration      // 默认任务超时时间 default timeout for each job
+	running int32              // 并发执行任务计数 counter for concurrently running jobs
+}
+
+// New 创建并返回 Crontab 实例
+// New creates a Crontab with given root context, zap logger, and default timeout
+func New(ctx context.Context, logger *zap.Logger, defaultTimeout time.Duration) *Crontab {
+	// 初始化随机种子 (用于 auuid 或其他随机逻辑)
+	// Initialize random seed (for auuid or other random logic)
+	rand.Seed(time.Now().UnixNano())
+
+	// 支持秒级的 cron 解析器 parser supporting seconds
+	parser := cron.NewParser(
+		cron.Second | cron.Minute | cron.Hour | cron.Dom |
+			cron.Month | cron.DowOptional | cron.Descriptor,
+	)
+
+	cronLogger := &zapCronLogger{logger: logger}
+	c := cron.New(
+		cron.WithParser(parser),       // 使用自定义解析器 use custom parser
+		cron.WithLocation(time.Local), // 本地时区 local timezone
+		cron.WithChain(
+			cron.SkipIfStillRunning(cronLogger), // 如果上次任务未完成，则跳过 skip if still running
+			cron.Recover(cronLogger),            // 任务 panic 时自动恢复 recover from panic
+		),
+	)
 
 	return &Crontab{
-		inner: cron.New(cron.WithParser(secondParser), cron.WithChain()), // 初始化 Cron 实例 / Initialize Cron instance
-		ids:   make(map[string]cron.EntryID),                             // 初始化任务ID映射表 / Initialize task ID map
+		ctx:     ctx,
+		cron:    c,
+		ids:     make(map[string]JobMeta),
+		logger:  logger,
+		timeout: defaultTimeout,
 	}
 }
 
-// IDs 返回所有有效的 cron 任务ID / Return all valid cron task IDs
-func (c *Crontab) IDs() []string {
-	c.mu.RLock()         // 只读锁 / Acquire read lock
-	defer c.mu.RUnlock() // 释放读锁 / Release read lock
-
-	validIDs := make([]string, 0, len(c.ids)) // 存储有效的ID / Store valid IDs
-	invalidIDs := make([]string, 0)           // 存储无效的ID / Store invalid IDs
-
-	// 遍历所有任务ID，检查其有效性 / Check the validity of each task ID
-	for sid, eid := range c.ids {
-		if e := c.inner.Entry(eid); e.ID != eid { // 如果任务无效 / If the task is invalid
-			invalidIDs = append(invalidIDs, sid) // 添加到无效ID列表 / Add to invalid IDs
-			continue
-		}
-		validIDs = append(validIDs, sid) // 添加到有效ID列表 / Add to valid IDs
-	}
-
-	// 清理无效ID / Clean up invalid IDs
-	if len(invalidIDs) > 0 {
-		c.mu.Lock()         // 升级为写锁 / Upgrade to write lock
-		defer c.mu.Unlock() // 释放写锁 / Release write lock
-		for _, id := range invalidIDs {
-			delete(c.ids, id) // 删除无效ID / Delete invalid IDs
-		}
-	}
-
-	return validIDs // 返回所有有效的ID / Return all valid IDs
-}
-
-// Start 启动 cron 引擎 / Start the cron engine
+// Start 启动调度器
+// Start starts the cron scheduler
 func (c *Crontab) Start() {
-	c.inner.Start()  // 启动 Cron / Start Cron
-	c.running = true // 标记为运行中 / Set the running flag to true
+	c.cron.Start()
+	c.logger.Info("cron scheduler started")
 }
 
-// Stop 停止 cron 引擎 / Stop the cron engine
-func (c *Crontab) Stop() {
-	c.inner.Stop()    // 停止 Cron / Stop Cron
-	c.running = false // 标记为停止 / Set the running flag to false
+// Stop 停止调度并返回停止后的上下文，等待所有正在运行任务完成
+// Stop stops scheduler and returns a context that ends when all jobs complete
+func (c *Crontab) Stop() context.Context {
+	c.logger.Info("stopping cron scheduler gracefully")
+	return c.cron.Stop()
 }
 
-// IsRunning 检查 Cron 引擎是否正在运行 / Check if the cron engine is running
-func (c *Crontab) IsRunning() bool {
-	return c.running // 返回运行状态 / Return the running status
-}
-
-// DelByID 根据ID删除一个 cron 任务 / Remove a cron task by its ID
-func (c *Crontab) DelByID(id string) {
-	c.mu.Lock()         // 获取写锁 / Acquire write lock
-	defer c.mu.Unlock() // 释放写锁 / Release write lock
-
-	eid, ok := c.ids[id] // 获取任务ID对应的Cron Entry ID / Get the Cron Entry ID for the task ID
-	if !ok {
-		return // 如果ID不存在，直接返回 / Return if ID does not exist
+// StopWithTimeout 限时停止，超时后强制结束
+// StopWithTimeout stops scheduler and forcibly ends after duration d
+func (c *Crontab) StopWithTimeout(d time.Duration) {
+	c.logger.Info("stopping cron with timeout", zap.Duration("timeout", d))
+	ctx := c.Stop()
+	select {
+	case <-ctx.Done():
+		c.logger.Info("cron stopped gracefully")
+	case <-time.After(d):
+		c.logger.Warn("cron forced stop after timeout")
 	}
-	c.inner.Remove(eid) // 移除任务 / Remove the task
-	delete(c.ids, id)   // 删除任务ID映射 / Delete the task ID mapping
 }
 
-// AddByID 根据ID添加一个 cron 任务 / Add a cron task by its ID
-// id 为唯一标识符 / id is unique
-// spec 为 cron 表达式 / spec is the cron expression
-func (c *Crontab) AddByID(id string, spec string, cmd cron.Job) error {
-	c.mu.Lock()         // 获取写锁 / Acquire write lock
-	defer c.mu.Unlock() // 释放写锁 / Release write lock
+// RunningTasks 返回当前正在执行的任务数量
+// RunningTasks returns number of jobs currently executing
+func (c *Crontab) RunningTasks() int {
+	return int(atomic.LoadInt32(&c.running))
+}
 
-	if _, ok := c.ids[id]; ok { // 检查任务ID是否已存在 / Check if task ID already exists
-		return errors.New("crontab id exists") // 如果已存在，返回错误 / Return error if ID already exists
+// AddFunc 添加无上下文的简单任务
+// AddFunc registers a simple function without context
+func (c *Crontab) AddFunc(id, spec string, f func()) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// 检查任务ID是否已存在
+	// Check if task ID already exists
+	if _, exists := c.ids[id]; exists {
+		return errors.New("task id exists")
 	}
-	eid, err := c.inner.AddJob(spec, cmd) // 添加Cron任务 / Add the cron task
+
+	eid, err := c.cron.AddFunc(spec, f)
 	if err != nil {
-		return err // 返回错误 / Return error
+		c.logger.Error("AddFunc failed", zap.String("id", id), zap.Error(err))
+		return err
 	}
-	c.ids[id] = eid // 保存任务ID和Cron Entry ID映射 / Save the task ID and Cron Entry ID mapping
-	return nil      // 返回成功 / Return success
+
+	// 存储任务元数据
+	// Store job metadata
+	c.ids[id] = JobMeta{
+		EntryID: eid,
+		Spec:    spec,
+		Type:    "func",
+	}
+
+	c.logger.Info("task registered",
+		zap.String("id", id),
+		zap.String("spec", spec),
+		zap.String("type", "func"))
+	return nil
 }
 
-// AddByFunc 根据ID和函数添加一个 cron 任务 / Add a cron task using a function
-func (c *Crontab) AddByFunc(id string, spec string, f func()) error {
-	c.mu.Lock()         // 获取写锁 / Acquire write lock
-	defer c.mu.Unlock() // 释放写锁 / Release write lock
+// AddJobWithTimeout 添加带上下文支持和自定义超时的任务
+// AddJobWithTimeout registers a ContextJob with timeout d
+func (c *Crontab) AddJobWithTimeout(id, spec string, job ContextJob, d time.Duration) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	if _, ok := c.ids[id]; ok { // 检查任务ID是否已存在 / Check if task ID already exists
-		return errors.New("crontab id exists") // 如果已存在，返回错误 / Return error if ID already exists
+	// 检查任务ID是否已存在
+	// Check if task ID already exists
+	if _, exists := c.ids[id]; exists {
+		return errors.New("task id exists")
 	}
-	eid, err := c.inner.AddFunc(spec, f) // 添加Cron任务 / Add the cron task
+
+	// 包装实际运行逻辑，包含超时和恢复机制
+	// Wrap execution logic with timeout and recovery
+	run := func() {
+		start := time.Now()
+		atomic.AddInt32(&c.running, 1)        // 增加并发计数 increment counter
+		defer atomic.AddInt32(&c.running, -1) // 完成后减少计数 decrement counter
+
+		// 创建带超时的上下文
+		// Create timeout context
+		ctx, cancel := context.WithTimeout(c.ctx, d)
+		defer cancel()
+
+		// 为每次任务生成唯一请求 ID
+		// Generate unique request ID for each execution
+		reqID := auuid.New().String()
+		ctx = context.WithValue(ctx, requestIDKey, reqID)
+
+		// 准备日志字段
+		// Prepare logging fields
+		fields := []zap.Field{
+			zap.String("task_id", id),
+			zap.String("spec", spec),
+			zap.String("request_id", reqID),
+			zap.Duration("timeout", d),
+		}
+		c.logger.Debug("job start", fields...)
+
+		// 错误处理通道
+		// Error handling channel
+		errChan := make(chan error, 1)
+
+		// 并发执行任务，捕获panic
+		// Execute job concurrently and capture panics
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// 记录panic恢复信息
+					// Log recovered panic
+					c.logger.Error("panic recovered",
+						append(fields, zap.Any("error", r))...)
+					errChan <- fmt.Errorf("panic: %v", r)
+				}
+			}()
+			errChan <- job.Run(ctx) // 执行用户任务 execute user job
+		}()
+
+		// 监控超时和任务完成
+		// Monitor timeout and job completion
+		select {
+		case err := <-errChan:
+			dur := time.Since(start)
+			fields = append(fields, zap.Duration("duration", dur))
+
+			// 根据执行结果记录不同级别的日志
+			// Log at different levels based on execution result
+			switch {
+			case err != nil:
+				c.logger.Error("job failed", append(fields, zap.Error(err))...)
+			case dur > d/2:
+				c.logger.Warn("job completed near timeout", fields...)
+			default:
+				c.logger.Debug("job completed", fields...)
+			}
+		case <-ctx.Done():
+			// 任务超时处理
+			// Handle job timeout
+			elapsed := time.Since(start)
+			c.logger.Warn("job timeout",
+				append(fields, zap.Duration("elapsed", elapsed))...)
+		}
+	}
+
+	// 将包装后的函数添加到调度器
+	// Add wrapped function to scheduler
+	eid, err := c.cron.AddFunc(spec, run)
 	if err != nil {
-		return err // 返回错误 / Return error
+		c.logger.Error("AddJob failed", zap.String("id", id), zap.Error(err))
+		return err
 	}
-	c.ids[id] = eid // 保存任务ID和Cron Entry ID映射 / Save the task ID and Cron Entry ID mapping
-	return nil      // 返回成功 / Return success
+
+	// 存储任务元数据
+	// Store job metadata
+	c.ids[id] = JobMeta{
+		EntryID: eid,
+		Spec:    spec,
+		Timeout: d,
+		Type:    "job",
+	}
+
+	c.logger.Info("context job registered",
+		zap.String("id", id),
+		zap.String("spec", spec),
+		zap.Duration("timeout", d))
+	return nil
 }
 
-// IsExists 检查 cron 任务是否存在 / Check if a cron task exists by job ID
-func (c *Crontab) IsExists(jid string) bool {
-	c.mu.RLock()           // 获取读锁 / Acquire read lock
-	defer c.mu.RUnlock()   // 释放读锁 / Release read lock
-	_, exist := c.ids[jid] // 检查任务ID是否存在 / Check if the task ID exists
-	return exist           // 返回结果 / Return the result
+// AddJob 使用默认超时添加上下文任务
+// AddJob registers a ContextJob with default timeout
+func (c *Crontab) AddJob(id, spec string, job ContextJob) error {
+	return c.AddJobWithTimeout(id, spec, job, c.timeout)
+}
+
+// Remove 删除已注册的任务
+// Remove cancels and removes a job by its id
+func (c *Crontab) Remove(id string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if meta, exists := c.ids[id]; exists {
+		c.cron.Remove(meta.EntryID)
+		delete(c.ids, id)
+		c.logger.Info("task removed",
+			zap.String("id", id),
+			zap.String("type", meta.Type))
+	}
+}
+
+// IDs 返回所有注册任务 ID 列表
+// IDs returns all registered task IDs
+func (c *Crontab) IDs() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	ids := make([]string, 0, len(c.ids))
+	for id := range c.ids {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// JobStatus 获取任务状态信息
+// JobStatus retrieves detailed status of a job
+func (c *Crontab) JobStatus(id string) (cron.Entry, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if meta, exists := c.ids[id]; exists {
+		return c.cron.Entry(meta.EntryID), true
+	}
+	return cron.Entry{}, false
+}
+
+// Reschedule 重新调度现有任务
+// Reschedule updates the schedule of an existing job
+func (c *Crontab) Reschedule(id, newSpec string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	meta, exists := c.ids[id]
+	if !exists {
+		return errors.New("task not found")
+	}
+
+	// 获取现有任务函数
+	// Get existing job function
+	entry := c.cron.Entry(meta.EntryID)
+	if entry.Job == nil {
+		return errors.New("job function not found")
+	}
+
+	// 添加新调度的任务
+	// Add job with new schedule
+	newID, err := c.cron.AddFunc(newSpec, entry.Job.Run)
+	if err != nil {
+		return err
+	}
+
+	// 移除旧任务
+	// Remove old job
+	c.cron.Remove(meta.EntryID)
+
+	// 更新元数据
+	// Update metadata
+	meta.EntryID = newID
+	meta.Spec = newSpec
+	c.ids[id] = meta
+
+	c.logger.Info("job rescheduled",
+		zap.String("id", id),
+		zap.String("old_spec", meta.Spec),
+		zap.String("new_spec", newSpec))
+	return nil
+}
+
+// 健康检查协程 (可选)
+// Health check goroutine (optional)
+func (c *Crontab) StartHealthCheck(interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			running := c.RunningTasks()
+			c.logger.Debug("system health check",
+				zap.Int("running_tasks", running),
+				zap.Int("total_jobs", len(c.IDs())))
+
+			// 高负载预警
+			// High load warning
+			if running > 50 {
+				c.logger.Warn("high system load",
+					zap.Int("running_tasks", running))
+			}
+		}
+	}()
 }
