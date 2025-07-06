@@ -11,5 +11,6 @@ func TestHash(t *testing.T) {
 	log.Println(ahash.SHA1("test"))
 	log.Println(ahash.SHA256("test"))
 	log.Println(ahash.SHA512("test"))
-	log.Println(ahash.Crc32("test"))
+	log.Println(ahash.CRC32("test"))
+	log.Println(ahash.SignSHA1("test", "123"))
 }
