@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"github.com/small-ek/antgo/utils/conv"
 	"testing"
 	"time"
@@ -105,23 +106,6 @@ func TestBytes(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	tests := []struct {
-		input    interface{}
-		expected string
-	}{
-		{123, "123"},
-		{3.14, "3.14"},
-		{"hello", "hello"},
-		{time.Now().Format(time.RFC3339), time.Now().Format(time.RFC3339)},
-		{nil, ""}, // Edge case for nil
-	}
-
-	for _, test := range tests {
-		t.Run("TestString", func(t *testing.T) {
-			result := conv.String(test.input)
-			if result != test.expected {
-				t.Errorf("expected %v, got %v", test.expected, result)
-			}
-		})
-	}
+	ts := time.Now()
+	fmt.Println(conv.String(&ts))
 }

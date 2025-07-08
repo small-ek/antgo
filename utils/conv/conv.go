@@ -2,7 +2,6 @@ package conv
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"math"
 	"strconv"
 	"time"
@@ -66,7 +65,7 @@ func Bytes(any interface{}) []byte {
 		// 复杂类型回退到JSON序列化
 		result, err := json.Marshal(v)
 		if err != nil {
-			panic(err)
+			return nil
 		}
 		return result
 	}
@@ -112,21 +111,18 @@ func String(any interface{}) string {
 	case []byte:
 		return string(v)
 	case time.Time:
-		if v.IsZero() {
-			return ""
-		}
-		return v.String()
+		return v.Format("2006-01-02 15:04:05")
 	case *time.Time:
 		if v == nil {
 			return ""
 		}
-		return v.String()
+		return v.Format("2006-01-02 15:04:05")
 	default:
 		// JSON serialization for complex types
 		// 复杂类型使用JSON序列化
 		result, err := json.Marshal(v)
 		if err != nil {
-			panic(err)
+			return ""
 		}
 		return string(result)
 	}

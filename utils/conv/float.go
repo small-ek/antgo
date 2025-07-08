@@ -2,7 +2,6 @@ package conv
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -34,9 +33,9 @@ func Float32(any interface{}) float32 {
 	case []byte:
 		// Requires exactly 4 bytes in little-endian IEEE 754 format
 		// Panics if length is invalid (considered programming error)
-		// 需要恰好 4 字节小端序 IEEE 754 格式，长度不符会 panic（视为编程错误）
+		// 需要恰好 4 字节小端序 IEEE 754 格式，长度不符会 直接返回0
 		if len(value) != 4 {
-			panic(errors.New("invalid byte length for float32"))
+			return 0
 		}
 		return math.Float32frombits(binary.LittleEndian.Uint32(value))
 	default:
@@ -78,7 +77,7 @@ func Float64(any interface{}) float64 {
 		// Panics if length is invalid (considered programming error)
 		// 需要恰好 8 字节小端序 IEEE 754 格式，长度不符会 panic（视为编程错误）
 		if len(value) != 8 {
-			panic(errors.New("invalid byte length for float64"))
+			return 0
 		}
 		return math.Float64frombits(binary.LittleEndian.Uint64(value))
 	default:
