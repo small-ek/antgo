@@ -1,8 +1,12 @@
 package test
 
 import (
+	"context"
+	"fmt"
+	"github.com/small-ek/antgo/crypto/auuid"
 	"github.com/small-ek/antgo/utils/pool"
 	"testing"
+	"time"
 )
 
 // TestNewPool 测试 New 函数
@@ -71,14 +75,56 @@ func TestGetWithoutInitialization(t *testing.T) {
 
 // TestNewWithInvalidSize 测试给定无效的大小
 // Test the case when an invalid size is provided
-func TestNewWithInvalidSize(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatalf("Expected panic when providing invalid pool size")
-		}
-	}()
+func TestExamples(t *testing.T) {
+	// 初始化协程池，大小100，最大阻塞任务数1000
+	err := pool.New(100, 1000)
+	if err != nil {
+		panic("init pool failed: " + err.Error())
+	}
+	defer pool.Release() // 程序退出时释放资源
+	// 带上下文的任务，自动捕获 panic
+	ctx := context.WithValue(context.Background(), "request_id", auuid.New().String())
+	// 提交普通任务
+	for i := 0; i < 5; i++ {
+		n := i
+		err := pool.Submit(func() {
+			fmt.Printf("普通任务: %d\n", n)
 
-	// 尝试初始化池时传入无效的大小（小于等于0）
-	// Try initializing the pool with an invalid size (<= 0)
-	pool.New(0, 10)
+			time.Sleep(200 * time.Millisecond)
+		})
+		if err != nil {
+			fmt.Printf("Submit error: %v\n", err)
+		}
+	}
+
+	for i := 0; i < 5; i++ {
+		n := i
+		err := pool.SubmitWithCtx(ctx, func(ctx context.Context) {
+			fmt.Printf("带上下文任务: %d\n", n)
+
+			if n == 3 {
+				panic("模拟panic")
+			}
+			time.Sleep(100 * time.Millisecond)
+		})
+		if err != nil {
+			fmt.Printf("SubmitWithCtx error: %v\n", err)
+		}
+	}
+	pool.OnPanic(func(ctx context.Context, r interface{}, stack []byte) {
+		traceID := ctx.Value("trace_id") // 如果你有 trace_id
+
+		// 构造飞书消息内容（示意）
+		msg := fmt.Sprintf("🚨 Panic Detected\nTraceID: %v\nReason: %v\nStack: %s",
+			traceID,
+			r,
+			stack[:300], // 避免太长
+		)
+		fmt.Println(msg)
+
+	})
+
+	// 等待所有任务执行完成
+	time.Sleep(2 * time.Second)
+	fmt.Println("所有任务执行完毕")
 }

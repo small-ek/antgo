@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/small-ek/antgo/utils/password"
+	"github.com/small-ek/antgo/crypto/password"
 	"testing"
 )
 
