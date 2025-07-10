@@ -226,6 +226,8 @@ func toString(v reflect.Value) string {
 			// []byte 转字符串
 			return string(v.Bytes())
 		}
+	default:
+		return ""
 	}
 	return ""
 }

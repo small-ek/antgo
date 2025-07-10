@@ -10,6 +10,9 @@ import (
 // 将任意类型转换为map[string]interface{}，包含panic处理
 // 支持类型：JSON字节/字符串、map、结构体
 func Map(any any) (data map[string]interface{}) {
+	if any == nil {
+		return data
+	}
 	// Fast path for direct type conversion [[4,15]]
 	if m, ok := any.(map[string]interface{}); ok {
 		return m
@@ -28,6 +31,9 @@ func Map(any any) (data map[string]interface{}) {
 // 将任意类型转换为[]map[string]interface{}，包含panic处理
 // 自动转换JSON字符串/字节为切片
 func Maps(any any) (data []map[string]interface{}) {
+	if any == nil {
+		return data
+	}
 	// Fast path for direct type conversion [[4,15]]
 	if slice, ok := any.([]map[string]interface{}); ok {
 		return slice
@@ -46,6 +52,9 @@ func Maps(any any) (data []map[string]interface{}) {
 // 将任意类型转换为[]map[int]interface{}
 // 自动转换JSON字符串/字节为切片
 func MapsInt(any any) (data []map[int]interface{}) {
+	if any == nil {
+		return data
+	}
 	// Fast path for direct type conversion [[4,15]]
 	if slice, ok := any.([]map[int]interface{}); ok {
 		return slice
@@ -63,14 +72,16 @@ func MapsInt(any any) (data []map[int]interface{}) {
 // Supports all JSON value types converted to string via fmt.Sprintf
 // 将任意类型转换为map[string]string，增强类型兼容性
 // 支持通过fmt.Sprintf将所有JSON值类型转为字符串
-func MapString(any any) map[string]string {
+func MapString(any any) (data map[string]string) {
+	if any == nil {
+		return data
+	}
 	bytes := Bytes(any)
 	var temp map[string]interface{}
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return nil
 	}
 
-	data := make(map[string]string, len(temp))
 	for k, v := range temp {
 		data[k] = fmt.Sprintf("%v", v) // Universal conversion [[6,15]]
 	}
@@ -81,14 +92,17 @@ func MapString(any any) map[string]string {
 // Requires JSON keys to be numeric strings (e.g., "123")
 // 将任意类型转换为map[int]interface{}，包含键值验证
 // 要求JSON键为数字字符串（如"123"）
-func MapInt(any any) map[int]interface{} {
+func MapInt(any any) (data map[int]interface{}) {
+	if any == nil {
+		return data
+	}
+
 	bytes := Bytes(any)
 	var temp map[string]interface{}
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return nil
 	}
 
-	data := make(map[int]interface{}, len(temp))
 	for k, v := range temp {
 		intKey, err := strconv.Atoi(k)
 		if err != nil {
