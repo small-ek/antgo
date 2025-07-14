@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"net"
 	"net/http"
+	"net/url"
 	"runtime"
 	"sync"
 	"time"
@@ -29,6 +30,9 @@ type Config struct {
 	DialerKeepAlive       time.Duration // Dialer 的 Keep-Alive 时间 / Dialer keep-alive time
 	RetryWaitTime         time.Duration // 重试等待时间 / RetryWaitTime
 	RetryMaxWaitTime      time.Duration // 最大重试等待时间 / RetryMaxWaitTime
+	ProxyURL              string        // HTTP 代理地址, eg: "http://127.0.0.1:7890"
+	ProxyUser             string        // 代理认证用户名
+	ProxyPass             string        // 代理认证密码
 }
 
 // HttpClient 是对 Resty 客户端的封装，支持自定义配置和日志 / HttpClient is a wrapper for the Resty client with custom configuration and logging support
@@ -37,6 +41,7 @@ type HttpClient struct {
 	httpTransport *http.Transport // HTTP 传输层配置 / HTTP transport layer configuration
 	logger        *zap.Logger     // 日志记录器 / Logger instance
 	config        *Config
+	mu            sync.RWMutex
 }
 
 var (
@@ -48,12 +53,12 @@ var (
 func New(config *Config) *HttpClient {
 	once.Do(func() {
 		if config == nil {
-			config = defaultConfig()
+			config = DefaultConfig()
 		}
 
 		singletonClient = &HttpClient{
 			httpClient:    newRestyClient(config),
-			httpTransport: newTransport(config),
+			httpTransport: buildTransport(config),
 			config:        config,
 		}
 		singletonClient.init()
@@ -64,7 +69,7 @@ func New(config *Config) *HttpClient {
 // newRestyClient 配置 Resty 客户端 / Configures the Resty client
 func newRestyClient(config *Config) *resty.Client {
 	client := resty.NewWithClient(&http.Client{
-		Transport: newTransport(config),
+		Transport: buildTransport(config),
 		Timeout:   config.Timeout,
 	})
 
@@ -75,35 +80,51 @@ func newRestyClient(config *Config) *resty.Client {
 	return client
 }
 
-// defaultConfig 返回默认的配置值 / Returns the default configuration values
-func defaultConfig() *Config {
+// DefaultConfig 返回默认的配置值 / Returns the default configuration values
+func DefaultConfig() *Config {
 	return &Config{
-		MaxIdleConnections:    runtime.GOMAXPROCS(0) * 200,
-		IdleConnectionTimeout: 120 * time.Second,
-		DisableCompression:    false,
-		Timeout:               60 * time.Second,
-		TLSHandshakeTimeout:   30 * time.Second,
-		ExpectContinueTimeout: 2 * time.Second,
-		MaxConnectionsPerHost: runtime.GOMAXPROCS(0) * 100,
-		RetryAttempts:         3,
-		DialerTimeout:         15 * time.Second, // 默认 Dialer 超时时间
-		DialerKeepAlive:       60 * time.Second, // 默认 Dialer Keep-Alive 时间
-		RetryWaitTime:         1 * time.Second,  // 默认重试等待时间
-		RetryMaxWaitTime:      10 * time.Second, // 默认最大重试等待时间
-		InsecureSkipVerify:    true,             // 跳过 TLS 证书验证 / Skip TLS certificate verification
+		MaxIdleConnections:    runtime.GOMAXPROCS(0) * 200, // 连接池最大空闲连接数
+		IdleConnectionTimeout: 120 * time.Second,           // 空闲连接最大存活时间
+		DisableCompression:    false,                       // 是否禁用压缩（默认启用）
+		Timeout:               30 * time.Second,            // 请求整体超时时间，适合大多数API请求
+		TLSHandshakeTimeout:   10 * time.Second,            // TLS 握手超时时间
+		ExpectContinueTimeout: 2 * time.Second,             // 100-continue等待超时
+		MaxConnectionsPerHost: runtime.GOMAXPROCS(0) * 100, // 每主机最大连接数
+		RetryAttempts:         3,                           // 请求失败重试次数
+		DialerTimeout:         10 * time.Second,            // TCP连接超时时间
+		DialerKeepAlive:       60 * time.Second,            // TCP连接KeepAlive时间
+		RetryWaitTime:         1 * time.Second,             // 重试等待时间
+		RetryMaxWaitTime:      10 * time.Second,            // 最大重试等待时间
+		InsecureSkipVerify:    true,                        // 跳过 TLS 证书验证 / Skip TLS certificate verification
+		ProxyURL:              "",                          //代理地址，空表示不使用代理
 	}
 }
 
-// newTransport 创建并配置 HTTP 传输层 / Creates and configures the HTTP transport
-func newTransport(config *Config) *http.Transport {
+// buildTransport 创建并配置 HTTP 传输层 / Creates and configures the HTTP transport layer
+func buildTransport(config *Config) *http.Transport {
 	tcpDialer := &net.Dialer{
 		Timeout:   config.DialerTimeout,
 		KeepAlive: config.DialerKeepAlive,
 		DualStack: true,
 	}
+	// 代理处理
+	var proxyFunc func(*http.Request) (*url.URL, error)
+	if config.ProxyURL != "" {
+		u, err := url.Parse(config.ProxyURL)
+		if err == nil {
+			if config.ProxyUser != "" || config.ProxyPass != "" {
+				u.User = url.UserPassword(config.ProxyUser, config.ProxyPass)
+			}
+			proxyFunc = http.ProxyURL(u)
+		} else {
+			proxyFunc = http.ProxyFromEnvironment
+		}
+	} else {
+		proxyFunc = http.ProxyFromEnvironment
+	}
 
 	return &http.Transport{
-		Proxy:               http.ProxyFromEnvironment,
+		Proxy:               proxyFunc,
 		DialContext:         tcpDialer.DialContext,
 		ForceAttemptHTTP2:   true,
 		MaxIdleConns:        config.MaxIdleConnections,
@@ -132,6 +153,47 @@ func getRequestId(ctx context.Context) string {
 		return ""
 	}
 	return requestID
+}
+
+// SetProxy 设置代理
+func (h *HttpClient) SetProxy(proxyURL, user, pass string) *HttpClient {
+	u, err := url.Parse(proxyURL)
+	if err != nil {
+		return h
+	}
+	if user != "" || pass != "" {
+		u.User = url.UserPassword(user, pass)
+	}
+	h.httpTransport.Proxy = http.ProxyURL(u)
+	h.httpClient.SetTransport(h.httpTransport)
+	return h
+}
+
+// SetTLSClientCert 设置客户端证书和私钥用于双向 TLS 认证
+func (h *HttpClient) SetTLSClientCert(certFile, keyFile string) error {
+	// 加载证书和私钥
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return err
+	}
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	// 创建当前 TLS 配置的副本（或新配置）
+	newTLSConfig := h.httpTransport.TLSClientConfig.Clone()
+	if newTLSConfig == nil {
+		newTLSConfig = &tls.Config{}
+	}
+
+	// 设置客户端证书
+	newTLSConfig.Certificates = []tls.Certificate{cert}
+
+	// 更新 Transport 的 TLS 配置
+	h.httpTransport.TLSClientConfig = newTLSConfig
+	h.httpClient.SetTransport(h.httpTransport)
+
+	return nil
 }
 
 // SetLog 设置日志记录器 / SetLog sets the logger
