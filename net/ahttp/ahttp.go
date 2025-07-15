@@ -3,6 +3,8 @@ package ahttp
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"net"
@@ -62,6 +64,9 @@ func New(config *Config) *HttpClient {
 			config:        config,
 		}
 		singletonClient.init()
+		if config.ProxyURL != "" && config.ProxyUser != "" && config.ProxyPass != "" {
+			singletonClient = singletonClient.SetProxy(config.ProxyURL, config.ProxyUser, config.ProxyPass)
+		}
 	})
 	return singletonClient
 }
@@ -107,24 +112,9 @@ func buildTransport(config *Config) *http.Transport {
 		KeepAlive: config.DialerKeepAlive,
 		DualStack: true,
 	}
-	// 代理处理
-	var proxyFunc func(*http.Request) (*url.URL, error)
-	if config.ProxyURL != "" {
-		u, err := url.Parse(config.ProxyURL)
-		if err == nil {
-			if config.ProxyUser != "" || config.ProxyPass != "" {
-				u.User = url.UserPassword(config.ProxyUser, config.ProxyPass)
-			}
-			proxyFunc = http.ProxyURL(u)
-		} else {
-			proxyFunc = http.ProxyFromEnvironment
-		}
-	} else {
-		proxyFunc = http.ProxyFromEnvironment
-	}
 
 	return &http.Transport{
-		Proxy:               proxyFunc,
+		Proxy:               http.ProxyFromEnvironment,
 		DialContext:         tcpDialer.DialContext,
 		ForceAttemptHTTP2:   true,
 		MaxIdleConns:        config.MaxIdleConnections,
@@ -166,6 +156,15 @@ func (h *HttpClient) SetProxy(proxyURL, user, pass string) *HttpClient {
 	}
 	h.httpTransport.Proxy = http.ProxyURL(u)
 	h.httpClient.SetTransport(h.httpTransport)
+
+	h.httpClient.OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
+		if h.config.ProxyUser != "" && h.config.ProxyPass != "" {
+			auth := fmt.Sprintf("%s:%s", h.config.ProxyUser, h.config.ProxyPass)
+			basic := "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
+			r.SetHeader("Proxy-Authorization", basic)
+		}
+		return nil
+	})
 	return h
 }
 
