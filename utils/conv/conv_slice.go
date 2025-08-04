@@ -18,10 +18,10 @@ func Ints(any interface{}) []int {
 		// Already a []int, return directly.
 		// 已经是 []int，直接返回
 		return v
-	case []string:
+	case []string, []interface{}:
 		// Convert slice of strings to []int
 		// 将字符串切片转换为整数切片
-		return convertStringSliceToIntSlice(v)
+		return convertStringSliceToIntSlice(Strings(v))
 	case string:
 		// Parse JSON array string to []int
 		// 尝试将 JSON 数组字符串解析为整型切片
@@ -72,11 +72,11 @@ func Strings(any interface{}) []string {
 		// Already a []string, return directly.
 		// 已经是 []string，直接返回
 		return v
-	case string:
+	case string, []interface{}, []byte:
 		// Parse JSON array string to []string
 		// 尝试将 JSON 数组字符串解析为字符串切片
 		var arr []string
-		if err := json.Unmarshal([]byte(v), &arr); err == nil {
+		if err := json.Unmarshal(Bytes(v), &arr); err == nil {
 			return arr
 		}
 		return nil
@@ -109,7 +109,7 @@ func Interfaces(any interface{}) []interface{} {
 		// Already a []interface{}, return directly.
 		// 已经是 []interface{}，直接返回
 		return v
-	case []byte, []int, []string, []bool, [][]byte, []float64:
+	case []byte, []int, []int32, []int64, []string, []bool, [][]byte, []float64, []float32:
 		// Marshal then unmarshal to []interface{}
 		// 使用 JSON 编码再解码
 		b, err := json.Marshal(v)
