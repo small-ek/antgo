@@ -38,6 +38,7 @@ func Logger() gin.HandlerFunc {
 	// 初始化配置 / Initialize configuration
 	headerWhitelist := config.GetStringSlice("log.header_whitelist")
 	skipMethods := config.GetStringSlice("log.skip_methods")  // 跳过日志记录的方法 / methods to skip logging
+	skipPaths := config.GetStringSlice("log.skip_paths")      // 跳过日志的路由路径
 	enableRequestBody := config.GetBool("log.request_body")   // 是否启用请求体Body
 	enableResponseBody := config.GetBool("log.response_body") // 是否启用Debug日志 / enable debug logs
 
@@ -47,13 +48,47 @@ func Logger() gin.HandlerFunc {
 		skipMethodsMap[strings.ToUpper(m)] = true
 	}
 
+	// 预处理跳过路径：分离精确匹配和前缀匹配
+	exactSkipPaths := make(map[string]bool)
+	prefixSkipPaths := []string{}
+	for _, path := range skipPaths {
+		if path == "" {
+			continue
+		}
+		if strings.HasSuffix(path, "/*") {
+			// 前缀匹配：移除末尾的"/*"
+			prefix := strings.TrimSuffix(path, "/*")
+			if prefix != "" {
+				prefixSkipPaths = append(prefixSkipPaths, prefix)
+			}
+		} else {
+			// 精确匹配
+			exactSkipPaths[path] = true
+		}
+	}
+
 	return func(c *gin.Context) {
 		startTime := time.Now()
+		currentPath := c.Request.URL.Path
 
 		// 跳过指定HTTP方法 / Skip specified HTTP methods
 		if skipMethodsMap[c.Request.Method] {
 			c.Next()
 			return
+		}
+
+		// 2. 跳过指定路径（新增逻辑）
+		// 精确匹配检查
+		if exactSkipPaths[currentPath] {
+			c.Next()
+			return
+		}
+		// 前缀匹配检查
+		for _, prefix := range prefixSkipPaths {
+			if strings.HasPrefix(currentPath, prefix) {
+				c.Next()
+				return
+			}
 		}
 
 		// 读取请求体（限制大小） / Read request body (with size limit)
