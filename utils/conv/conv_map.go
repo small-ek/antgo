@@ -82,6 +82,8 @@ func MapString(any any) (data map[string]string) {
 		return nil
 	}
 
+	data = make(map[string]string, len(temp))
+
 	for k, v := range temp {
 		data[k] = fmt.Sprintf("%v", v) // Universal conversion [[6,15]]
 	}
