@@ -2,7 +2,10 @@ package agin
 
 import (
 	"bytes"
+	"encoding/xml"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/small-ek/antgo/net/httpx"
 	"github.com/small-ek/antgo/os/alog"
 	"github.com/small-ek/antgo/os/config"
@@ -13,6 +16,10 @@ import (
 	"sync"
 	"time"
 )
+
+// json is the shared instance for JSON serialization/deserialization.
+// Using this shared instance prevents redundant initialization.
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // responseBodyWriter 用于捕获响应体 / responseBodyWriter for capturing response body
 type responseBodyWriter struct {
@@ -133,7 +140,14 @@ func Logger() gin.HandlerFunc {
 		responseBody := w.body.Bytes()
 
 		if enableResponseBody {
-			logFields = append(logFields, zap.ByteString("response_body", responseBody))
+			var parsedBody interface{}
+
+			// 尝试解析 JSON
+			if err := json.Unmarshal(responseBody, &parsedBody); err != nil {
+				// 不是 JSON，直接作为字符串保存
+				parsedBody = string(responseBody)
+			}
+			logFields = append(logFields, zap.Any("response_body", parsedBody))
 		}
 
 		// 根据状态码记录不同级别日志 / Log different levels based on status code
@@ -187,7 +201,11 @@ func prepareLogFields(
 
 	// 请求体处理 / Process request body
 	if enableRequestBody {
-		logFields = append(logFields, zap.ByteString("request_body", requestBody))
+		parsedBody, err := parseRequestLogBody(requestBody, c.ContentType())
+		if err != nil {
+			alog.Write.Error("parseLogBody failed", zap.Error(err))
+		}
+		logFields = append(logFields, zap.Any("request_body", parsedBody))
 	}
 
 	return logFields
@@ -208,4 +226,44 @@ func filterHeaders(headers http.Header, whitelist []string) map[string][]string 
 		}
 	}
 	return filtered
+}
+
+// parseRequestLogBody 解析请求体或者参数，支持多种 Content-Type 格式
+func parseRequestLogBody(body []byte, contentType string) (interface{}, error) {
+	var parsedBody interface{}
+
+	switch {
+	case strings.Contains(contentType, "application/json"):
+		if err := json.Unmarshal(body, &parsedBody); err != nil {
+			return string(body), err
+		}
+	case strings.Contains(contentType, "application/xml"), strings.Contains(contentType, "text/xml"):
+		var xmlData map[string]interface{}
+		if err := xml.Unmarshal(body, &xmlData); err != nil {
+			return string(body), err
+		}
+		parsedBody = xmlData
+	case strings.Contains(contentType, "application/x-www-form-urlencoded"):
+		formData, err := url.ParseQuery(string(body))
+		if err != nil {
+			return string(body), err
+		}
+		parsedBody = formData
+	case strings.Contains(contentType, "multipart/form-data"):
+		parsedBody = "multipart/form-data: not parsed (binary/form boundary)"
+	case strings.Contains(contentType, "application/octet-stream"):
+		parsedBody = "binary data (not parsed)"
+	case strings.HasPrefix(contentType, "image/"):
+		parsedBody = fmt.Sprintf("binary image data (%s)", contentType)
+	case strings.HasPrefix(contentType, "video/"):
+		parsedBody = fmt.Sprintf("binary video data (%s)", contentType)
+	case strings.HasPrefix(contentType, "audio/"):
+		parsedBody = fmt.Sprintf("binary audio data (%s)", contentType)
+	case strings.Contains(contentType, "text/plain"):
+		parsedBody = string(body)
+	default:
+		parsedBody = string(body) // 原始输出
+	}
+
+	return parsedBody, nil
 }
