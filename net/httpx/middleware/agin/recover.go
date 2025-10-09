@@ -95,23 +95,17 @@ func parseRequestBody(c *gin.Context) interface{} {
 
 	switch {
 	case strings.Contains(contentType, "application/json"):
-		return parseJSONBody(body)
+		result, err := parseJSONBody(body)
+		if err != nil {
+			return fmt.Sprintf("parse json error: %v", err)
+		}
+		return result
 	case strings.Contains(contentType, "form-data"),
 		strings.Contains(contentType, "x-www-form-urlencoded"):
 		return parseFormData(c)
 	default:
 		return string(body)
 	}
-}
-
-// parseJSONBody 解析 JSON 格式请求体
-// Parse JSON request body
-func parseJSONBody(body []byte) interface{} {
-	var params map[string]interface{}
-	if err := json.Unmarshal(body, &params); err != nil {
-		return string(body) // 返回原始内容如果解析失败
-	}
-	return params
 }
 
 // parseFormData 解析表单数据

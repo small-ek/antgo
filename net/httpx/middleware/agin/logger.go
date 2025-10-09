@@ -2,7 +2,6 @@ package agin
 
 import (
 	"bytes"
-	"encoding/xml"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -17,9 +16,9 @@ import (
 	"time"
 )
 
-// json is the shared instance for JSON serialization/deserialization.
-// Using this shared instance prevents redundant initialization.
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+// 使用更快的 jsoniter 配置以提升性能（生产可选）
+// 如果有兼容性顾虑，可改回 ConfigCompatibleWithStandardLibrary
+var json = jsoniter.ConfigFastest
 
 // responseBodyWriter 用于捕获响应体 / responseBodyWriter for capturing response body
 type responseBodyWriter struct {
@@ -33,14 +32,82 @@ func (r *responseBodyWriter) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }
 
+// buffer 池（保留），但回收时会判断 cap，避免被超大 buffer 长期占用
 var apiBufferPool = sync.Pool{
 	New: func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, 4096)) // 4KB初始缓冲区 / 4KB initial buffer
+		return bytes.NewBuffer(make([]byte, 0, 8192)) // 8KB 初始
 	},
 }
 
-// Logger 记录HTTP请求日志中间件
-// Logger middleware for recording HTTP request logs
+// 控制 buffer 返回池的阈值（超过则丢弃）
+const bufferRetainCapThreshold = 64 * 1024 // 64KB
+
+func putBackBuffer(buf *bytes.Buffer) {
+	if buf == nil {
+		return
+	}
+	// 如果底层容量过大，丢弃以避免池被撑爆
+	if buf.Cap() > bufferRetainCapThreshold {
+		return
+	}
+	buf.Reset()
+	apiBufferPool.Put(buf)
+}
+
+// 异步日志写入相关（非必须，但高并发时能显著降低阻塞）
+type logEntry struct {
+	level  int // 0=info,1=warn,2=error
+	msg    string
+	fields []zap.Field
+}
+
+var (
+	logChan       chan logEntry
+	logWorkerOnce sync.Once
+)
+
+// 启动异步日志工作协程，缓冲可调
+func startLogWorker() {
+	logWorkerOnce.Do(func() {
+		// 缓冲大小可按机器/负载调整
+		logChan = make(chan logEntry, 16384)
+		go func() {
+			for e := range logChan {
+				switch e.level {
+				case 2:
+					alog.Write.Error(e.msg, e.fields...)
+				case 1:
+					alog.Write.Warn(e.msg, e.fields...)
+				default:
+					alog.Write.Info(e.msg, e.fields...)
+				}
+			}
+		}()
+	})
+}
+
+// 尝试异步入队，入队失败（channel 满）则回退到同步写入（保证日志不会全部丢失）
+func enqueueLog(level int, msg string, fields []zap.Field) {
+	// ensure worker started
+	startLogWorker()
+	le := logEntry{level: level, msg: msg, fields: fields}
+	select {
+	case logChan <- le:
+		// queued
+	default:
+		// fallback to sync write to avoid silent丢失
+		switch level {
+		case 2:
+			alog.Write.Error(msg, fields...)
+		case 1:
+			alog.Write.Warn(msg, fields...)
+		default:
+			alog.Write.Info(msg, fields...)
+		}
+	}
+}
+
+// ----------------- Logger 中间件（保留原结构，尽量少改动） -----------------
 func Logger() gin.HandlerFunc {
 	// 初始化配置 / Initialize configuration
 	headerWhitelist := config.GetStringSlice("log.header_whitelist")
@@ -84,13 +151,11 @@ func Logger() gin.HandlerFunc {
 			return
 		}
 
-		// 2. 跳过指定路径（新增逻辑）
-		// 精确匹配检查
+		// 跳过指定路径
 		if exactSkipPaths[currentPath] {
 			c.Next()
 			return
 		}
-		// 前缀匹配检查
 		for _, prefix := range prefixSkipPaths {
 			if strings.HasPrefix(currentPath, prefix) {
 				c.Next()
@@ -106,11 +171,11 @@ func Logger() gin.HandlerFunc {
 		}
 		// 重新构造 c.Request.Body 以便后续的中间件或处理函数使用
 		c.Request.Body = newRC
+
 		// 获取响应体缓冲区 / Get response body buffer
 		buffer := apiBufferPool.Get().(*bytes.Buffer)
 		buffer.Reset()
-		defer apiBufferPool.Put(buffer)
-
+		// 注意：这里不再 defer 直接放回池（避免中途被提前 Put）
 		// 包装响应写入器 / Wrap response writer
 		w := &responseBodyWriter{
 			body:           buffer,
@@ -125,7 +190,10 @@ func Logger() gin.HandlerFunc {
 		// 准备日志字段 / Prepare log fields
 		statusCode := c.Writer.Status()
 		path, _ := url.QueryUnescape(c.Request.URL.RequestURI())
-		logFields := prepareLogFields(
+
+		// 预分配字段切片，减少扩容
+		logFields := make([]zap.Field, 0, 16)
+		prepared := prepareLogFieldsWithSlice(
 			c,
 			statusCode,
 			path,
@@ -135,36 +203,38 @@ func Logger() gin.HandlerFunc {
 			headerWhitelist,
 			enableRequestBody,
 		)
+		logFields = append(logFields, prepared...)
 
 		// 记录响应体（限制大小） / Record response body (with size limit)
 		responseBody := w.body.Bytes()
 
 		if enableResponseBody {
 			var parsedBody interface{}
-
 			// 尝试解析 JSON
 			if err := json.Unmarshal(responseBody, &parsedBody); err != nil {
-				// 不是 JSON，直接作为字符串保存
 				parsedBody = string(responseBody)
 			}
 			logFields = append(logFields, zap.Any("response_body", parsedBody))
 		}
 
-		// 根据状态码记录不同级别日志 / Log different levels based on status code
+		// 将 buffer 放回池（受阈值控制）
+		putBackBuffer(buffer)
+
+		// 异步写日志（channel 满时会回退为同步写）
 		switch {
 		case statusCode >= 500:
-			alog.Write.Error("HTTP Server Error", logFields...)
+			enqueueLog(2, "HTTP Server Error", logFields)
 		case statusCode >= 400:
-			alog.Write.Warn("HTTP Client Error", logFields...)
+			enqueueLog(1, "HTTP Client Error", logFields)
 		default:
-			alog.Write.Info("HTTP Access Log", logFields...)
+			enqueueLog(0, "HTTP Access Log", logFields)
 		}
 	}
 }
 
-// prepareLogFields 准备日志字段
-// prepareLogFields prepares log fields
-func prepareLogFields(
+// prepareLogFieldsWithSlice: 返回 zap.Field 切片（便于预分配）
+// 把原 prepareLogFields 拆分成返回 slice 的版本，减少中间分配
+func prepareLogFieldsWithSlice(
 	c *gin.Context,
 	status int,
 	path string,
@@ -173,14 +243,16 @@ func prepareLogFields(
 	headerWhitelist []string,
 	enableRequestBody bool,
 ) []zap.Field {
+	logFields := make([]zap.Field, 0, 16)
+
 	// 基础字段 / Basic fields
-	logFields := []zap.Field{
+	logFields = append(logFields,
 		zap.Int("status", status),
 		zap.String("path", path),
 		zap.String("method", c.Request.Method),
 		zap.String("ip", c.ClientIP()),
 		zap.String("latency", endTime.Sub(startTime).String()),
-	}
+	)
 
 	// 错误信息 / Error messages
 	if len(c.Errors) > 0 {
@@ -201,8 +273,9 @@ func prepareLogFields(
 
 	// 请求体处理 / Process request body
 	if enableRequestBody {
-		parsedBody, err := parseRequestLogBody(requestBody, c.ContentType())
+		parsedBody, err := parseRequestLogBody(c, requestBody, c.ContentType())
 		if err != nil {
+			// 解析错误写到 error logger（避免影响主日志链路）
 			alog.Write.Error("parseLogBody failed", zap.Error(err))
 		}
 		logFields = append(logFields, zap.Any("request_body", parsedBody))
@@ -211,7 +284,7 @@ func prepareLogFields(
 	return logFields
 }
 
-// filterHeaders 基于白名单过滤请求头
+// filterHeaders 基于白名单过滤请求头（保持原来行为）
 // filterHeaders filters headers based on whitelist
 func filterHeaders(headers http.Header, whitelist []string) map[string][]string {
 	filtered := make(map[string][]string)
@@ -228,42 +301,112 @@ func filterHeaders(headers http.Header, whitelist []string) map[string][]string 
 	return filtered
 }
 
-// parseRequestLogBody 解析请求体或者参数，支持多种 Content-Type 格式
-func parseRequestLogBody(body []byte, contentType string) (interface{}, error) {
-	var parsedBody interface{}
+// parseRequestLogBody 是统一入口，根据 Content-Type 分发给不同的解析器
+func parseRequestLogBody(c *gin.Context, body []byte, contentType string) (interface{}, error) {
+	// 轻量 Content-Type 处理：常见类型使用更快判断
+	ct := strings.ToLower(strings.TrimSpace(contentType))
 
 	switch {
-	case strings.Contains(contentType, "application/json"):
-		if err := json.Unmarshal(body, &parsedBody); err != nil {
-			return string(body), err
-		}
-	case strings.Contains(contentType, "application/xml"), strings.Contains(contentType, "text/xml"):
-		var xmlData map[string]interface{}
-		if err := xml.Unmarshal(body, &xmlData); err != nil {
-			return string(body), err
-		}
-		parsedBody = xmlData
-	case strings.Contains(contentType, "application/x-www-form-urlencoded"):
-		formData, err := url.ParseQuery(string(body))
-		if err != nil {
-			return string(body), err
-		}
-		parsedBody = formData
-	case strings.Contains(contentType, "multipart/form-data"):
-		parsedBody = "multipart/form-data: not parsed (binary/form boundary)"
-	case strings.Contains(contentType, "application/octet-stream"):
-		parsedBody = "binary data (not parsed)"
-	case strings.HasPrefix(contentType, "image/"):
-		parsedBody = fmt.Sprintf("binary image data (%s)", contentType)
-	case strings.HasPrefix(contentType, "video/"):
-		parsedBody = fmt.Sprintf("binary video data (%s)", contentType)
-	case strings.HasPrefix(contentType, "audio/"):
-		parsedBody = fmt.Sprintf("binary audio data (%s)", contentType)
-	case strings.Contains(contentType, "text/plain"):
-		parsedBody = string(body)
+	case strings.HasPrefix(ct, "application/json"):
+		return parseJSONBody(body)
+	case strings.HasPrefix(ct, "application/xml"), strings.HasPrefix(ct, "text/xml"):
+		return parseXMLBody(body)
+	case strings.HasPrefix(ct, "application/x-www-form-urlencoded"):
+		return parseFormURLEncodedBody(body)
+	case strings.HasPrefix(ct, "multipart/form-data"):
+		return parseMultipartFormDataFromContext(c)
+	case strings.HasPrefix(ct, "application/octet-stream"):
+		return "binary data (not parsed)", nil
+	case strings.HasPrefix(ct, "image/"):
+		return fmt.Sprintf("binary image data (%s)", contentType), nil
+	case strings.HasPrefix(ct, "video/"):
+		return fmt.Sprintf("binary video data (%s)", contentType), nil
+	case strings.HasPrefix(ct, "audio/"):
+		return fmt.Sprintf("binary audio data (%s)", contentType), nil
+	case strings.HasPrefix(ct, "text/plain"):
+		return string(body), nil
 	default:
-		parsedBody = string(body) // 原始输出
+		// 未知类型，直接输出原始字符串
+		return string(body), nil
+	}
+}
+
+// JSON 解析
+func parseJSONBody(body []byte) (interface{}, error) {
+	if len(body) == 0 {
+		return nil, nil
+	}
+	var parsed interface{}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return string(body), err
+	}
+	return parsed, nil
+}
+
+// XML 解析
+func parseXMLBody(body []byte) (interface{}, error) {
+	if len(body) == 0 {
+		return nil, nil
+	}
+	// 为保持稳定性，默认返回原始字符串（可以再加长度限制或尝试解析小 payload）
+	return string(body), nil
+}
+
+// x-www-form-urlencoded 解析
+func parseFormURLEncodedBody(body []byte) (interface{}, error) {
+	if len(body) == 0 {
+		return nil, nil
+	}
+	formData, err := url.ParseQuery(string(body))
+	if err != nil {
+		return string(body), err
+	}
+	return formData, nil
+}
+
+// multipart/form-data 解析（生产版）
+// 仅输出普通字段与文件名；对大体量请求会选择省略解析以保护内存
+func parseMultipartFormDataFromContext(c *gin.Context) (interface{}, error) {
+	formFields := make(map[string]interface{})
+
+	// 若 ContentLength 明确且非常大，直接省略解析（避免占用内存）
+	const multipartOmitThreshold = 10 << 20 // 10MB
+	if c.Request.ContentLength > multipartOmitThreshold {
+		return "multipart/form-data: omitted (too large)", nil
 	}
 
-	return parsedBody, nil
+	// 解析表单，限制内存临时解析大小（用于 small-form 提取文本字段）
+	// 这里使用 2MB 内存阈值用于解析表单字段和文件 metadata
+	const multipartParseMem = 2 << 20 // 2MB
+	if err := c.Request.ParseMultipartForm(multipartParseMem); err != nil {
+		// 解析失败时不阻塞主逻辑，返回简短提示
+		return "multipart/form-data: parse failed", err
+	}
+
+	form := c.Request.MultipartForm
+	if form == nil {
+		return "multipart/form-data: empty form", nil
+	}
+
+	// 普通字段
+	for key, vals := range form.Value {
+		if len(vals) > 0 {
+			formFields[key] = vals[0]
+		}
+	}
+
+	// 文件字段：只打印文件名，避免内存占用
+	for key, files := range form.File {
+		// 构造文件名切片（避免 fmt.Sprintf 带来的额外分配）
+		names := make([]string, 0, len(files))
+		for _, f := range files {
+			names = append(names, f.Filename)
+		}
+		formFields[key] = map[string]interface{}{
+			"files": names,
+			"count": len(names),
+		}
+	}
+
+	return formFields, nil
 }
