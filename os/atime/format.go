@@ -73,36 +73,85 @@ func New(param ...interface{}) *Times {
 	return &Times{Time: time.Now()}
 }
 
+// 所有常用时间格式常量
+var layouts = []string{
+	"15:04", "15:04:05",
+	"2006-01", "2006-01-02", "2006-01-02 15", "2006-01-02 15:04", "2006-01-02 15:04:05",
+	"200601", "20060102", "2006010215", "200601021504", "20060102150405",
+	"2006/01", "2006/01/02", "2006/01/02 15", "2006/01/02 15:04", "2006/01/02 15:04:05",
+	time.RFC3339, time.RFC1123,
+}
+
 // StrToTime String转Time
 func StrToTime(str string) *Times {
-	formats := []string{
-		"2006-01-02 15:04:05",
-		"2006-01-02 15:04",
-		"2006-01-02",
-		"20060102150405",
-		"20060102",
-		"200601",
-		"2006/01/02 15:04:05",
-		"2006/01/02",
-		"2006-01",
-		time.RFC3339,
-		time.RFC1123,
+	if str == "" {
+		panic("StrToTime: empty string")
 	}
-	for _, f := range formats {
+
+	// 高性能策略：先按长度快速匹配
+	switch len(str) {
+	case 4: // YYYY
+		if y, err := strconv.Atoi(str); err == nil {
+			return &Times{Time: time.Date(y, 1, 1, 0, 0, 0, 0, time.Local)}
+		}
+	case 6: // YYYYMM
+		y, m, _, err := parseYMD(str, 6)
+		if err == nil {
+			return &Times{Time: time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.Local)}
+		}
+	case 8: // YYYYMMDD
+		if y, m, d, err := parseYMD(str, 8); err == nil {
+			return &Times{Time: time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.Local)}
+		}
+	case 10: // 时间戳秒 或 YYYYMMDDhh
+		if ts, err := strconv.ParseInt(str, 10, 64); err == nil {
+			return &Times{Time: time.Unix(ts, 0)}
+		}
+	case 13: // 时间戳毫秒
+		if ts, err := strconv.ParseInt(str, 10, 64); err == nil {
+			return &Times{Time: time.UnixMilli(ts)}
+		}
+	case 14: // YYYYMMDDhhmmss
+		if y, mo, d, h, mi, s, err := parseFullNumeric(str); err == nil {
+			return &Times{Time: time.Date(y, time.Month(mo), d, h, mi, s, 0, time.Local)}
+		}
+	}
+
+	// 循环尝试标准 layouts
+	for _, f := range layouts {
 		if t, err := time.ParseInLocation(f, str, time.Local); err == nil {
 			return &Times{Time: t}
 		}
 	}
-	// 尝试时间戳（秒或毫秒）
-	if ts, err := strconv.ParseInt(str, 10, 64); err == nil {
-		switch len(str) {
-		case 10:
-			return &Times{Time: time.Unix(ts, 0)}
-		case 13:
-			return &Times{Time: time.UnixMilli(ts)}
-		}
-	}
+
+	// 都不匹配，panic
 	panic(fmt.Sprintf("StrToTime: unsupported time format '%s'", str))
+}
+
+// parseYMD 辅助解析 YYYYMM 或 YYYYMMDD
+func parseYMD(s string, length int) (y, m, d int, err error) {
+	if length == 6 {
+		y, _ = strconv.Atoi(s[0:4])
+		m, _ = strconv.Atoi(s[4:6])
+		return y, m, 1, nil
+	} else if length == 8 {
+		y, _ = strconv.Atoi(s[0:4])
+		m, _ = strconv.Atoi(s[4:6])
+		d, _ = strconv.Atoi(s[6:8])
+		return y, m, d, nil
+	}
+	return 0, 0, 0, fmt.Errorf("invalid length")
+}
+
+// parseFullNumeric 解析 YYYYMMDDhhmmss
+func parseFullNumeric(s string) (y, m, d, h, mi, sec int, err error) {
+	y, _ = strconv.Atoi(s[0:4])
+	m, _ = strconv.Atoi(s[4:6])
+	d, _ = strconv.Atoi(s[6:8])
+	h, _ = strconv.Atoi(s[8:10])
+	mi, _ = strconv.Atoi(s[10:12])
+	sec, _ = strconv.Atoi(s[12:14])
+	return y, m, d, h, mi, sec, nil
 }
 
 // NewFromTimeStamp creates and returns a Time object with given timestamp,
