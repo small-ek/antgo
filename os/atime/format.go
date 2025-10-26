@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/small-ek/antgo/utils/conv"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -74,11 +75,34 @@ func New(param ...interface{}) *Times {
 
 // StrToTime String转Time
 func StrToTime(str string) *Times {
-	t, err := time.ParseInLocation("2006-01-02 15:04:05", str, time.Local)
-	if err != nil {
-		panic(err)
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04",
+		"2006-01-02",
+		"20060102150405",
+		"20060102",
+		"200601",
+		"2006/01/02 15:04:05",
+		"2006/01/02",
+		"2006-01",
+		time.RFC3339,
+		time.RFC1123,
 	}
-	return &Times{Time: t}
+	for _, f := range formats {
+		if t, err := time.ParseInLocation(f, str, time.Local); err == nil {
+			return &Times{Time: t}
+		}
+	}
+	// 尝试时间戳（秒或毫秒）
+	if ts, err := strconv.ParseInt(str, 10, 64); err == nil {
+		switch len(str) {
+		case 10:
+			return &Times{Time: time.Unix(ts, 0)}
+		case 13:
+			return &Times{Time: time.UnixMilli(ts)}
+		}
+	}
+	panic(fmt.Sprintf("StrToTime: unsupported time format '%s'", str))
 }
 
 // NewFromTimeStamp creates and returns a Time object with given timestamp,
