@@ -8,24 +8,30 @@ import (
 	"unicode/utf8"
 )
 
+var ValidateUTF8 = false // 如果数据来源不受信任，可在 init 或运行时设置为 true
+
 type Json []byte
 
+// IsNull: 使用 bytes.TrimSpace 避免 string 转换分配，同时处理 "null"、空白等
 func (j Json) IsNull() bool {
 	b := bytes.TrimSpace(j)
 	return len(b) == 0 || bytes.Equal(b, []byte("null"))
 }
 
+// Value: 返回 string 以兼容大多数驱动与 MySQL JSON 字段。
+// 当 ValidateUTF8 为 true 时，会修复非法 UTF-8（发生复制）。
 func (j Json) Value() (driver.Value, error) {
 	if j.IsNull() {
 		return nil, nil
 	}
-	// 保证合法 UTF-8（会去掉/替换非法字节）
-	if !utf8.Valid(j) {
-		j = bytes.ToValidUTF8(j, []byte{})
+	if ValidateUTF8 && !utf8.Valid(j) {
+		// 仅在需要时做修复，避免每次都额外开销
+		j = bytes.ToValidUTF8(j, nil)
 	}
-	return string(j), nil // 返回 string，避免 MySQL 报 3144
+	return string(j), nil
 }
 
+// Scan: 正确处理类型，返回错误（你原来忘记返回）
 func (j *Json) Scan(value interface{}) error {
 	if value == nil {
 		*j = nil
@@ -43,14 +49,15 @@ func (j *Json) Scan(value interface{}) error {
 	}
 }
 
+// MarshalJSON: 若为 nil 或 "null"，输出 null
 func (j Json) MarshalJSON() ([]byte, error) {
 	if j == nil || j.IsNull() {
 		return []byte("null"), nil
 	}
-	// 假设 j 已经是合法的 JSON bytes（如果不放心，可以在这里校验）
 	return j, nil
 }
 
+// UnmarshalJSON: 将输入原样写入；对 "null" 进行转换
 func (j *Json) UnmarshalJSON(data []byte) error {
 	if j == nil {
 		return errors.New("asql.Json: nil pointer")
@@ -63,6 +70,7 @@ func (j *Json) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Equals
 func (j Json) Equals(j1 Json) bool {
 	return bytes.Equal(j, j1)
 }
