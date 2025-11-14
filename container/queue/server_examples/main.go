@@ -7,8 +7,8 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/small-ek/antgo/container/queue"
 	"github.com/small-ek/antgo/frame/ant"
-	"github.com/small-ek/antgo/frame/gin_middleware"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
+	"github.com/small-ek/antgo/net/httpx/middleware/agin"
 	"github.com/small-ek/antgo/os/config"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -23,7 +23,7 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 		gin.DefaultWriter = ioutil.Discard
 	}
-	app.Use(gin_middleware.Recovery()).Use(gin_middleware.Logger())
+	app.Use(agin.Recovery()).Use(agin.Logger())
 	configPath := flag.String("config", "./config.toml", "Configuration file path")
 
 	app.GET("/", func(c *gin.Context) {

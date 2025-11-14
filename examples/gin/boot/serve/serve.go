@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/small-ek/antgo/examples/gin/boot/lang"
 	"github.com/small-ek/antgo/frame/ant"
-	"github.com/small-ek/antgo/frame/gin_middleware"
 	_ "github.com/small-ek/antgo/frame/serve/gin"
 	"github.com/small-ek/antgo/i18n"
+	"github.com/small-ek/antgo/net/httpx/middleware/agin"
 	"github.com/small-ek/antgo/os/config"
 	"io/ioutil"
 	"os"
@@ -37,7 +37,7 @@ func load() *gin.Engine {
 		gin.SetMode(gin.ReleaseMode)
 		gin.DefaultWriter = ioutil.Discard
 	}
-	app.Use(gin_middleware.Recovery()).Use(gin_middleware.Logger()).Use(i18n.Middleware())
+	app.Use(agin.Recovery()).Use(agin.Logger()).Use(i18n.Middleware())
 
 	app.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
