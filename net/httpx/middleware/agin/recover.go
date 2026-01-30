@@ -63,7 +63,7 @@ func buildLogFields(c *gin.Context, err interface{}, stack []byte) []zap.Field {
 		zap.Any("request_body", parseRequestBody(c)),
 		zap.Any("panic", err),
 		zap.String("panic_at", extractPanicLocation(stack)), // 新增:精准定位
-		zap.Strings("stack", splitStack(stack)),             // 改进:数组形式
+		zap.Strings("stack", SplitStack(stack)),             // 改进:数组形式
 		zap.String("request_id", getRequestID(c)),
 	}
 }
@@ -102,8 +102,8 @@ func isFrameworkCode(line string) bool {
 		strings.Contains(line, "/pkg/mod/") // modules 模式
 }
 
-// splitStack 分割堆栈为数组(仅保留关键帧)
-func splitStack(stack []byte) []string {
+// SplitStack 分割堆栈为数组(仅保留关键帧)
+func SplitStack(stack []byte) []string {
 	lines := bytes.Split(stack, []byte("\n"))
 	var result []string
 	for i := 0; i < len(lines) && i < 20; i++ { // 限制 10 帧

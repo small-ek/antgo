@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/robfig/cron/v3"              // 任务调度库 cron scheduler library
-	"github.com/small-ek/antgo/crypto/auuid" // 生成唯一请求 ID UUID generator for request IDs
-	"go.uber.org/zap"                        // 结构化日志库 structured logging
-	"math/rand"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/robfig/cron/v3"              // 任务调度库 cron scheduler library
+	"github.com/small-ek/antgo/crypto/auuid" // 生成唯一请求 ID UUID generator for request IDs
+	"github.com/small-ek/antgo/net/httpx/middleware/agin"
+	"go.uber.org/zap" // 结构化日志库 structured logging
 )
 
 // requestIDKey 定义上下文中的键，用于请求跟踪
@@ -47,9 +49,6 @@ type Crontab struct {
 // New 创建并返回 Crontab 实例
 // New creates a Crontab with given root context, zap logger, and default timeout
 func New(ctx context.Context, logger *zap.Logger, defaultTimeout time.Duration) *Crontab {
-	// 初始化随机种子 (用于 auuid 或其他随机逻辑)
-	// Initialize random seed (for auuid or other random logic)
-	rand.Seed(time.Now().UnixNano())
 
 	// 支持秒级的 cron 解析器 parser supporting seconds
 	parser := cron.NewParser(
@@ -190,10 +189,14 @@ func (c *Crontab) AddJobWithTimeout(id, spec string, job ContextJob, d time.Dura
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
-					// 记录panic恢复信息
-					// Log recovered panic
+					// 捕获并解析堆栈，提取首个非 runtime/robfig 的用户代码帧
+					stack := debug.Stack()
+
 					c.logger.Error("panic recovered",
-						append(fields, zap.Any("error", r))...)
+						append(fields,
+							zap.Any("error", r),
+							zap.Strings("stack", agin.SplitStack(stack)), // 改进:数组形式
+						)...)
 					errChan <- fmt.Errorf("panic: %v", r)
 				}
 			}()
@@ -221,8 +224,7 @@ func (c *Crontab) AddJobWithTimeout(id, spec string, job ContextJob, d time.Dura
 			// 任务超时处理
 			// Handle job timeout
 			elapsed := time.Since(start)
-			c.logger.Warn("job timeout",
-				append(fields, zap.Duration("elapsed", elapsed))...)
+			c.logger.Warn("job timeout", append(fields, zap.Duration("elapsed", elapsed), zap.Error(ctx.Err()))...)
 		}
 	}
 
@@ -325,15 +327,15 @@ func (c *Crontab) Reschedule(id, newSpec string) error {
 	// Remove old job
 	c.cron.Remove(meta.EntryID)
 
-	// 更新元数据
-	// Update metadata
+	// 先保存旧表达式，再更新
+	oldSpec := meta.Spec
 	meta.EntryID = newID
 	meta.Spec = newSpec
 	c.ids[id] = meta
 
 	c.logger.Info("job rescheduled",
 		zap.String("id", id),
-		zap.String("old_spec", meta.Spec),
+		zap.String("old_spec", oldSpec),
 		zap.String("new_spec", newSpec))
 	return nil
 }
