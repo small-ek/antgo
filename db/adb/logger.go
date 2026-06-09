@@ -3,12 +3,14 @@ package adb
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/small-ek/antgo/os/alog"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
-	"time"
 )
 
 type Logger struct {
@@ -72,6 +74,7 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 
 	elapsed := time.Since(begin)
 	sql, rows := fc()
+	sql = formatSQLForLog(sql)
 	logFields := []zap.Field{
 		zap.String("line", utils.FileWithLineNum()),
 		zap.String("sql", sql),
@@ -92,4 +95,65 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 	case l.LogLevel >= gormlogger.Info:
 		l.ZapLogger.Info("sql_info", logFields...)
 	}
+}
+
+func formatSQLForLog(sql string) string {
+	var builder strings.Builder
+	builder.Grow(len(sql))
+
+	inSingleQuote := false
+	inDoubleQuote := false
+	lastSpace := false
+
+	writeSpace := func() {
+		if builder.Len() > 0 && !lastSpace {
+			builder.WriteByte(' ')
+			lastSpace = true
+		}
+	}
+
+	for i := 0; i < len(sql); i++ {
+		ch := sql[i]
+
+		if inSingleQuote {
+			switch ch {
+			case '\'':
+				builder.WriteByte(ch)
+				lastSpace = false
+				if i+1 < len(sql) && sql[i+1] == '\'' {
+					i++
+					builder.WriteByte(sql[i])
+					continue
+				}
+				inSingleQuote = false
+			case '\r', '\n', '\t':
+				builder.WriteByte(' ')
+				lastSpace = false
+			default:
+				builder.WriteByte(ch)
+				lastSpace = false
+			}
+			continue
+		}
+
+		switch ch {
+		case '\'':
+			inSingleQuote = true
+			builder.WriteByte(ch)
+			lastSpace = false
+		case '"':
+			if inDoubleQuote && i+1 < len(sql) && sql[i+1] == '"' {
+				i++
+				continue
+			}
+			inDoubleQuote = !inDoubleQuote
+		case '\r', '\n', '\t', ' ':
+			writeSpace()
+		default:
+			builder.WriteByte(ch)
+			lastSpace = false
+		}
+	}
+
+	return strings.TrimSpace(builder.String())
 }
