@@ -1,19 +1,119 @@
 package asql
 
 import (
-	"fmt"
+	"database/sql/driver"
+	"reflect"
+	"strings"
+
 	"github.com/small-ek/antgo/utils/conv"
 	"github.com/small-ek/antgo/utils/page"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
 )
+
+type columnCondition struct {
+	Column   clause.Column
+	Operator string
+	Values   []interface{}
+}
+
+func (c columnCondition) Build(builder clause.Builder) {
+	operator := dialectOperator(builder, c.Operator)
+
+	builder.WriteQuoted(c.Column)
+	builder.WriteByte(' ')
+	builder.WriteString(operator)
+
+	switch operator {
+	case "BETWEEN", "NOT BETWEEN":
+		builder.WriteByte(' ')
+		builder.AddVar(builder, c.Values[0])
+		builder.WriteString(" AND ")
+		builder.AddVar(builder, c.Values[1])
+	case "IS NULL", "IS NOT NULL":
+		return
+	default:
+		builder.WriteByte(' ')
+		builder.AddVar(builder, c.Values...)
+	}
+}
+
+// PostgreSQL uses POSIX regex operators; MySQL uses RLIKE. Other dialects keep
+// the caller-provided operator so unsupported SQL fails visibly instead of being
+// silently rewritten to a different meaning.
+func dialectOperator(builder clause.Builder, operator string) string {
+	if operator != "RLIKE" {
+		return operator
+	}
+	if stmt, ok := builder.(*gorm.Statement); ok && stmt.DB != nil && stmt.DB.Dialector != nil {
+		if stmt.DB.Dialector.Name() == "postgres" {
+			return "~"
+		}
+	}
+	return operator
+}
+
+func columnExpr(key, operator string, values ...interface{}) clause.Expression {
+	return columnCondition{
+		Column:   clause.Column{Name: key},
+		Operator: strings.ToUpper(strings.TrimSpace(operator)),
+		Values:   values,
+	}
+}
+
+func pattern(value interface{}) string {
+	return strings.TrimRight(conv.String(value), "%") + "%"
+}
+
+func isZeroFilterValue(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+	if valuer, ok := value.(driver.Valuer); ok {
+		v, err := valuer.Value()
+		return err == nil && isZeroFilterValue(v)
+	}
+
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Chan, reflect.Map, reflect.Slice:
+		return rv.IsNil() || rv.Len() == 0
+	case reflect.Func, reflect.Interface, reflect.Ptr:
+		return rv.IsNil()
+	case reflect.Array:
+		return rv.Len() == 0
+	case reflect.String:
+		return rv.Len() == 0
+	default:
+		return rv.IsZero()
+	}
+}
+
+func sliceValues(value interface{}) []interface{} {
+	if value == nil {
+		return nil
+	}
+	if values, ok := value.([]interface{}); ok {
+		return values
+	}
+
+	rv := reflect.ValueOf(value)
+	if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
+		return nil
+	}
+
+	values := make([]interface{}, 0, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		values = append(values, rv.Index(i).Interface())
+	}
+	return values
+}
 
 // Like Fuzzy search when there is value
 func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
-			return db.Where(fmt.Sprintf("`%s` LIKE ?", key), value+"%")
+			return db.Where(columnExpr(key, "LIKE", pattern(value)))
 		}
 		return db
 	}
@@ -23,7 +123,7 @@ func Like(key, value string) func(db *gorm.DB) *gorm.DB {
 func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if key != "" && value != "" {
-			return db.Where(fmt.Sprintf("`%s` ILIKE ?", key), value+"%")
+			return db.Where(columnExpr(key, "ILIKE", pattern(value)))
 		}
 		return db
 	}
@@ -32,16 +132,8 @@ func Ilike(key, value string) func(db *gorm.DB) *gorm.DB {
 // WhereIn WhereIn search when there is value
 func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		switch v := value.(type) {
-		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
-			newValue := conv.Interfaces(v)
-			if len(newValue) == 0 {
-				return db
-			}
-		}
-
-		if key != "" && value != nil && value != "" {
-			return db.Where(fmt.Sprintf("`%s` IN ?", key), value)
+		if key != "" && !isZeroFilterValue(value) {
+			return db.Where(columnExpr(key, "IN", value))
 		}
 		return db
 	}
@@ -50,16 +142,8 @@ func WhereIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 // WhereNotIn WhereNotIn search when there is value
 func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		switch v := value.(type) {
-		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
-			newValue := conv.Interfaces(v)
-			if len(newValue) == 0 {
-				return db
-			}
-		}
-
-		if key != "" && value != nil && value != "" {
-			return db.Where(fmt.Sprintf("`%s` NOT IN ?", key), value)
+		if key != "" && !isZeroFilterValue(value) {
+			return db.Where(columnExpr(key, "NOT IN", value))
 		}
 		return db
 	}
@@ -68,28 +152,35 @@ func WhereNotIn(key string, value interface{}) func(db *gorm.DB) *gorm.DB {
 // Where Where to search when there is value
 func Where(key, conditions string, value interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		conditions = strings.ToUpper(conditions)
-		if key == "" || conditions == "" || value == nil || value == "" || value == 0 {
+		conditions = strings.ToUpper(strings.TrimSpace(conditions))
+		if key == "" || conditions == "" || !isValidOperator(conditions) {
+			return db
+		}
+		if conditions == "IS NULL" || conditions == "IS NOT NULL" {
+			return db.Where(columnExpr(key, conditions))
+		}
+		if isZeroFilterValue(value) {
 			return db
 		}
 
-		switch v := value.(type) {
-		case []interface{}, []int, []int16, []int32, []int64, []uint16, []uint32, []uint64, []string, []float32, []float64:
-			newValue := conv.Interfaces(v)
-			if (conditions == "BETWEEN" || conditions == "NOT BETWEEN") && len(newValue) == 2 {
-				return db.Where(fmt.Sprintf("`%s` %s ? AND ?", key, conditions), newValue[0], newValue[1])
+		switch conditions {
+		case "BETWEEN", "NOT BETWEEN":
+			values := sliceValues(value)
+			if len(values) == 2 {
+				return db.Where(columnExpr(key, conditions, values[0], values[1]))
 			}
-			if (conditions == "IN" || conditions == "NOT IN") && len(newValue) > 0 {
-				return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), newValue)
+		case "IN", "NOT IN":
+			values := sliceValues(value)
+			if len(values) > 0 {
+				return db.Where(columnExpr(key, conditions, values))
 			}
-		case string:
-			if (conditions == "LIKE" || conditions == "ILIKE") && v != "" {
-				return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), v+"%")
-			} else {
-				return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), value)
+		case "LIKE", "NOT LIKE", "ILIKE", "NOT ILIKE":
+			if v, ok := value.(string); ok {
+				return db.Where(columnExpr(key, conditions, pattern(v)))
 			}
+			return db.Where(columnExpr(key, conditions, value))
 		default:
-			return db.Where(fmt.Sprintf("`%s` %s ?", key, conditions), value)
+			return db.Where(columnExpr(key, conditions, value))
 		}
 
 		return db
@@ -152,89 +243,80 @@ func Filters(filters interface{}) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 
-		// Build WHERE conditions and arguments
-		query, args := buildWhere(newFilter, "AND")
-		return db.Where(query, args...)
+		query := buildWhere(newFilter, "AND")
+		if query == nil {
+			return db
+		}
+		return db.Where(query)
 	}
 }
 
 // buildWhere recursively constructs WHERE clause with AND/OR conditions
-func buildWhere(filters []page.Filter, joinType string) (string, []interface{}) {
-	var conditions []string
-	var values []interface{}
-	// Estimate the number of conditions to optimize slice allocation
-	conditions = make([]string, 0, len(filters)*2) // Allocate space for conditions and subqueries
+func buildWhere(filters []page.Filter, joinType string) clause.Expression {
+	conditions := make([]clause.Expression, 0, len(filters)*2)
 
 	for _, filter := range filters {
-		// Handle OR conditions recursively
 		if len(filter.Or) > 0 {
-			subQuery, subValues := buildWhere(filter.Or, "OR")
-			conditions = append(conditions, fmt.Sprintf("(%s)", subQuery))
-			values = append(values, subValues...)
+			if subQuery := buildWhere(filter.Or, "OR"); subQuery != nil {
+				conditions = append(conditions, subQuery)
+			}
 		}
 
-		// Handle AND conditions recursively
 		if len(filter.And) > 0 {
-			subQuery, subValues := buildWhere(filter.And, "AND")
-			conditions = append(conditions, fmt.Sprintf("(%s)", subQuery))
-			values = append(values, subValues...)
+			if subQuery := buildWhere(filter.And, "AND"); subQuery != nil {
+				conditions = append(conditions, subQuery)
+			}
 		}
 
-		// Handle basic filter conditions
-		if filter.Field != "" && filter.Operator != "" && filter.Value != nil && isValidOperator(filter.Operator) {
-			operator := strings.ToUpper(filter.Operator)
-			condition, value := handleOperator(filter, operator)
-			if condition != "" {
+		operator := strings.ToUpper(strings.TrimSpace(filter.Operator))
+		isNullOperator := operator == "IS NULL" || operator == "IS NOT NULL"
+		if filter.Field != "" && operator != "" && isValidOperator(operator) && (isNullOperator || !isZeroFilterValue(filter.Value)) {
+			if condition := handleOperator(filter, operator); condition != nil {
 				conditions = append(conditions, condition)
-				values = append(values, value...)
 			}
 		}
 	}
 
-	query := strings.Join(conditions, " "+joinType+" ")
-	return query, values
+	if len(conditions) == 0 {
+		return nil
+	}
+	if strings.ToUpper(joinType) == "OR" {
+		return clause.Or(conditions...)
+	}
+	return clause.And(conditions...)
 }
 
 // handleOperator handles different operator types to generate query conditions
-func handleOperator(filter page.Filter, operator string) (string, []interface{}) {
-	var condition string
-	var values []interface{}
-
+func handleOperator(filter page.Filter, operator string) clause.Expression {
 	switch operator {
-	case "BETWEEN":
-		// Handle BETWEEN operator
-		value := conv.Strings(filter.Value)
-		if len(value) == 2 {
-			condition = fmt.Sprintf("`%s` BETWEEN ? AND ?", filter.Field)
-			values = append(values, value[0], value[1])
+	case "BETWEEN", "NOT BETWEEN":
+		values := sliceValues(filter.Value)
+		if len(values) == 2 {
+			return columnExpr(filter.Field, operator, values[0], values[1])
 		}
 	case "IS NULL", "IS NOT NULL":
-		// Handle IS NULL or IS NOT NULL
-		condition = fmt.Sprintf("`%s` %s", filter.Field, operator)
-	case "LIKE", "NOT LIKE":
-		// Handle LIKE or NOT LIKE with escaping
-		condition = fmt.Sprintf("`%s` %s ?", filter.Field, operator)
-		values = append(values, fmt.Sprintf("%s%%", filter.Value))
+		return columnExpr(filter.Field, operator)
+	case "LIKE", "NOT LIKE", "ILIKE", "NOT ILIKE":
+		return columnExpr(filter.Field, operator, pattern(filter.Value))
 	case "IN", "NOT IN":
-		// Handle IN or NOT IN with values
-		condition = fmt.Sprintf("`%s` %s (?)", filter.Field, operator)
-		values = append(values, conv.Strings(filter.Value))
+		values := sliceValues(filter.Value)
+		if len(values) > 0 {
+			return columnExpr(filter.Field, operator, values)
+		}
 	default:
-		// Handle other operators
-		condition = fmt.Sprintf("`%s` %s ?", filter.Field, operator)
-		values = append(values, filter.Value)
+		return columnExpr(filter.Field, operator, filter.Value)
 	}
 
-	return condition, values
+	return nil
 }
 
 // isValidOperator checks if the operator is valid
 func isValidOperator(operator string) bool {
-	// Direct lookup for valid operators using map
 	validOperators := map[string]bool{
 		"=": true, ">": true, ">=": true, "<": true, "<=": true, "!=": true,
 		"<>": true, "IN": true, "NOT IN": true, "LIKE": true, "NOT LIKE": true,
-		"ILIKE": true, "RLIKE": true, "BETWEEN": true, "IS NULL": true, "IS NOT NULL": true,
+		"ILIKE": true, "NOT ILIKE": true, "RLIKE": true, "BETWEEN": true, "NOT BETWEEN": true,
+		"IS NULL": true, "IS NOT NULL": true,
 	}
-	return validOperators[strings.ToUpper(operator)]
+	return validOperators[strings.ToUpper(strings.TrimSpace(operator))]
 }
