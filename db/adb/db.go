@@ -130,13 +130,15 @@ func CreateConnection(config DatabaseConfig) (*gorm.DB, error) {
 	// 根据数据库类型选择对应驱动 / Select appropriate driver based on database type.
 	switch config.Type {
 	case "mysql":
-		db, err = config.Open(Mysql(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+		db, err = config.Open(Mysql(config.DSN), getConfig(config.LogEnabled, config.LogLevel, true))
 	case "pgsql":
-		db, err = config.Open(Postgres(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+		// PostgreSQL 表结构变更后，缓存的 SELECT * 预编译计划可能保留旧结果集结构，
+		// 导致后续查询报 cached plan must not change result type，因此这里固定关闭。
+		db, err = config.Open(Postgres(config.DSN), getConfig(config.LogEnabled, config.LogLevel, false))
 	case "sqlsrv":
-		db, err = config.Open(Sqlserver(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+		db, err = config.Open(Sqlserver(config.DSN), getConfig(config.LogEnabled, config.LogLevel, true))
 	case "clickhouse":
-		db, err = config.Open(clickhouse.Open(config.DSN), getConfig(config.LogEnabled, config.LogLevel))
+		db, err = config.Open(clickhouse.Open(config.DSN), getConfig(config.LogEnabled, config.LogLevel, true))
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", config.Type)
 	}
@@ -156,11 +158,11 @@ func CreateConnection(config DatabaseConfig) (*gorm.DB, error) {
 
 // getConfig 返回 GORM 的配置对象
 // getConfig returns a GORM configuration object based on logging settings.
-func getConfig(isLog bool, level gormlogger.LogLevel) *gorm.Config {
+func getConfig(isLog bool, level gormlogger.LogLevel, prepareStmt bool) *gorm.Config {
 	cfg := &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 		SkipDefaultTransaction:                   true,
-		PrepareStmt:                              true,
+		PrepareStmt:                              prepareStmt,
 		AllowGlobalUpdate:                        false,
 	}
 
