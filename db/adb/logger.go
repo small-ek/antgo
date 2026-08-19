@@ -89,6 +89,8 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 
 	switch {
 	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
+		// SQL 日志必须保留驱动原始错误，否则无法区分超时、死锁、序列化冲突和字段约束错误。
+		logFields = append(logFields, zap.Error(err))
 		l.ZapLogger.Error("sql_error", logFields...)
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
 		l.ZapLogger.Warn("sql_warn", logFields...)
